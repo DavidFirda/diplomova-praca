@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sign up</h1>
+        <form id="register-form">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="text" id="login" placeholder="Login" required>
+            <button type="submit">Sing up</button>
+        </form>
+        <p id="error-message" class="error-message" style="display: none; text-align: center;"></p>
+        <a class="bottom-link" href="login.html">Already have an account? Sign in here</a>
+    </div>
+
+    <script src="/config.js"></script>
+    <script src="/script.js"></script>
+    <script>
+      checkAccessCode();
+    </script>
+</body>
+</html>

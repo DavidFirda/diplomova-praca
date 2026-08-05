@@ -1,0 +1,3017 @@
+Instruction,Input,Output,Category,Subcategory
+Write a Python program to create a singly linked list,,"class Node():
+  def __init__(self, data):
+    self.data = data
+    self.next = None
+
+class List():
+  def __init__(self):
+    self.head = None
+
+  def addNode(self, data):
+    node = Node(data)
+    if self.head == None:
+       self.head = node
+    else:
+      current = self.head
+      while current.next != None:
+        current = current.next
+      current.next = node",Data Structures,linked list
+Write a Python function which takes in an argument and returns a corresponding string.,"Given an argument of 1,2 or 3","def get_string(arg):
+    """"""
+    This function takes in an argument and returns the corresponding
+    string. 
+ 
+    Parameters:
+    arg (int): the argument
+
+    Returns:
+    str: the corresponding string
+    """"""
+    if arg == 1:
+        return ""One""
+    elif arg == 2:
+        return ""Two""
+    elif arg ==3:
+        return ""Three""
+    else:
+        return """"",Data Structures,string
+Develop an algorithm in Python to print Fibonacci series up to a given number.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+      
+n = int(input(""Enter a number: ""))
+print(fibonacci(n))",Syntax,print
+Create a function in Python that implements binary search.,"[2, 5, 7, 9, 12, 15], 12","def binary_search(arr, value): 
+    low = 0
+    high = len(arr) - 1
+  
+    while low <= high: 
+        mid = (low + high) // 2
+        if arr[mid] < value: 
+            low = mid + 1
+        elif arr[mid] > value: 
+            high = mid - 1
+        else: 
+            return mid 
+  
+    return -1
+
+# Test
+arr = [2, 5, 7, 9, 12, 15]
+value = 12
+print(binary_search(arr, value)) # 4",Branching,elif
+"Write a Python program to implement a basic stack data structure with push, pop, and peek operations.",,"class Stack:
+ def __init__(self):
+ self.items = []
+
+ def push(self, item):
+ self.items.append(item)
+
+ def pop(self):
+ return self.items.pop()
+
+ def peek(self):
+ return self.items[len(self.items)-1]
+
+my_stack = Stack()
+my_stack.push(1)
+my_stack.push(2)
+my_stack.push(3)
+print(my_stack.peek()) # 3
+print(my_stack.pop()) # 3
+print(my_stack.pop()) # 2",Data Structures,stack
+Create a command line tool in Python that takes a numerical input (e.g. from user input) and prints out all prime numbers up to that number.,50,"import sys
+
+def main():
+ try:
+ number = int(sys.argv[1])
+ except (IndexError, ValueError):
+ number = int(input('Please enter a number: '))
+
+ prime_list = []
+ for num in range(2, number + 1):
+ for i in prime_list:
+ if num % i == 0:
+ break
+ else:
+ prime_list.append(num)
+
+print(prime_list)
+
+if __name__ == '__main__':
+ main()",Syntax,user input
+Design a program to find the nth term of the Fibonacci sequence for a given number n.,n = 10,"# Python 3 program to find the nth
+# Fibonacci number
+def Fibonacci(n):
+    if n<0:
+        print(""Incorrect input"")
+    # First Fibonacci number is 0
+    elif n==1:
+        return 0
+    # Second Fibonacci number is 1
+    elif n==2:
+        return 1
+    else:
+        return Fibonacci(n-1)+Fibonacci(n-2)
+ 
+# Driver Program
+print(Fibonacci(10))
+
+# Output
+34",Algorithms and Dynamic Programming,fibonacci
+Generate a Python script for calculating the GCD and LCM of two numbers,,"# Function to calculate GCD and LCM of two numbers
+def gcd_lcm(a, b): 
+    if a > b:
+        small = b
+    else:
+        small = a
+    for i in range(1, small+1):
+        if((a % i == 0) and (b % i == 0)): 
+            gcd = i 
+              
+    lcm = int(a*b)/int(gcd) 
+    return gcd, lcm
+
+# Driver Code
+a = 8
+b = 12
+
+gcd, lcm = gcd_lcm(a, b)
+print(""GCD:"", gcd)
+print(""LCM:"", lcm)",Mathematics,number
+Create a data structure to efficiently store and manipulate a set of strings.,,"# Create an empty set 
+str_set = set() 
+  
+# Add elements to the set
+str_set.add(""Python"") 
+str_set.add(""Java"") 
+str_set.add(""C#"") 
+str_set.add(""JavaScript"") 
+
+# Check for the presence
+if ""Python"" in str_set: 
+    print(""Python is present"") 
+  
+# Remove elements from the set
+str_set.remove(""Java"") 
+
+# Print the set
+print(""Set of strings: "", end = "" "") 
+for i in str_set: 
+    print(i, end ="" "")",Data Structures,data structure
+Create a Python program to convert a number to its corresponding month name.,2,"def num_to_month(num):
+    months = [
+        'January', 
+        'February', 
+        'March', 
+        'April', 
+        'May', 
+        'June', 
+        'July', 
+        'August', 
+        'September', 
+        'October', 
+        'November', 
+        'December'
+    ]
+    return months[num - 1]
+
+print(num_to_month(2)) # February",Mathematics,number
+Write a Python function to generate the Fibonacci series till n-th term.,,"def Fibonacci(n): 
+	a = 0
+	b = 1
+	if n < 0: 
+		print(""Incorrect input"") 
+	elif n == 0: 
+		return a 
+	elif n == 1: 
+		return b 
+	else: 
+		for i in range(2,n): 
+			c = a + b 
+			a = b 
+			b = c 
+		return b 
+
+result = Fibonacci(7) 
+print(result)",Algorithms and Dynamic Programming,fibonacci
+Write a Python program to generate all unique combinations of two numbers from a list.,"nums = [1, 2, 3, 4]","def generate_combinations(nums): 
+    result = [] 
+    for x in range(0, len(nums)): 
+        for y in range(x + 1, len(nums)): 
+            result.append([nums[x], nums[y]]) 
+    return result 
+
+nums = [1, 2, 3, 4]
+
+result = generate_combinations(nums)
+
+for item in result:
+    print(item)
+
+# output
+[1, 2]
+[1, 3]
+[1, 4]
+[2, 3]
+[2, 4]
+[3, 4]",Mathematics,number
+Generate a Fibonacci sequence from 0 to 10 using Python.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+
+# Driver Code 
+print(fibonacci(10))",Algorithms and Dynamic Programming,fibonacci
+Construct an algorithm in Python to calculate the area of a triangle given its sides.,"3
+4
+5","def areaTriangle(a, b, c): 
+    """"""
+    Calculate the area of a triangle.
+    Parameters: 
+    a (float): length of side a
+    b (float): length of side b
+    c (float): length of side c
+    """"""
+    s = (a + b + c) / 2.0
+    area = (s*(s-a)*(s-b)*(s-c)) ** 0.5
+    return area
+ 
+a = 3
+b = 4
+c = 5
+ 
+area = areaTriangle(a, b, c)
+print(""The area of the triangle is"", area)  # 6.0",Mathematics,calculate
+Generate a python program to convert numbers in between 1 to 10 to their respective word form.,,"# Dictionary of numbers and words
+DAYS = {
+    1:'one',
+    2:'two',
+    3:'three',
+    4:'four',
+    5:'five',
+    6:'six',
+    7:'seven',
+    8:'eight',
+    9:'nine',
+    10:'ten',
+}
+
+def num_to_str(num):
+    if num in DAYS:
+        return DAYS[num]
+    else:
+        return ""invalid number""
+
+if __name__ == '__main__':
+    num = 5
+    print(num_to_str(num))",Mathematics,number
+Write a Python program that takes a positive integer and prints the squares of all the numbers from 1 to the given number.,Given number: 5,"# Program to print the squares of all 
+# the numbers from 1 to the given number 
+  
+# Positive number taken as an input 
+num = 5
+  
+# Iterate from 1 to num 
+for i in range(1, num+1): 
+  
+    # Calculate the square 
+    value = i**2
+      
+    # Print the value 
+    print(value)
+
+# Output:
+# 1
+# 4
+# 9
+# 16
+# 25",Syntax,integer
+"Using Python, write a program that prints out the Fibonacci sequence up until the number 100.",,"def Fibonacci(n): 
+ a = 0
+ b = 1
+ 
+ if n < 0: 
+  print(""Incorrect input"") 
+ elif n == 0: 
+  return a 
+ elif n == 1: 
+  return b 
+ else: 
+  for i in range(2,n+1): 
+   c = a + b 
+   a = b 
+   b = c 
+  return b 
+ 
+# Function to display Fibonacci sequence until number 100
+for i in range(101):
+  print(Fibonacci(i),end = "" "")",Syntax,print
+Create a function in Python to print Pascal's Triangle of a given number of rows.,6,"def pascal_triangle(n):
+    triangle = []
+
+    for i in range(n):
+        row = [1] * (i+1)
+        triangle.append(row)
+
+        for j in range(1,i):
+            row[j] = triangle[i-1][j-1] + triangle[i-1][j]
+
+    for row in triangle:
+        print(row)
+
+pascal_triangle(6) 
+# Output: [1]
+# [1, 1]
+# [1, 2, 1]
+# [1, 3, 3, 1]
+# [1, 4, 6, 4, 1]
+# [1, 5, 10, 10, 5, 1]",Syntax,print
+Write a function to find the median of three specific numbers.,,"def median_numbers(a,b,c):
+ if a > b:
+    if a < c:
+        median = a
+    elif b > c:
+        median = b
+    else:
+        median = c
+ else:
+    if a > c:
+        median = a
+    elif b < c:
+        median = b
+    else:
+        median = c
+ return median",Mathematics,median
+Generate the Fibonacci sequence of length 8 (starting from 0) in Python.,,"def fibonacciSequence(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+fibonacciSequence(8) # Output:21",Algorithms and Dynamic Programming,fibonacci
+Write a function to find if the given number is a keith number or not.,,"def is_num_keith(x): 
+	terms = [] 
+	temp = x 
+	n = 0 
+	while (temp > 0): 
+		terms.append(temp % 10) 
+		temp = int(temp / 10) 
+		n+=1 
+	terms.reverse() 
+	next_term = 0 
+	i = n 
+	while (next_term < x): 
+		next_term = 0 
+		for j in range(1,n+1): 
+			next_term += terms[i - j] 
+		terms.append(next_term) 
+		i+=1 
+	return (next_term == x) ",Branching,if
+Compose a Python program for finding the median value of an unsorted array.,"[4, 5, 6, 7, 8, 1, 2]","def median(arr):
+    # Sort the array
+    arr.sort()
+
+    # Calculate length
+    n = len(arr)
+
+    # Check if n is even
+    if n % 2 == 0:
+        median1 = arr[n // 2]
+        median2 = arr[n // 2 - 1]
+        median = (median1 + median2) / 2
+    else:
+        median = arr[n // 2]
+
+    return median
+
+arr = [4, 5, 6, 7, 8, 1, 2]
+result = median(arr)
+print(result) # 4.5",Mathematics,median
+Generate a list of Python library names available in the Python standard library.,,"Built-in Python libraries:
+1. ast
+2. dis
+3. math
+4. fractions
+5. datetime
+6. hashlib
+7. itertools
+8. json
+9. urllib
+10. os
+11. pickle
+12. random
+13. re
+14. subprocess
+15. sys
+16. time
+17. zlib",Data Structures,list
+Create a Python script to calculate the median of an array of integers.,"[3, 1, 4, 5, 2]","def median(arr): 
+ # Sort the array 
+ arr.sort() 
+ n = len(arr) 
+  
+ # If number of elements is odd, 
+ # return the middle element 
+ if n % 2 != 0: 
+  return arr[n//2] 
+  
+ # If number of elements is even, 
+ # return the average of the middle 
+ # two elements 
+ else:
+  return (arr[n//2] + arr[(n//2)-1]) / 2
+
+# Driver code 
+arr = [3, 1, 4, 5, 2] 
+print(median(arr))",Mathematics,calculate
+Write a Python code to implement a list containing at least three dictionaries.,,"list_of_dicts = [ 
+    {
+        ""name"": ""John"",
+        ""age"": 32,
+        ""country"": ""USA""
+    },
+    {
+        ""name"": ""Peter"",
+        ""age"": 28,
+        ""country"": ""Australia""
+    },
+    {
+        ""name"": ""David"",
+        ""age"": 30,
+        ""country"": ""Canada""
+    }
+]",Data Structures,list
+Write a Python program to convert a given Roman number to its integer numerical equivalent.,,"def romanToInt(s):
+    values = {
+    'I': 1,
+    'V': 5,
+    'X': 10,
+    'L': 50,
+    'C': 100,
+    'D': 500,
+    'M': 1000
+    }
+
+    number = 0
+    for i in range(len(s)):
+        if i == 0 or values[s[i]] <= values[s[i-1]]:
+            number += values[s[i]]
+        else:
+            number += values[s[i]] - 2*values[s[i-1]]
+
+    return number",Mathematics,number
+Create a Python function that takes a number as input and returns the Fibonacci number at the same position in the sequence.,3,"def fibonacciNum(n): 
+  a = 0
+  b = 1
+  if n < 0: 
+    print(""Incorrect input"") 
+  elif n == 0: 
+    return a 
+  elif n == 1: 
+    return b 
+  else: 
+    for i in range(2,n+1): 
+        c = a + b 
+        a = b 
+        b = c 
+    return b 
+
+fibonacciNum(3)",Mathematics,number
+Create a Python program to print out the prime numbers between the given input range.,"min = 1
+max = 10","def print_primes(min, max):
+  for num in range(min, max+1):
+    if num > 1:
+      for i in range(2, num):
+        if (num % i) == 0:
+          break
+      else:
+        print(num)
+  
+# Driver Code
+min = 1
+max = 10
+
+print_primes(min, max)
+
+# Output:
+# 2
+# 3
+# 5
+# 7",Syntax,print
+Design an algorithm in Python to calculate the Fibonacci numbers up to N.,5,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+print(fibonacci(5)) # 5",Mathematics,calculate
+Write a short Python program to generate the Fibonacci sequence up to the given number n.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+ 
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+if __name__ == '__main__':
+    n = int(input('Enter a number: '))
+    print(fibonacci(n))",Algorithms and Dynamic Programming,fibonacci
+Design an algorithm in Python to Merge two lists.,"[1, 3, 5], [2, 4, 6]","def merge(list1, list2):
+ merged_list = []
+ 
+ while list1 and list2:
+  if list1[0] < list2[0]:
+   merged_list.append(list1[0])
+   list1.pop(0)
+  else:
+   merged_list.append(list2[0])
+   list2.pop(0)
+
+ merged_list += list1
+ merged_list += list2
+ return merged_list
+
+list1 = [1, 3, 5]
+list2 = [2, 4, 6]
+
+merged_list = merge(list1, list2)
+
+print(""Merged list:"") 
+print(merged_list)",Data Structures,list
+"Given a set of numbers, construct a Python program to calculate the sum of all prime numbers in the set.","[2, 3, 9, 14]","def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+ 
+def sum_primes(nums):
+    prime_sum = 0
+    for num in nums:
+        if is_prime(num):
+            prime_sum += num
+    return prime_sum
+ 
+nums = [2, 3, 9, 14]
+ 
+result = sum_primes(nums)
+print(result)",Syntax,set
+Create a Python function to calculate the Fibonacci sequence with a given number as the input.,6,"def fibonacci_sequence(num): 
+ 
+    a = 0
+    b = 1
+ 
+    if num < 0: 
+        print(""Incorrect input"") 
+    elif num == 0: 
+        return a 
+    elif num == 1: 
+        return b 
+    else: 
+        for i in range(2,num): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+ 
+print(fibonacci_sequence(num))",Mathematics,calculate
+Generate a Python script to print the Fibonacci sequence.,,"def Fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+# Driver Program 
+print(Fibonacci(9))",Syntax,print
+Write a function in Python to get the intersection of two sorted lists.,"list1 = [5, 7, 9, 11, 13]
+list2 = [7, 8, 10, 11, 12]","def intersection(list1, list2):
+ result = []
+ i = 0
+ j = 0
+ while i < len(list1) and j < len(list2):
+ if list1[i] == list2[j]:
+ result.append(list1[i])
+ i += 1
+ j += 1
+ elif list1[i] < list2[j]:
+ i += 1
+ else:
+ j += 1
+ return result
+
+print(intersection(list1, list2))
+# Output: [7, 11]",Data Structures,list
+Create a Python program to print a given string with each character's ASCII code.,Hello world!,"def print_ascii(text):
+    '''This function will print a given string with each character's ASCII code.'''
+    for ch in text:
+        print(f'{ch} : {ord(ch)}')
+
+print_ascii('Hello world!')
+
+# Output:
+# H : 72
+# e : 101
+# l : 108
+# l : 108
+# o : 111
+#  : 32
+# w : 119
+# o : 111
+# r : 114
+# l : 108
+# d : 100
+# ! : 33",Syntax,print
+"Develop a Python program to generate a Fibonacci series up to nth element, where n is an input.",10,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+# Driver Program 
+  
+print(fibonacci(10))",Algorithms and Dynamic Programming,fibonacci
+Write a python program to generate the first n prime numbers.,n = 10,"def generate_prime_numbers(n):
+  prime_numbers = []
+  count = 0
+  num = 2
+  while count < n:
+    is_prime = True
+    for i in range(2, num):
+      if num % i == 0:
+        is_prime = False
+        break
+    if is_prime:
+      prime_numbers.append(num)
+      count += 1
+    num += 1
+  return prime_numbers
+
+primes = generate_prime_numbers(n)
+print(primes)  # Outputs [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]",Mathematics,prime
+Create a script in Python that prints the first 10 Fibonacci numbers.,,"def Fibonacci(n): 
+    if n<0: 
+        print(""Incorrect input"") 
+    elif n==1: 
+        return 0
+    elif n==2: 
+        return 1
+    else: 
+        x = 0
+        y = 1
+        for i in range(2, n): 
+            z = x+y 
+            x = y 
+            y = z 
+        return z 
+  
+for i in range(1, 11): 
+    print(Fibonacci(i))",Syntax,print
+Create an algorithm in Python to find the sum of the first n prime numbers,n = 10,"def sum_of_primes(n):
+    if n < 2: 
+        return 0
+    primes = [2]
+    num = 3
+    while len(primes) < n:
+        is_prime = True
+        for p in primes:
+            if num % p == 0:
+                is_prime = False
+                break
+        if is_prime:
+            primes.append(num)
+        num += 2
+    return sum(primes)
+
+print(sum_of_primes(10))",Mathematics,sum
+Write a python class that implements a linked list data structure.,,"class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    
+    def insert(self, data):
+        node = Node(data)
+        if not self.head:
+            self.head = node
+        else:
+            tmp = self.head
+            while tmp.next:
+                tmp = tmp.next
+            tmp.next = node",Object-Oriented Programming,class
+"Create a program in Python that prints the Fibonacci Series up to N terms, where N is a user-input number.",,"def fibonacci_series(N):
+    a = 0
+    b = 1
+ 
+    if N < 0:
+        print(""Incorrect input"")
+    elif N == 0:
+        print(""Series up to 0 terms: "")
+    else:
+        print(""Series up to"", N,""terms:"")
+    
+    for i in range(0, N):
+        print(a, end="" "")
+        c = a + b
+        a = b
+        b = c
+
+N = int(input(""Enter a number: ""))
+fibonacci_series(N)",Syntax,print
+Write a Python function to convert a given floating point number to binary.,19.66,"def decimal_to_binary(f_num):
+  b_str = """"
+  int_num = int(f_num)
+  f_num = f_num - int_num
+
+  while int_num > 0:
+    b_str = str(int_num % 2) + b_str
+    int_num //= 2
+
+  b_str = ""1."" + b_str
+
+  while f_num > 0: 
+    f_num *= 2
+    int_num = int(f_num)
+    if int_num == 1:
+      b_str += ""1""
+    else:
+      b_str += ""0""
+    f_num = f_num - int_num
+
+  return b_str",Mathematics,number
+Can you make a Python program to print out the Fibonacci sequence up to the nth element of the sequence?,8,"def Fibonacci(n):
+  a = 0
+  b = 1
+  if n < 0:
+    print(""Incorrect input"")
+  elif n == 0:
+    return 0
+  elif n == 1:
+    return 1
+  else:
+    for i in range(2,n):
+      c = a + b
+      a = b
+      b = c
+    return b
+
+print(Fibonacci(8)) # Output: 13",Syntax,print
+Write a function in Python that prints all the prime numbers between two given numbers inclusive.,"Start: 15
+End: 25","def printPrimeNumbers(start, end):
+ for num in range(start, end+1):
+ # base case
+ if num > 1: 
+ for i in range(2, num): 
+ if (num % i) == 0: 
+ break
+ else: 
+ print(num) 
+
+# Driver Code 
+start = 15
+end = 25
+
+printPrimeNumbers(start, end) 
+
+# Output:
+# 17 
+# 19 
+# 23 
+# 25",Syntax,print
+Write a Python program to create a list of odd numbers between x and y.,"x = 3, y = 10","# Generate a list of odd numbers between x and y
+def odd_numbers(x, y):
+  # Initialize an empty list 
+  odd_list = [] 
+  
+  # Loop through the range
+  for i in range(x, y): 
+    # If the number is odd
+    if (i % 2 != 0): 
+      odd_list.append(i)
+  
+  return odd_list 
+  
+x = 3
+y = 10
+
+# Get the list of odd numbers
+odd_list = odd_numbers(x, y)
+
+# Print the list
+print(odd_list)",Data Structures,list
+Develop a function in Python to print the first 10 Fibonacci numbers.,,"def printFibo(n): 
+    a = 0
+    b = 1
+    
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        print(a) 
+    elif n == 1: 
+        print(b) 
+    else: 
+        print(a)
+        print(b)
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+            print(b)
+        
+printFibo(10)",Syntax,print
+Can you create a Python program to find prime numbers within a given range?,,"def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, n):
+        if n % i == 0:
+            return False
+    return True
+
+
+def find_prime_numbers(a, b):
+    result = []
+    for num in range(a, b + 1):
+        if is_prime(num):
+            result.append(num)
+    return result
+
+
+start = 2
+end = 20
+print(find_prime_numbers(start, end))",Mathematics,prime
+Design a loop in a Python program to print the Fibonacci series up to the nth term.,n=10,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+print(fibonacci(n))",Loops,loop
+Create a simple algorithm in Python to find the mode of a given array of numbers.,"[1, 2, 2, 3, 5, 6, 7]","def mode(arr):
+  dict = {}
+  for item in arr:
+    if item in dict:
+      dict[item] += 1
+    else:
+      dict[item] = 1
+  
+  max_val = 0
+  max_key = 0
+  for key, value in dict.items():
+    if value > max_val:
+      max_val = value
+      max_key = key
+  
+  return max_key
+
+arr = [1, 2, 2, 3, 5, 6, 7]
+print(mode(arr))",Scientific Computing,array
+Design a Python program to print out all possible permutations of a 3 character string.,ABC,"def permutation(str):
+    if len(str) == 0:
+        return []
+    if len(str) == 1:
+        return [str]
+    l = [] 
+    for i in range(len(str)):
+       m = str[i] 
+       remLst = permutation(str[:i] + str[i+1:])
+       for p in remLst:
+           l.append(m + p)
+    return l
+
+string = 'ABC'
+l = permutation(string)
+for s in l:
+    print(s)",Syntax,print
+Write a function in Python to print the Fibonacci sequence up to the nth term.,n = 10,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+    
+print(""Fibonacci sequence:"")
+for i in range(n):
+    print(fibonacci(i))",Syntax,print
+Develop a Python program to display the Fibonacci sequence up to n-th term.,10,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+# Driver Program 
+print(fibonacci(10))",Algorithms and Dynamic Programming,fibonacci
+Create a dictionary in Python to store information about the different elements in the Periodic Table.,,"elements_dict = {}
+
+elements_dict[""Hydrogen""] = {
+    ""symbol"": ""H"", 
+    ""atomic_number"": 1, 
+    ""atomic_mass"": 1.008, 
+    ""group"": 1, 
+    ""period"": 1
+    }
+
+elements_dict[""Helium""] = {
+    ""symbol"": ""He"", 
+    ""atomic_number"": 2, 
+    ""atomic_mass"": 4.003, 
+    ""group"": 18, 
+    ""period"": 1
+    }
+
+#Repeat for other elements.",Data Structures,dictionary
+"Create a Python class to implement a queue with methods push() to insert an element, pop() to remove an element, and peek() to return the top element of the queue.",,"class Queue:
+ def __init__(self):
+ self.queue = []
+
+ def push(self, item):
+ self.queue.append(item)
+
+ def pop(self):
+ return self.queue.pop(0)
+
+ def peek(self):
+ return self.queue[0]
+
+# Usage example
+q = Queue()
+q.push(1)
+q.push(2)
+q.push(3)
+
+print(q.pop()) # 1 
+print(q.peek()) # 2",Object-Oriented Programming,class
+Create a Python function that prints the next prime number after a given number.,19,"def is_prime(n):
+ 
+ if n <= 1:
+ return False
+ 
+ for i in range(2, int(n**0.5)+1):
+ if n % i == 0:
+ return False
+ 
+ return True
+ 
+ 
+def next_prime(num):
+ 
+ if is_prime(num):
+ num += 1
+ 
+ while (True):
+ if is_prime(num):
+ return num
+ 
+ num += 1
+ 
+ 
+num = 19
+print(next_prime(num))
+# Output: 23",Syntax,print
+Create a program in Python that prints out the first 10 prime numbers.,"""<noinput>""","import math
+
+def is_prime(n):
+    if n == 1:
+        return False
+    
+    for i in range(2, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+prime_nums = []
+
+for i in range(2, 1000):  
+    if is_prime(i):
+        prime_nums.append(i)
+        if len(prime_nums) == 10:
+            break
+
+for item in prime_nums:
+    print(item)",Syntax,print
+Write a python script to format a list of numbers into a tabular form.,"[2, 3, 4, 5, 6]","def format_list(list_in):
+   list_out = []
+
+   for n in list_in:
+      list_out.append('|'+str(n).ljust(2)+'|')
+   
+   header = '--|--+'
+   header_line = '--|'+'--'*len(list_out)+'|'
+   
+   list_out = [header] + list_out + [header_line]
+   
+   return '\n'.join(list_out)
+
+print(format_list([2, 3, 4, 5, 6]))
+
+# Output:
+--|--+
+|2 |
+|3 |
+|4 |
+|5 |
+|6 |
+--|---|",Data Structures,list
+Edit a Python program given to produce a new program with different outputs according to the given criteria.,none,"def double(value): 
+    return value * 2
+
+def triple(value): 
+    return value * 3
+
+def quad(value):
+    return value * 4
+
+def calculate_value(n): 
+    if n > 10: 
+        return double(n) 
+    elif n > 5: 
+        return triple(n) 
+    else: 
+        return quad(n) 
+    
+print(calculate_value(-2))
+print(calculate_value(8)) 
+print(calculate_value(13))",Branching,elif
+Generate a Python program to print the Fibonacci series up to n-th term.,The n value is 6.,"def Fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+print(Fibonacci(6))",Syntax,print
+Design an algorithm in Python to generate all permutations of a given list.,,"def permute(nums):
+  res = [] 
+  backtrack(nums, res, [])
+  return res
+
+def backtrack(nums, res, temp):
+  if(len(temp) == len(nums)):
+    res.append(temp[:])
+  else:
+    for num in nums:
+      if num not in temp:
+        temp.append(num)
+        backtrack(nums, res, temp)
+        temp.pop()
+
+#print the result 
+nums = [1, 2, 3]
+perms = permute(nums)
+print(perms)",Data Structures,list
+Create a Python program that takes a string as input and prints all permutations of it in lexicographical order.,ABC,"def permutations(string):
+ if len(string) == 0:
+ return
+
+ else:
+ first_char = string[0]
+ remainder = string[1:]
+ permutations(remainder)
+ for perm in permutations(remainder):
+ for i in range(len(perm)+1):
+ result = perm[:i] + first_char + perm[i:]
+ print(result)
+
+permutations(""ABC"") #run the code
+
+# Output
+ABC
+ACB
+BAC
+BCA
+CBA
+CAB",Data Structures,string
+Create a Python function to print out all the prime numbers between two integers.,"start = 10, end = 25","def print_primes(start, end):
+ for n in range(start, end + 1):
+ if is_prime(n):
+ print(n)
+ 
+def is_prime(n):
+ if n <= 1:
+ return False
+ elif n <= 3:
+ return True
+ elif (n % 2 == 0) or (n % 3 == 0):
+ return False
+ 
+ i = 5
+ while i ** 2 <= n:
+ if (n % i == 0) or (n % (i + 2) == 0):
+ return False
+ i += 6
+ 
+ return True
+
+print_primes(10, 25)",Syntax,print
+Write a python script that prints the 20th Fibonacci number.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    
+    elif n == 0: 
+        return a 
+    
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+print(fibonacci(20))",Syntax,print
+Modify a Python program to optimize its performance and handle errors gracefully.,A Python program to read a file and print its contents,"# Library import
+import os
+
+# Path of the file
+file_name = ""myfile.txt""
+
+# Open file
+try:
+  with open(file_name, 'r') as f:
+
+    # Read file
+    contents = f.read()
+
+    # Print file
+    print(contents)
+
+except IOError:
+  print('Error: file not found!')
+
+finally:
+  if f:
+    f.close()",Testing and Debugging,error
+Write a Python function to print a Pascal Triangle.,,"def printPascalTriangle(n): 
+
+	for line in range(1, n + 1): 
+		C = 1; # used to represent C(line, i) 
+		for i in range(1, line + 1): 
+			# The first value in a line is always 1 
+			print(C, end = "" ""); 
+			C = int(C * (line - i) / i); # Calculating 
+										# the next value  
+		print(""""); # entered to move to the next line 
+
+# Driver Code 
+n = 5; 
+printPascalTriangle(n); 
+
+Output:
+1 
+1 1 
+1 2 1 
+1 3 3 1 
+1 4 6 4 1",Syntax,print
+Write a function to check whether a list contains the given sublist or not.,,"def is_sublist(l, s):
+	sub_set = False
+	if s == []:
+		sub_set = True
+	elif s == l:
+		sub_set = True
+	elif len(s) > len(l):
+		sub_set = False
+	else:
+		for i in range(len(l)):
+			if l[i] == s[0]:
+				n = 1
+				while (n < len(s)) and (l[i+n] == s[n]):
+					n += 1				
+				if n == len(s):
+					sub_set = True
+	return sub_set",Data Structures,list
+Write a Python function to find the most frequent elements in a list.,"[3, 4, 2, 5, 4, 3, 2, 5, 4]","def most_frequent_elements(lst):
+ count = {}
+ for item in lst:
+ if item in count:
+ count[item] += 1
+ else:
+ count[item] = 1
+ max_count = 0
+ max_element = None
+ for item in count:
+ if count[item] > max_count:
+ max_count = count[item]
+ max_element = item
+
+return max_element
+
+print(most_frequent_elements([3, 4, 2, 5, 4, 3, 2, 5, 4]))
+# Output: 4",Data Structures,list
+Create a Python program to find the square root of a number without using the square root function.,25,"# A function to calculate the Square Root of a number using 
+# the babylonian method 
+def sqrt(n): 
+	
+	# We are using n itself as initial approximation 
+	# This can definitely be improved 
+	x = n 
+	y = 1
+	
+	# e decides the accuracy level 
+	e = 0.000001
+	
+	while(x - y > e): 
+		x = (x + y)/2
+		y = n/x 
+
+	return x 
+
+# Driver Program 
+num = 25
+print(sqrt(num))",Mathematics,number
+Write a function to find the longest chain which can be formed from the given set of pairs.,,"class Pair(object): 
+	def __init__(self, a, b): 
+		self.a = a 
+		self.b = b 
+def max_chain_length(arr, n): 
+	max = 0
+	mcl = [1 for i in range(n)] 
+	for i in range(1, n): 
+		for j in range(0, i): 
+			if (arr[i].a > arr[j].b and
+				mcl[i] < mcl[j] + 1): 
+				mcl[i] = mcl[j] + 1
+	for i in range(n): 
+		if (max < mcl[i]): 
+			max = mcl[i] 
+	return max",Syntax,set
+Develop a function to search for a character into a given string and return its index if present.,"String: Python
+Character: y","#function to search for a character
+def search_char(str, char):
+	idx = -1
+	for i in range(len(str)):
+		if str[i] == char:
+			idx = i
+			break
+	return idx
+    
+#call the function
+str = 'Python'
+char = 'y'
+
+index = search_char(str, char)
+#print the result
+if index != -1:
+	print('Character found at index:', index)
+else:
+	print('Character not found')",Data Structures,string
+Create a script in Python to generate the nth term of the Fibonacci series.,,"def Fibonacci(n):
+ a = 0
+ b = 1
+ if n < 0:
+  print(""Incorrect input"")
+ elif n == 0:
+  return a
+ elif n == 1:
+  return b
+ else:
+  for i in range(2,n):
+   c = a + b
+   a = b
+   b = c
+  return b
+
+print(Fibonacci(5))",Algorithms and Dynamic Programming,fibonacci
+Provide a Python program to print out a Pascal triangle,,"""""""
+A function to print out a Pascal triangle
+""""""
+
+def pascal_triangle(n): 
+    # Initialize the row
+    row = [1]
+
+    # Calculate each successive row 
+    y = [0] 
+    for x in range(max(n, 0)): 
+        print(row)
+		# Compute the next row
+        row = [sum(i) for i in zip(row + y, y + row)] 
+        # Copy the row
+        y = row[:] 
+		
+if __name__ == '__main__':
+    n = 5
+    pascal_triangle(n)",Syntax,print
+Implement an algorithm in Python to find the mode of the given array,"arr = [2, 4, 3, 3, 5, 3, 7]","def findMode(arr): 
+ max_count = 1 
+ mode = arr[0] 
+ count = 1 
+  
+ for i in range(1,len(arr)): 
+ if (arr[i] == arr[i - 1]): 
+ count = count + 1 # increment count
+ if (count > max_count): 
+ max_count = count # update max_count 
+ mode = arr[i] 
+ else: 
+ count = 1 # reset count 
+  
+ return mode 
+
+# Driver program 
+arr = [2, 4, 3, 3, 5, 3, 7] 
+print(findMode(arr)) # prints 3",Scientific Computing,array
+Create a Python script to calculate the Fibonacci sequence for a given integer n.,7,"# Fibonacci sequence
+def Fibonacci(n):
+ a = 0
+ b = 1
+ if n < 0:
+ print(""Incorrect input"")
+ elif n == 0:
+ return a
+ elif n == 1:
+ return b
+ else:
+ for i in range(2,n):
+ c = a + b
+ a = b
+ b = c
+ return b
+
+# Driver Program
+print(Fibonacci(7)) 
+# Output: 13",Mathematics,calculate
+Create a basic search engine using Elasticsearch and Python. The search engine should allow users to enter a query and return a list of relevant documents.,,"from elasticsearch import Elasticsearch
+
+# create the client
+es = Elasticsearch()
+
+# define the query
+query = {
+ ""query"": {
+ ""match"": {
+ ""text"": ""query_term""
+ }
+ }
+}
+
+# search the index
+response = es.search(index=""index_name"", body=query)
+
+# print the results
+for hit in response[""hits""][""hits""]:
+ print(hit[""_source""])",Data Structures,list
+Write a function to find length of the subarray having maximum sum.,,"from sys import maxsize 
+def max_sub_array_sum(a,size): 
+	max_so_far = -maxsize - 1
+	max_ending_here = 0
+	start = 0
+	end = 0
+	s = 0
+	for i in range(0,size): 
+		max_ending_here += a[i] 
+		if max_so_far < max_ending_here: 
+			max_so_far = max_ending_here 
+			start = s 
+			end = i 
+		if max_ending_here < 0: 
+			max_ending_here = 0
+			s = i+1
+	return (end - start + 1)",Mathematics,sum
+Write a function in Python that returns the nth term in a Fibonacci sequence.,,"# Fibonacci sequence generator
+def fibonacci(n):
+  a = 0
+  b = 1
+  if n < 0:
+    print(""Incorrect input"")
+  elif n == 1:
+    return a
+  elif n == 2:
+    return b
+  else:
+    for i in range(2,n):
+      c = a + b
+      a = b
+      b = c
+    return b",Algorithms and Dynamic Programming,fibonacci
+Generate a function to print a Fibonacci series with n steps (including 0) in Python.,,"def printFibo(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        print(a) 
+    elif n == 1: 
+        print(a,b) 
+    else: 
+        print(a,b,end="" "") 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+            print(b,end="" "") 
+
+printFibo(10)",Syntax,print
+Develop a Python program that prints out the nth Fibonacci number.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+print(fibonacci(n))",Syntax,print
+Write a Python program that checks if a given number is prime.,7,"def is_prime(n):
+    if n == 2 or n == 3:
+        return True
+    if n < 2 or n%2 == 0:
+        return False
+    if n < 9:
+        return True
+    if n%3 == 0:
+        return False
+
+    r = int(n**0.5)
+    f = 5
+    while f <= r:
+        if n%f == 0:
+            return False
+        if n % (f+2) == 0:
+            return False
+        f += 6
+    return True
+
+num = 7
+print(""Is"", num, ""prime?: "", is_prime(num))",Branching,if
+Create an algorithm in Python to print a pattern consisting of '*' and '#' characters.,,"def pattern(n):
+ m = 0
+ for i in range(1, n+1):
+ for j in range(1, m+1):
+ print(""*"", end="""")
+ m = m + 2
+ 
+ for k in range(1, n-i+1):
+ print(""#"", end="""")
+ print()
+
+pattern(5) 
+/* Output: 
+*#*#*
+**#**
+***#
+****
+*/",Syntax,print
+Develop an algorithm in Python that takes a number as input and outputs the sum of all its divisors.,6,"def sum_divisors(num):
+    # Initialize sum 
+    summation = 0
+    
+    # Iterate upto num 
+    for i in range(1, num+1):
+        # If num is divisible  
+        # by i, add it to sum 
+        if num%i == 0:
+            summation += i
+    # Return summation 
+    return summation
+  
+   
+# Driver Code 
+num = 6
+result = sum_divisors(num) 
+  
+# Printing result  
+print(result)",Mathematics,number
+Develop a Python program to check if a number is an Armstrong number.,,"def isArmstrong(x): 
+  
+    # Calculate the number of 
+    # digits in x 
+    n = len(str(x)) 
+  
+    sum1 = 0
+  
+    # For every digit calculate 
+    # its sum of nth power 
+    temp = x 
+    while temp > 0: 
+        d = temp % 10
+        sum1 = sum1 + d ** n 
+        temp = temp//10
+  
+    # Check whether sum1 is equal to x 
+    if sum1 == x: 
+        return True
+    return False",Branching,if
+Write a python function to find common divisor between two numbers in a given pair.,,"def ngcd(x,y):
+    i=1
+    while(i<=x and i<=y):
+        if(x%i==0 and y%i == 0):
+            gcd=i;
+        i+=1
+    return gcd;
+def num_comm_div(x,y):
+  n = ngcd(x,y)
+  result = 0
+  z = int(n**0.5)
+  i = 1
+  while(i <= z):
+    if(n % i == 0):
+      result += 2 
+      if(i == n/i):
+        result-=1
+    i+=1
+  return result",Mathematics,number
+Code an algorithm in Python to compute the Fibonacci sequence.,"A positive integer n.
+
+n = 10","def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+# Driver Program 
+print(fibonacci(10)) 
+
+# Output: 55",Algorithms and Dynamic Programming,fibonacci
+Create a Python program to print the Fibonacci sequence.,,"def Fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+# Driver Program 
+
+print(Fibonacci(9))",Syntax,print
+Write a Python script for developing a simple calculator.,,"import operator
+
+ops = {
+ ""+"": operator.add,
+ ""-"": operator.sub,
+ ""*"": operator.mul,
+ ""/"": operator.truediv
+}
+
+while True:
+ print(""\nEnter 'q' to exit."")
+ num1 = input(""\nEnter a number: "")
+ if num1 == 'q':
+ break
+ op = input(""Enter an operator: "")
+ num2 = input(""Enter another number: "")
+ 
+ answer = ops[op](float(num1), float(num2))
+ print(""The answer is:"", answer)",Scientific Computing,calculator
+Write a function to find the longest common prefix in the given set of strings.,,"def common_prefix_util(str1, str2): 
+	result = """"; 
+	n1 = len(str1) 
+	n2 = len(str2) 
+	i = 0
+	j = 0
+	while i <= n1 - 1 and j <= n2 - 1: 
+		if (str1[i] != str2[j]): 
+			break
+		result += str1[i] 
+		i += 1
+		j += 1
+	return (result) 
+def common_prefix (arr, n): 
+	prefix = arr[0] 
+	for i in range (1, n): 
+		prefix = common_prefix_util(prefix, arr[i]) 
+	return (prefix) ",Syntax,set
+Can you write a Python function to determine if a supplied number is prime?,num=20,"def is_prime(num):
+    """"""Check if the given number is prime.
+
+    Args:
+        num (int): A number to check
+
+    Returns:
+        bool: True if num is prime, False otherwise.
+    """"""
+
+    if num < 2: 
+        return False
+
+    for i in range(2, num):
+        if (num % i) == 0:
+            return False
+    return True
+
+num = 20
+result = is_prime(num)
+print(f""Is {num} prime? {result}"")",Branching,if
+Generate a Python script to generate n distinct prime numbers.,,"import math
+
+def generate_primes(n): 
+    primes = []
+    num = 2
+    while len(primes) < n: 
+        is_prime = True
+        for i in range(2, int(math.sqrt(num)) + 1): 
+            if num % i == 0: 
+                is_prime = False
+                break
+
+        if is_prime: 
+            primes.append(num)
+
+        num += 1
+    
+    return primes
+
+n = 8
+primes = generate_primes(n)
+print(primes)",Mathematics,prime
+Write a function to check whether the given number is armstrong or not.,,"def armstrong_number(number):
+ sum = 0
+ times = 0
+ temp = number
+ while temp > 0:
+           times = times + 1
+           temp = temp // 10
+ temp = number
+ while temp > 0:
+           reminder = temp % 10
+           sum = sum + (reminder ** times)
+           temp //= 10
+ if number == sum:
+           return True
+ else:
+           return False",Mathematics,number
+Create a class in Python that allows for a linked list of strings.,,"class Node:
+ def __init__(self, data):
+ self.data = data
+ self.next = None
+
+class LinkedList:
+ def __init__(self):
+ self.head = None
+
+def append(self, new_data):
+ new_node = Node(new_data)
+ if self.head == None:
+ self.head = new_node
+ return
+ last = self.head
+ while last.next:
+ last = last.next
+ last.next = new_node",Object-Oriented Programming,class
+Create a program in Python for generating a Fibonacci sequence.,,"# Generate a Fibonacci sequence
+
+# Function to generate Fibonacci sequence
+def Fibonacci(n):
+    if n < 0:
+        print(""Incorrect input"")
+    elif n == 1:
+        return 0
+    elif n == 2:
+        return 1
+    else:
+        return Fibonacci(n-1) + Fibonacci(n-2)
+
+# Print the sequence upto n terms
+terms = 10
+print(""Fibonacci sequence:"")
+for num in range(1, terms + 1):
+    print(Fibonacci(num))",Algorithms and Dynamic Programming,fibonacci
+Implement a stack in Python using lists.,,"class Stack:
+ def __init__(self):
+ self.items = []
+ 
+ def isEmpty(self):
+ return self.items == []
+ 
+ def push(self, item):
+ self.items.append(item)
+ 
+ def pop(self):
+ return self.items.pop()
+ 
+ def peek(self):
+ return self.items[len(self.items)-1]
+ 
+ def size(self):
+ return len(self.items)
+
+stack = Stack()
+stack.push(1)
+stack.push(2)
+print(stack.peek())
+print(stack.pop())
+print(stack.size())",Data Structures,stack
+Write a Python program to access a value from a nested dictionary given its keys.,,"def nested_dict_value(dictionary, keys): 
+ for key in keys: 
+ if key in dictionary.keys(): 
+ dictionary = dictionary[key] 
+ else: 
+ return None
+ 
+ return dictionary
+
+data = {
+""first"" : {
+""second"" : {
+""third"" : 10
+}
+}
+}
+
+result = nested_dict_value(data, [""first"", ""second"", ""third""])
+print(result)",Data Structures,dictionary
+Write a Python function to create a Fibonacci sequence up to n-th number.,n=10,"def FibonacciGenerator(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+ 
+# Driver Program 
+print(FibonacciGenerator(10))",Algorithms and Dynamic Programming,fibonacci
+Create a Python program that takes a number n and prints out the Fibonacci sequence from 0 to n.,,"def Fibonacci(n): 
+ a = 0
+ b = 1
+ if n < 0: 
+ print(""Incorrect input"") 
+ elif n == 0: 
+ return a 
+ elif n == 1: 
+ return b 
+ else: 
+ for i in range(2,n+1): 
+ c = a + b 
+ a = b 
+ b = c 
+ return b 
+
+def printFibonacci(n): 
+ for i in range(n+1):
+ print(Fibonacci(i),end="" "")",Mathematics,number
+Create a program in Python for converting an integer number to a Roman numeral.,,"def int_to_Roman(num):
+roma_numerals = {
+ 1: ""I"",
+ 4: ""IV"",
+ 5: ""V"",
+ 9: ""IX"",
+ 10: ""X"",
+ 40: ""XL"",
+ 50: ""L"",
+ 90: ""XC"",
+ 100: ""C"",
+ 400: ""CD"",
+ 500: ""D"",
+ 900: ""CM"",
+ 1000: ""M"",
+}
+
+roman_num = """"
+for key, value in sorted(roma_numerals.items(), reverse=True):
+ while num >= key:
+ roman_num += value
+ num -= key
+
+return roman_num",Syntax,integer
+You need to write a Python program to print the Fibonacci series.,,"def fibonacci_series(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2, n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+for n in range(0, 10): 
+    print(fibonacci_series(n))",Syntax,print
+Create a Python script to print out the most common words in the text.,The quick brown fox jumps over the lazy dog.,"from collections import Counter
+
+text = ""The quick brown fox jumps over the lazy dog.""
+words = text.split()
+
+word_counts = Counter(words)
+most_common_words = word_counts.most_common()
+
+for word, count in most_common_words:
+    print(word, count)
+# Output:
+# the 2
+# quick 1
+# brown 1
+# fox 1
+# jumps 1
+# over 1
+# lazy 1
+# dog 1",Syntax,print
+Write a function to find out the minimum no of swaps required for bracket balancing in the given string.,,"def swap_count(s):
+	chars = s
+	count_left = 0
+	count_right = 0
+	swap = 0
+	imbalance = 0; 
+	for i in range(len(chars)):
+		if chars[i] == '[':
+			count_left += 1
+			if imbalance > 0:
+				swap += imbalance
+				imbalance -= 1
+		elif chars[i] == ']':
+			count_right += 1
+			imbalance = (count_right - count_left) 
+	return swap",Data Structures,string
+Write a Python script to print the Fibonacci series from 0 to n.,10,"def Fibonacci(n): 
+   a = 0
+   b = 1
+   if n < 0: 
+      print(""Incorrect input"") 
+   elif n == 0: 
+      return a 
+   elif n == 1: 
+      return b 
+   else: 
+      for i in range(2,n+1): 
+          c = a + b 
+          a = b 
+          b = c 
+      return b 
+  
+print(Fibonacci(10))",Syntax,print
+Write a function to find kth element from the given two sorted arrays.,,"def find_kth(arr1, arr2, m, n, k):
+	sorted1 = [0] * (m + n)
+	i = 0
+	j = 0
+	d = 0
+	while (i < m and j < n):
+		if (arr1[i] < arr2[j]):
+			sorted1[d] = arr1[i]
+			i += 1
+		else:
+			sorted1[d] = arr2[j]
+			j += 1
+		d += 1
+	while (i < m):
+		sorted1[d] = arr1[i]
+		d += 1
+		i += 1
+	while (j < n):
+		sorted1[d] = arr2[j]
+		d += 1
+		j += 1
+	return sorted1[k - 1]",Scientific Computing,array
+Create a Python function to print the Fibonacci series up to a given range.,range: 10,"def Fibonacci(n): 
+    if n<0: 
+        print(""Incorrect input"") 
+    # First Fibonacci number is 0 
+    elif n==1: 
+        return 0
+    # Second Fibonacci number is 1 
+    elif n==2: 
+        return 1
+    else: 
+        return Fibonacci(n-1)+Fibonacci(n-2) 
+   
+# Driver Program 
+result = []
+for i in range(1,10): 
+    result.append(Fibonacci(i))
+    
+print(result)",Syntax,print
+Write a Python program to print out a histogram for a list of numbers.,"numbers = [1,2,3,4,5,3,2,1,3,2,5,6,7,5,4]","numbers = [1, 2, 3, 4, 5, 3, 2, 1, 3, 2, 5, 6, 7, 5, 4]
+
+for i in numbers:
+    print('*' * i)
+
+# Output should be
+# *
+# **
+# ***
+# ****
+# *****
+# ***
+# **
+# *
+# ***
+# **
+# *****
+# ******
+# *******
+# *****
+# ****",Syntax,print
+"Create a function in Python that takes in a number, n, and prints out the nth term of the Fibonacci sequence.",n = 10,"def fibonacci(n):
+  a = 0
+  b = 1
+  if n < 0:
+    print(""Incorrect input"")
+  elif n == 0:
+    return a
+  elif n == 1:
+    return b
+  else:
+    for i in range(2,n):
+      c = a + b
+      a = b
+      b = c
+    return b
+  
+print(fibonacci(10))",Mathematics,number
+Create an algorithm in Python that computes a Fibonacci sequence up to a given index.,Index: 7,"def fibonacci_seq(n):
+    if n < 0:
+        raise ValueError(""Index must be a positive integer."")
+    elif n == 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        a = 0
+        b = 1
+        for i in range(2, n + 1):
+            c = a + b
+            a = b
+            b = c
+        return c
+
+fib_7 = fibonacci_seq(7)
+print(fib_7)",Algorithms and Dynamic Programming,fibonacci
+Generate a list of the first 10 Fibonacci numbers in Python.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+# Driver Program 
+fib_list = [] 
+for i in range(10):
+   fib_list.append(fibonacci(i)) 
+
+print(fib_list)",Data Structures,list
+"Create a function to lexicographically compare two strings in
+Python.",,"def stringCompare(str1, str2):
+    if str1 < str2: 
+        return -1
+    elif str1 > str2: 
+        return 1
+    else: 
+        return 0
+
+str1 = ""Hello""
+str2 = ""World""
+
+result = stringCompare(str1, str2)
+if result == -1:
+    print (""str1 is less than str2"")
+elif result == 1:
+    print (""str2 is less than str1"")
+else:
+    print (""str1 is equal to str2"")",Data Structures,string
+Write a function to print the following pattern in Python.,n = 3,"def print_pattern(n): 
+  
+    # outer loop to handle number of rows 
+    for i in range(1,n+1): 
+      
+        # inner loop to handle number of columns 
+        for j in range(1,i+1): 
+          
+            # printing stars 
+            print('* ', end="""") 
+       
+        # ending line after each row 
+        print(""\r"") 
+  
+# Driver Code 
+n = 3
+print_pattern(n)
+
+Output:
+* 
+* * 
+* * *",Syntax,print
+Create a function in Python to print the first n numbers of the Fibonacci series.,6,"def Fibonacci(n): 
+ a = 0
+ b = 1
+if n<0: 
+ print(""Incorrect input"") 
+elif n==0: 
+ print(a) 
+elif n==1: 
+ print(b) 
+else: 
+ print(a)
+ print(b)
+ for i in range(2,n): 
+ c = a + b 
+ a = b 
+ b = c 
+ print(b)",Syntax,print
+Develop a program in Python to calculate the Fibonacci sequence.,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+# Driver Code 
+print(fibonacci(9))",Mathematics,calculate
+Write a function to find if the given number is abundant or not.,,"import math 
+def get_sum(n): 
+	sum = 0
+	i = 1
+	while i <= (math.sqrt(n)): 
+		if n%i == 0: 
+			if n/i == i : 
+				sum = sum + i 
+			else: 
+				sum = sum + i 
+				sum = sum + (n / i ) 
+		i = i + 1
+	sum = sum - n 
+	return sum
+def check_abundant(n): 
+	if (get_sum(n) > n): 
+		return True
+	else: 
+		return False",Branching,if
+Create a custom context class in Python that stores shared data between functions.,,"class Context:
+ def __init__(self):
+ self.data = {}
+
+ def set(self, key, value):
+ self.data[key] = value
+
+ def get(self, key):
+ return self.data.get(key)
+ 
+ def clear(self):
+ self.data = {}
+ 
+ 
+context = Context()
+ 
+def foo():
+ context.set('name', 'John')
+ 
+def bar():
+ print(context.get('name'))
+ 
+ foo()
+ bar() # prints 'John'",Object-Oriented Programming,class
+Generate code that implements a Fibonacci sequence generator in Python.,,"def fibonacci(n): 
+  a = 0
+  b = 1
+  if n < 0: 
+    print(""Incorrect input"") 
+  elif n == 0: 
+    return a 
+  elif n == 1: 
+    return b 
+  else: 
+    for i in range (2,n): 
+      c = a + b 
+      a = b 
+      b = c 
+    return b 
+
+# Test the code
+fibonacci(9)
+# Output: 34",Algorithms and Dynamic Programming,fibonacci
+Develop a Python program to generate the first 10 Fibonacci numbers.,,"def Fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+  
+print(Fibonacci(10))",Algorithms and Dynamic Programming,fibonacci
+Generate a Python class to construct a linked list.,,"class Node:
+ def __init__(self, data):
+ self.data = data
+ self.next = None
+
+class LinkedList:
+ def __init__(self):
+ self.head = None
+
+def append(self, new_data):
+ new_node = Node(new_data)
+ if self.head == None:
+ self.head = new_node
+ return
+ last = self.head
+ while last.next:
+ last = last.next
+ last.next = new_node",Object-Oriented Programming,class
+Write a Python script to compute the Fibonacci sequence.,,"def Fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+# Driver Program 
+print(Fibonacci(9))",Algorithms and Dynamic Programming,fibonacci
+Can you create a program in Python to display the first 10 elements of the Fibonacci Sequence?,,"def Fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return 0
+    elif n == 1: 
+        return 1
+    else: 
+        for i in range(2,n+1): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+for i in range(0, 10):
+    print(Fibonacci(i))",Algorithms and Dynamic Programming,fibonacci
+"Create a Python program to print the nth Fibonacci number in the sequence, where n is provided as an input.",n = 10,"def Fibonacci(n): 
+	a = 0
+	b = 1
+	if n < 0: 
+		print(""Incorrect input"") 
+	elif n == 0: 
+		return a 
+	elif n == 1: 
+		return b 
+	else: 
+		for i in range(2,n+1): 
+			c = a + b 
+			a = b 
+			b = c 
+		return b 
+
+print(Fibonacci(10))",Syntax,print
+Design an algorithm in Python to calculate the sum of individual digits in a given number.,Number: 12345,"def digitSum(n): 
+	sum = 0
+ 
+	# loop until we have no digits left 
+	while (n != 0): 
+		# extract the last digit 
+		dig = n % 10
+ 
+		# add the digit to the total sum 
+		sum += dig
+ 
+		# remove the last digit from n 
+		n = n // 10
+ 
+	return sum
+ 
+# Driver Code 
+n = 12345
+sum = digitSum(n) 
+ 
+# Print the result 
+print(sum)",Mathematics,calculate
+Create a code to print the nth Fibonacci number in Python.,,"def fibonacci_n(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+n = 9
+print(fibonacci_n(n))",Syntax,print
+Write a function to calculate the sum of perrin numbers.,,"def cal_sum(n): 
+	a = 3
+	b = 0
+	c = 2
+	if (n == 0): 
+		return 3
+	if (n == 1): 
+		return 3
+	if (n == 2): 
+		return 5
+	sum = 5
+	while (n > 2): 
+		d = a + b 
+		sum = sum + d 
+		a = b 
+		b = c 
+		c = d 
+		n = n-1
+	return sum",Mathematics,calculate
+Write a Python program that takes an integer input and prints the Fibonacci series up to the input,10,"def fibonacci(n): 
+ a = 0
+ b = 1
+ if n < 0:
+ print(""Incorrect input"")
+ elif n == 0:
+ return a 
+ elif n == 1:
+ return b
+ else:
+ for i in range(2,n+1): 
+ c = a + b 
+ a = b 
+ b = c 
+ return b 
+
+n = 10
+print(fibonacci(n))
+
+# Output: 55",Syntax,integer
+Generate code for a function in Python for finding the sum of a given list of numbers.,"[4, 7, 6, 2]","def add_numbers(numbers):
+    """"""
+    Find the sum of a given list of numbers.
+    Args:
+        numbers: a list of numbers.
+    Returns:
+        The sum of the numbers.
+    """"""
+    sum = 0
+
+    # Iterate over numbers
+    for num in numbers:
+        # Add number to total
+        sum += num
+
+    return sum
+
+total = add_numbers([4, 7, 6, 2])
+
+print(total)",Mathematics,sum
+Create an automated security system using Python and Raspberry Pi.,,"#import necessary modules
+import os
+import RPi.GPIO as GPIO
+import time
+
+#Set up Raspberry pi hardware
+GPIO.setmode(GPIO.BCM)
+pirPin = 16
+GPIO.setup(pirPin, GPIO.IN)
+
+#Define Motion detection task
+def detectMotion():
+    if GPIO.input(pirPin):
+        print('Motion Detected!')
+        #Do some action if motion is detected
+    time.sleep(1)
+
+#Run task
+while True:
+    detectMotion()",Mathematics,pi
+Generate a Python script to visualize a dataset of four columns.,,"import matplotlib.pyplot as plt
+ 
+# Create the data
+x = [1, 2, 3, 4]
+y1 = [2, 4, 6, 8]
+y2 = [3, 6, 9, 12]
+ 
+# Plot the data
+plt.plot(x, y1)
+plt.plot(x, y2)
+ 
+# Add a title
+plt.title(""Two Lines on One Graph"")
+ 
+# Add X and y Label
+plt.xlabel('X Axis')
+plt.ylabel('Y Axis')
+ 
+# Add a legend
+plt.legend(['Line1', 'Line2'])
+ 
+# Show the plot
+plt.show()",Data Analysis,plot
+Compose a program in Python to find the sum of an array of integers.,,"# Compose a program in Python to find the sum of an array of integers
+
+def array_sum(arr):
+  """"""
+  Compute the sum of an array of integers.
+
+  Parameters
+  ----------
+  arr : array_like
+    The array of integers.
+
+  Returns
+  -------
+  int
+    The sum of the array entries.
+  """"""
+  sum = 0
+  for n in arr:
+    sum += n
+  return sum",Mathematics,sum
+Create a data structure in JavaScript to represent a directory structure.,,"const directoryStructure = {
+  ""root"": {
+    ""Projects"": {
+      ""Python"": {
+        ""Scripts"": {
+          ""script1.py"": null,
+          ""script2.py"": null
+        }
+      },
+      ""JavaScript"": {
+        ""Scripts"": {
+          ""script1.js"": null,
+          ""script2.js"": null
+        }
+      }
+    },
+    ""Documents"": {
+      ""paper1.pdf"": null,
+      ""paper2.pdf"": null
+    }
+  }
+};",Data Structures,data structure
+Create a Python program to calculate the grade for a student.,"Maths = 85
+English = 70
+Science = 90","Maths = 85
+English = 70
+Science = 90
+
+# Calculate the average 
+average = (Maths + English + Science) / 3
+
+# Check the grade
+if average >= 80:
+    grade = 'A'
+elif average >= 70:
+    grade = 'B'
+elif average >= 60:
+    grade = 'C'
+elif average >= 50:
+    grade = 'D'
+else:
+    grade = 'F'
+
+# Print the grade
+print(grade)",Mathematics,calculate
+Write a Python script to generate and print a Fibonacci series.,,"def fibonacci(n): 
+ a = 0
+ b = 1
+ if n < 0: 
+ print(""Incorrect input"") 
+ elif n == 0: 
+ return a 
+ elif n == 1: 
+ return b 
+ else: 
+ for i in range(2, n): 
+ c = a + b 
+ a = b 
+ b = c 
+ return b 
+
+print(fibonacci(9)) 
+# 21",Syntax,print
+Write a Python program to print out the first 10 numbers in the Fibonacci sequence starting from 0.,,"def Fibonacci(n): 
+ a = 0
+ b = 1
+ if n < 0: 
+ print(""Incorrect input"") 
+ elif n == 0: 
+ return a 
+ elif n == 1: 
+ return b 
+ else: 
+ for i in range(2,n): 
+ c = a + b 
+ a = b 
+ b = c 
+ return b 
+
+n = 10
+print(Fibonacci(n))",Syntax,print
+Implement a Python program to print all numbers from 0 to 100 that are multiples of 3.,,"for i in range(0, 101):
+  if i % 3 == 0:
+    print(i)
+
+# Output
+0
+3
+6
+9
+12
+15
+18
+21
+24
+27
+30
+33
+36
+39
+42
+45
+48
+51
+54
+57
+60
+63
+66
+69
+72
+75
+78
+81
+84
+87
+90
+93
+96
+99",Syntax,print
+Write a Python class for a queue data structure.,,"class Queue:
+    def __init__(self):
+        self.items = []
+    
+    def isEmpty(self):
+        return self.items == []
+    
+    def enqueue(self, item):
+        self.items.insert(0,item)
+    
+    def dequeue(self):
+        return self.items.pop()
+    
+    def size(self):
+        return len(self.items)
+    
+    def peek(self):
+        if self.items:
+	        return self.items[-1]
+        else:
+    	    return None",Object-Oriented Programming,class
+Implement a Stack in Python using the linked list data structure.,,"class Stack:
+ 
+ def __init__(self):
+ self.head = None
+
+ def is_empty(self):
+ return self.head is None
+
+ def push(self, data):
+ node = Node(data)
+ node.next = self.head
+ self.head = node
+
+ def pop(self):
+ if self.head is None:
+ return None
+ data = self.head.data
+ self.head = self.head.next
+ return data
+
+class Node:
+ 
+ def __init__(self, data):
+ self.data = data
+ self.next = None",Data Structures,stack
+Develop a function in Python to print out the Fibonacci sequence up to the given number n.,,"def printFibonacci(n):
+    if n<0:
+        print('Incorrect input')
+    elif n==0:
+        print(0)
+    elif n==1:
+        print(0,1)
+    else:
+        a=0
+        b=1
+        print(a)
+        print(b)
+        for i in range(2,n):
+            c=a+b
+            a=b
+            b=c
+            print(c)",Syntax,print
+Write a Python program to print out the grade of a student based on the given marks,60,"def get_grade(marks):
+    if marks >= 90:
+        grade = ""A+""
+    elif marks >= 80 and marks < 90:
+        grade = ""A""
+    elif marks >= 70 and marks < 80:
+        grade = ""B+""
+    elif marks >= 60 and marks < 70:
+        grade = ""B""
+    elif marks >= 50 and marks < 60:
+        grade = ""C+""
+    else:
+        grade = ""F""
+    
+    print(""Grade: %s"" %grade)
+
+marks = 60
+get_grade(marks)",Syntax,print
+Create a simple web page using HTML and CSS to display a list of the top 5 most popular programming languages.,,"<!DOCTYPE html>
+<html>
+<head>
+ <title>Top 5 Programming Languages</title>
+ <style>
+ ul {
+ list-style: none;
+ font-family: sans-serif;
+ font-size: 20px;
+ }
+ li {
+ padding-top: 10px;
+ }
+ </style>
+</head>
+<body>
+ <h1>Top 5 Programming Languages</h1>
+ <ul>
+ <li>JavaScript</li>
+ <li>Python</li>
+ <li>Java</li>
+ <li>C#</li>
+ <li>C++</li>
+ </ul>
+</body>
+</html>",Data Structures,list
+Write a Python program which prints the first n terms of the Fibonacci sequence.,n = 10,"def print_fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"")
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        print(a)
+        print(b)
+        for i in range(2,n): 
+            c = a + b 
+            a = b 
+            b = c 
+            print(c)
+    
+print_fibonacci(10)",Syntax,print
+Create a stack data structure in Python.,,"class Stack:
+ 
+    def __init__(self):
+        self.stack = []
+ 
+    # Add to the top of stack
+    def push(self, data):
+        self.stack.append(data)
+ 
+    # Remove from the top of stack
+    def pop(self):
+        if self.stack:
+            return self.stack.pop()
+ 
+    # Peek top element
+    def peek(self):
+        return self.stack[-1]
+ 
+    # Check if stack is empty
+    def is_empty(self):
+        return not bool(self.stack)",Data Structures,stack
+Create a stack data structure in Python.,,"class Stack:
+
+    def __init__(self):
+        self.items = []
+    
+    def push(self, item):
+        self.items.append(item)
+    
+    def pop(self):
+        if self.items:
+            return self.items.pop()
+        else:
+            return None
+    
+    def peek(self):
+        if self.items:
+            return self.items[-1]
+        else:
+            return None
+    
+    def size(self):
+        return len(self.items)",Data Structures,stack
+Can you generate a python program to print out the nth Fibonacci number?,,"def fibonacci(n): 
+    a = 0
+    b = 1
+    if n < 0: 
+        print(""Incorrect input"") 
+    elif n == 0: 
+        return a 
+    elif n == 1: 
+        return b 
+    else: 
+        for i in range(2, n): 
+            c = a + b 
+            a = b 
+            b = c 
+        return b 
+
+print(fibonacci(n))",Syntax,print
+Design an algorithm in Python to check if two strings are anagrams.,,"def is_anagram(str1, str2): 
+	
+	# Get lengths of both strings 
+	n1 = len(str1) 
+	n2 = len(str2) 
+
+	# If length of both strings is not same, 
+	# then they cannot be anagram 
+	if n1 != n2: 
+		return 0
+
+	# Sort both strings 
+	str1 = sorted(str1) 
+	str2 = sorted(str2) 
+
+	# Compare sorted strings 
+	for i in range(0, n1): 
+		if str1[i] != str2[i]: 
+			return 0
+
+	return 1",Branching,if
+"Create a Python program to display the Fibonacci sequence up to the nth term, as specified by the user.",n = 20,"def fibonacci(n): 
+ # Fibonacci numbers are 0, 1, 1, 2, 3, 5,... 
+ a = 0
+ b = 1
+ if n < 0: 
+ print(""Incorrect input"") 
+ elif n == 0: 
+ return a 
+ elif n == 1: 
+ return b 
+ else: 
+ for i in range(2,n): 
+ c = a + b 
+ a = b 
+ b = c 
+ return b 
+
+print(fibonacci(n))",Algorithms and Dynamic Programming,fibonacci
+Generate a Python method which will check whether an input number is even or odd.,,"def is_even(num):
+""""""
+This function takes a number as input 
+and checks whether it is even or odd.
+
+Parameters
+----------
+num : int
+    The number to be checked.
+
+Returns
+-------
+bool
+    Returns True if the number is even, 
+    False otherwise.
+""""""
+
+if num % 2 == 0:
+ return True
+else:
+ return False",Mathematics,number
+Build a program in Python for finding the largest prime number in a given range.,1-100,"def largest_prime(num):
+    largest_prime = 0
+    for n in range (num):
+        if(isPrime(n)):
+            largest_prime = n
+    return largest_prime
+
+def isPrime(n):
+    if(n == 1):
+        return False
+    elif(n == 2):
+        return True
+    else:
+        for x in range(2,n//2+1):
+            if(n % x == 0):
+                return False
+        return True
+
+print(largest_prime(100))",Mathematics,prime
+Write a function to find the length of the longest sub-sequence such that elements in the subsequences are consecutive integers.,,"def find_longest_conseq_subseq(arr, n): 
+	ans = 0
+	count = 0
+	arr.sort() 
+	v = [] 
+	v.append(arr[0]) 
+	for i in range(1, n): 
+		if (arr[i] != arr[i - 1]): 
+			v.append(arr[i]) 
+	for i in range(len(v)): 
+		if (i > 0 and v[i] == v[i - 1] + 1): 
+			count += 1
+		else: 
+			count = 1
+		ans = max(ans, count) 
+	return ans ",Syntax,integer
+Design a Python program to print a triangle of numbers.,,"def triangle_of_nums(n):
+    k = 0
+    for i in range(1, n + 1):
+        # inner loop to handle number of columns 
+        for j in range(0, i): 
+           # printing numbers 
+           print(k, end="" "") 
+           # incrementing k 
+           k = k + 1
+        # ending line after each row 
+        print(""\r"") 
+
+n = 4
+triangle_of_nums(n)
+
+# Output:
+# 0 
+# 1 2 
+# 3 4 5 
+# 6 7 8 9",Syntax,print
+Create an interface using Python and Tkinter to read data from an external source and show it in a canvas.,,"import tkinter as tk
+from tkinter import Canvas
+import requests
+
+# Window
+window = tk.Tk()
+window.title('Data Display')
+window.geometry('800x600')
+
+# Canvas and Frame
+canvas = Canvas(window, bg='white')
+canvas.pack()
+
+# Retrieve data
+response = requests.get('http://example.com/data.json')
+data = response.json()
+
+# Render data onto canvas
+# ...
+
+window.mainloop()",File Handling,read
+Create a class in Python that can be used to model and store data about a person.,,"class Person:
+ def __init__(self, name, age, gender, height, weight):
+  self.name = name
+  self.age = age
+  self.gender = gender
+  self.height = height
+  self.weight = weight
+
+def get_name(self):
+  return self.name
+
+def get_age(self):
+  return self.age
+
+def get_gender(self):
+  return self.gender
+
+def get_height(self):
+  return self.height
+
+def get_weight(self):
+  return self.weight",Object-Oriented Programming,class
+"Using Python, create a function that returns the first 10 prime numbers.",,"def find_prime_numbers(num):
+ prime_numbers = []
+ for x in range(2, num):
+ flag = True
+ for y in prime_numbers:
+ if x % y == 0:
+ flag = False
+ break
+ if flag:
+ prime_numbers.append(x)
+ if len(prime_numbers) == 10
+ break
+
+return prime_numbers
+ 
+# Usage
+find_prime_numbers(100)
+# Output
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]",Mathematics,prime
+Develop a function in Python to find the maximum number in a binary search tree.,,"class Node:
+ def __init__(self, val):
+ self.val = val
+ self.left = None
+ self.right = None
+
+def findMaxValue(root):
+ if root is None:
+ return None
+ 
+ if root.right is None:
+ return root.val
+ 
+ return findMaxValue(root.right)
+
+# Usage example
+root = Node(3)
+root.left = Node(2)
+root.right = Node(5)
+
+maxValue = findMaxValue(root)
+print('Max Value:', maxValue)",Mathematics,number
+"Write a Python program to create functions for min, max, and mean of a given list.",A list of 10 integers,"def min_list(numbers):
+  min_num = min(numbers)
+  return min_num
+
+def max_list(numbers):
+  max_num = max(numbers)
+  return max_num
+
+def mean_list(numbers):
+  mean_num = sum(numbers)/len(numbers)
+  return mean_num
+
+numbers = [1,2,3,4,5,6,7,8,9,10]
+
+print(min_list(numbers))
+print(max_list(numbers))
+print(mean_list(numbers))
+
+# Output
+# 1
+# 10
+# 5.5",Data Analysis,min

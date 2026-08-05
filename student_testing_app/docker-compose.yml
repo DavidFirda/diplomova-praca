@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    env_file:
+      - .env 
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./final_dataset.csv:/app/final_dataset.csv
+      - ./load_questions.py:/app/load_questions.py
+      - ${Q_LEARNING_MOUNT}
+      - ${POMDP_MOUNT}
+
+
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
+
+volumes:
+  pgdata: 
+  q_learning_data: 
+  pomdp_data:

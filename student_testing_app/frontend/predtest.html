@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Predtest</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<body>
+<div class="container">
+    <h1>🧠 Predtest</h1>
+    
+    <div id="test-container">
+        <div class="question-header">
+            <p class="left"><strong>Otázka:</strong></p>
+            <p class="right" id="question-counter"></p>
+        </div>
+    
+        <p id="instruction" class="left-align"></p>
+
+        <div style="display: flex; align-items: center; margin-top: 20px;">
+            <p style="margin: 0; margin-right: 8px;"><strong>Vstup:</strong></p>
+            <div class="tooltip">
+                <span style="font-weight: bold; font-size: 14px; border-radius: 50%; background: #ddd; padding: 0 6px;">i</span>
+                <span class="tooltiptext">
+                    Nezabudni použiť vstup, ktorý je uvedený pri otázke.
+                    V niektorých prípadoch budeš potrebovať aj print().
+                    Výstup kódu sa zobrazí pod odpoveďou.
+                    Máš maximálne 2 pokusy.
+                </span>
+            </div>
+        </div>
+
+        <pre id="input" class="input-plain"></pre>
+        <p class="category-label" id="category"></p>
+        <textarea id="student_code" name="code"></textarea>
+        <input type="hidden" id="question_id">
+        <pre id="output-box" style="background:#f8f8f8; padding:10px; margin-top:10px; text-align:left; border:1px solid #ccc; border-radius:5px;
+                                    white-space:pre-wrap; word-break:break-word; overflow-x:auto;"></pre>
+
+        <div id="solution-box" style="display: none; text-align: left;">
+            <h3>Správne riešenie:</h3>
+            <pre id="solution-code" style="
+                background: #f4f4f4;
+                padding: 10px;
+                white-space: pre-wrap;
+                word-break: break-word;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                text-align: left;
+            "></pre>
+        </div>
+
+        <button id="submit-answer">Odpovedať</button>
+        <button id="next-question" style="margin-top:10px; display:none;">➡️ Ďalšia otázka</button>
+        <p class= "btn-container" id="result-message"></p>
+    </div>
+</div>
+
+<script src="predtest.js"></script>
+<script src="/config.js"></script>
+<script src="/script.js"></script>
+<script>
+  checkAccessCode();
+</script>
+</body>
+</html>

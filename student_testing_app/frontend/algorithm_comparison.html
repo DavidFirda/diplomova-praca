@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Porovnanie algoritmov</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Porovnanie algoritmov</h1>
+
+    <div style="margin-bottom: 40px;">
+      <canvas id="overallAccuracyChart" height="100"></canvas>
+    </div>
+
+    <div style="margin-bottom: 40px;">
+      <canvas id="weakAccuracyChart" height="100"></canvas>
+    </div>
+
+    <div id="algo-stats-summary" style="font-size: 1.1em;"></div>
+
+    <div id="algo-category-details" class="category-summary-section" style="margin-top: 40px;"></div>
+
+    <div class="btn-container">
+      <a href="/" class="btn">Späť na domov</a>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/algorithm_comparison.js"></script>
+</body>
+</html>
+

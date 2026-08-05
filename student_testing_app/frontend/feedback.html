@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dotazník</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🎓 Poprosím ťa ešte o vyplnenie dotazníka.</h1>
+    <form id="feedback-form">
+      <label>Aké je tvoje pohlavie?</label><br />
+      <select name="gender" required>
+        <option value="">-- Vyber --</option>
+        <option value="Muž">Muž</option>
+        <option value="Žena">Žena</option>
+        <option value="Iné">Iné</option>
+        <option value="Nechcem uviesť">Nechcem uviesť</option>
+      </select><br /><br />
+
+      <label>Aký je tvoj vek?</label><br />
+      <input type="number" name="age" required min="10" max="100" /><br /><br />
+
+      <label>Akú máš skúsenosť s programovaním?</label><br />
+      <select name="experience" required>
+        <option value="Žiadna">Žiadna</option>
+        <option value="Základná">Základná</option>
+        <option value="Pokročilá">Pokročilá</option>
+        <option value="Profesionálna">Profesionálna</option>
+      </select><br /><br />
+
+      <label>Aký je tvoj študijný odbor?</label><br />
+      <input type="text" name="field_of_study" required /><br /><br />
+
+      <label>Rozumel/a si úlohám?</label><br />
+      <select name="understand_questions" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Bolo používanie aplikácie pre teba intuitívne?</label><br />
+      <select name="easy_navigation" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Ako by si ohodnotil/a svoju motiváciu počas riešenia testu?</label><br />
+        <select name="motivation_level" required>
+            <option value="">-- Vyber --</option>
+            <option value="Vysoká">Vysoká</option>
+            <option value="Skôr vysoká">Skôr vysoká</option>
+            <option value="Skôr nízka">Skôr nízka</option>
+            <option value="Nízka">Nízka</option>
+        </select><br /><br />
+
+      <label>Pomohla ti spätná väzba k odpovediam?</label><br />
+      <select name="helpful_feedback" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Bol pre teba test užitočný?</label><br />
+      <select name="overall_usefulness" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Myslíš si, že úlohy boli primerané tvojej úrovni?</label><br />
+      <select name="difficulty_match" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Myslíš si, že si sa zlepšil/a v programovaní?</label><br />
+      <select name="improved_skills" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Koľko času si približne venoval/a riešeniu testu?</label><br />
+      <select name="time_spent" required>
+        <option value="">-- Vyber --</option>
+        <option value="Menej ako 20 minút">Menej ako 20 minút</option>
+        <option value="20 – 40 minút">20 – 40 minút</option>
+        <option value="40 – 60 minút">40 – 60 minút</option>
+        <option value="Viac ako 1 hodina">Viac ako 1 hodina</option>
+      </select><br /><br />
+
+      <label>Chcel/a by si v budúcnosti riešiť viac takýchto úloh?</label><br />
+      <select name="future_interest" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Bola pre teba vizuálna stránka a dizajn aplikácie vyhovujúca?</label><br />
+      <select name="ui_satisfaction" required>
+        <option value="">-- Vyber --</option>
+        <option value="Áno">Áno</option>
+        <option value="Skôr áno">Skôr áno</option>
+        <option value="Skôr nie">Skôr nie</option>
+        <option value="Nie">Nie</option>
+      </select><br /><br />
+
+      <label>Máš návrhy na zlepšenie?</label><br />
+      <textarea name="improvement_suggestion" rows="4" style="width: 100%;"></textarea><br /><br />
+
+      <button type="submit" class="btn">Odoslať</button>
+    </form>
+  </div>
+
+  <script src="feedback.js"></script>
+  <script src="/config.js"></script>
+  <script src="/script.js"></script>
+  <script>
+    checkAccessCode();
+  </script>
+</body>
+</html>
