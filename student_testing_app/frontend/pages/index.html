@@ -2,46 +2,46 @@
 <html lang="sk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>EduGuide</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/css/design.css?v=2">
 </head>
 <body>
-  <div class="container">
-    <h1>👨‍🏫 EduGuide</h1>
-    <p>
-        Vitaj v aplikácii <strong>EduGuide</strong> – nástroj pre personalizované učenie sa programovania v jazyku Python.
-        Táto platforma ti pomôže zlepšovať tvoje schopnosti riešením rôznych úloh.
-      </p>
-  
-      <p>
-        Cieľom je poskytovať personalizované programátorské úlohy pre študentov na základe ich predchádzajúcich odpovedí. 
-        Vďaka tomu sa systém učí, aké otázky má študentovi dávať, aby sa efektívne zlepšoval.
-      </p>
+  <div id="navbar"></div>
 
-      <p>
-        Táto aplikácia vznikla ako súčasť bakalárskej práce s názvom:<br>
-        <em>„Adaptívne odporúčanie študijných odporúčaní pre personalizovanú výučbu“</em>, 
-        ktorú vypracoval <strong>Dávid Firda</strong> na <strong>Technickej univerzite v Košiciach</strong>, <strong>Fakulte elektrotechniky a informatiky</strong>.
-      </p>
+  <main class="page page--mid">
+    <div class="card">
+      <div class="brand-hero">
+        <img src="/assets/logo.svg" alt="AdaptPy" class="brand-hero__logo" width="60" height="60" />
+        <h1 data-i18n-html="index.title">Vitaj v Adapt<span class="accent-py">Py</span></h1>
+        <span class="pill" data-i18n="index.subtitle">Adaptívne precvičovanie programovania v Pythone</span>
+      </div>
 
-    <p class="section-title">Ako používať aplikáciu:</p>
-    <ul>
-      1️⃣ Najprv sa zaregistruj alebo prihlás. <br>
-      2️⃣ Vyplň predtest, aby systém spoznal tvoju znalosti. <br>
-      3️⃣ Automaticky sa spustí hlavný test – systém ti bude dávať úlohy podľa tvojej výkonnosti. <br>
-      4️⃣ Po dokončení testu uvidíš štatistiky svojho progresu. <br>
-      5️⃣ Nakoniec vyplň krátky dotazník pre získanie spätnej väzby. <br>
-    </ul>
+      <p data-i18n="index.intro"></p>
 
-    <div class="btn-container">
-        <a class="btn" href="/login">Sign In / Sign Up</a>
+      <h2 data-i18n="index.how">Ako to funguje</h2>
+      <ul class="steps">
+        <li><span class="step-num">1</span><span data-i18n="index.step1"></span></li>
+        <li><span class="step-num">2</span><span data-i18n="index.step2"></span></li>
+        <li><span class="step-num">3</span><span data-i18n="index.step3"></span></li>
+        <li><span class="step-num">4</span><span data-i18n="index.step4"></span></li>
+        <li><span class="step-num">5</span><span data-i18n="index.step5"></span></li>
+      </ul>
+
+      <a class="btn" href="/login" data-i18n="index.cta">Začať</a>
+
+      <hr class="divider">
+      <p class="muted" style="font-size:0.85rem" data-i18n="index.thesis"></p>
     </div>
-  </div>
+  </main>
+
   <script src="/config.js"></script>
-  <script src="/js/script.js"></script>
-  <script>
-      checkAccessCode();
-  </script>
+  <script src="/js/i18n.js?v=2"></script>
+  <script src="/js/navbar.js?v=2"></script>
+  <script src="/js/script.js?v=2"></script>
+  <script> checkAccessCode(); </script>
 </body>
 </html>

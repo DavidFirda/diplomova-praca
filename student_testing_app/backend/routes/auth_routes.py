@@ -210,16 +210,72 @@ def forgot_password():
     frontend_base_url = current_app.config.get("FRONTEND_BASE_URL", "http://localhost:5000")
     reset_link = f"{frontend_base_url}/reset-password?uid={student.id}&token={raw_token}"
 
+    text_body = (
+        f"Ahoj {student.name},\n\n"
+        f"Niekto (dúfajme že ty) požiadal o reset hesla k tvojmu účtu.\n"
+        f"Klikni na nasledujúci link do {RESET_TOKEN_TTL_MINUTES} minút, aby si nastavil nové heslo:\n\n"
+        f"{reset_link}\n\n"
+        f"Ak si o reset nežiadal, tento email jednoducho ignoruj - tvoje heslo ostáva nezmenené.\n"
+    )
+
+    html_body = f"""\
+<!DOCTYPE html>
+<html lang="sk">
+<body style="margin:0; padding:0; background:#f4f6f8; font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f6f8; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="480" cellspacing="0" cellpadding="0"
+               style="background:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="background:#1c3f60; padding:20px 28px; color:#ffffff; font-size:20px; font-weight:bold; letter-spacing:0.5px;">
+              AdaptPy
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 14px; font-size:15px; color:#222;">Ahoj {student.name},</p>
+              <p style="margin:0 0 14px; font-size:15px; color:#222;">
+                Niekto (dúfajme že ty) požiadal o reset hesla k tvojmu účtu.
+                Klikni na tlačidlo nižšie a nastav si nové heslo. Odkaz je platný
+                <strong>{RESET_TOKEN_TTL_MINUTES} minút</strong>.
+              </p>
+              <p style="margin:24px 0; text-align:center;">
+                <a href="{reset_link}"
+                   style="background:#1c3f60; color:#ffffff; text-decoration:none;
+                          padding:12px 28px; border-radius:6px; font-size:15px; display:inline-block;">
+                  Nastaviť nové heslo
+                </a>
+              </p>
+              <p style="margin:0 0 8px; font-size:13px; color:#666;">
+                Ak tlačidlo nefunguje, skopíruj do prehliadača tento odkaz:
+              </p>
+              <p style="margin:0 0 18px; font-size:13px; word-break:break-all;">
+                <a href="{reset_link}" style="color:#1c3f60;">{reset_link}</a>
+              </p>
+              <p style="margin:0; font-size:13px; color:#666;">
+                Ak si o reset nežiadal, tento email jednoducho ignoruj -
+                tvoje heslo ostáva nezmenené.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f0f2f4; padding:14px 28px; font-size:12px; color:#999; text-align:center;">
+              AdaptPy &middot; adaptívne precvičovanie programovania v Pythone
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
     send_email(
         to_email=student.email,
-        subject="Reset hesla - Adaptívny testovací systém",
-        text_body=(
-            f"Ahoj {student.name},\n\n"
-            f"Niekto (dúfajme že ty) požiadal o reset hesla k tvojmu účtu.\n"
-            f"Klikni na nasledujúci link do {RESET_TOKEN_TTL_MINUTES} minút, aby si nastavil nové heslo:\n\n"
-            f"{reset_link}\n\n"
-            f"Ak si o reset nežiadal, tento email jednoducho ignoruj - tvoje heslo ostáva nezmenené.\n"
-        ),
+        subject="Reset hesla - AdaptPy",
+        text_body=text_body,
+        html_body=html_body,
     )
 
     return generic_response, 200

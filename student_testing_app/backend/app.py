@@ -119,11 +119,19 @@ def serve_config():
 
 @app.route("/css/<path:filename>")
 def serve_css(filename):
-    return send_from_directory(os.path.join(FRONTEND_FOLDER, "css"), filename)
+    resp = send_from_directory(os.path.join(FRONTEND_FOLDER, "css"), filename)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp
 
 @app.route("/js/<path:filename>")
 def serve_js(filename):
-    return send_from_directory(os.path.join(FRONTEND_FOLDER, "js"), filename)
+    resp = send_from_directory(os.path.join(FRONTEND_FOLDER, "js"), filename)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp
+
+@app.route("/assets/<path:filename>")
+def serve_assets(filename):
+    return send_from_directory(os.path.join(FRONTEND_FOLDER, "assets"), filename)
 
 @app.route("/health")
 def health():

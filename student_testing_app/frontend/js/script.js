@@ -1,3 +1,9 @@
+// Pomocník na preklad hlášok (funguje aj keď i18n.js nie je načítaný)
+function tr(key, fallback) {
+  try { if (typeof I18N !== "undefined") { const v = I18N.t(key); if (v && v !== key) return v; } } catch (e) {}
+  return fallback;
+}
+
 function checkAccessCode() {
     const access = sessionStorage.getItem("access_granted");
     if (!access || access !== "true") {
@@ -11,44 +17,43 @@ function checkAccessCode() {
   }
   
   function showPasswordPrompt() {
+    if (document.getElementById("access-overlay")) return;
+
     const overlay = document.createElement("div");
+    overlay.id = "access-overlay";
     overlay.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
+      position: fixed; inset: 0;
+      background: rgba(8, 12, 18, 0.6);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
       display: flex; justify-content: center; align-items: center;
-      z-index: 9999;
+      z-index: 9999; padding: 20px;
     `;
-  
+
     overlay.innerHTML = `
       <div style="
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 32px 28px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
         text-align: center;
-        width: 300px;
+        width: 100%; max-width: 340px;
       ">
-        <h2>Vstup do aplikácie</h2>
-        <input type="password" id="popup-password" placeholder="Zadaj heslo" style="
-          width: 93%;
-          padding: 10px;
-          margin: 15px 0;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-        " />
-        <button onclick="validateAccess()" style="
-          padding: 10px 20px;
-          background: #1c3f60;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-        ">Odomknúť</button>
-        <p id="popup-error" style="color: red; display: none; margin-top: 10px;">❌ Nesprávne heslo</p>
+        <img src="/assets/logo.svg" alt="AdaptPy" width="52" height="52"
+             style="border-radius:14px; box-shadow: var(--shadow-md); margin-bottom: 14px;" />
+        <h2 style="margin: 0 0 18px; color: var(--text); font-size: 1.3rem;" data-i18n="access.title">${tr("access.title", "Vstup do aplikácie")}</h2>
+        <input type="password" id="popup-password" data-i18n-placeholder="access.placeholder"
+               placeholder="${tr("access.placeholder", "Zadaj heslo")}"
+               onkeydown="if(event.key==='Enter'){validateAccess();}" />
+        <button onclick="validateAccess()" data-i18n="access.submit">${tr("access.submit", "Odomknúť")}</button>
+        <p id="popup-error" class="error-message" style="display:none; margin-top: 12px;" data-i18n="access.error">${tr("access.error", "Nesprávne heslo")}</p>
       </div>
     `;
-  
+
     document.body.appendChild(overlay);
+    if (typeof I18N !== "undefined") I18N.apply();
+    const input = document.getElementById("popup-password");
+    if (input) input.focus();
   }
   
   function validateAccess() {
@@ -98,7 +103,7 @@ async function login() {
             errorMessage.style.display = "block";
         }
     } catch (error) {
-        errorMessage.innerText = "Chyba pripojenia k serveru.";
+        errorMessage.innerText = tr("msg.serverError", "Chyba pripojenia k serveru.");
         errorMessage.style.display = "block";
     }
 }
@@ -136,7 +141,7 @@ async function register() {
             errorMessage.style.display = "block";
         }
     } catch (error) {
-        errorMessage.innerText = "Chyba pripojenia k serveru.";
+        errorMessage.innerText = tr("msg.serverError", "Chyba pripojenia k serveru.");
         errorMessage.style.display = "block";
     }
 }
@@ -166,7 +171,7 @@ async function forgotPassword() {
             errorMessage.style.display = "block";
         }
     } catch (error) {
-        errorMessage.innerText = "Chyba pripojenia k serveru.";
+        errorMessage.innerText = tr("msg.serverError", "Chyba pripojenia k serveru.");
         errorMessage.style.display = "block";
     }
 }
@@ -181,7 +186,7 @@ async function resetPassword() {
     infoMessage.style.display = "none";
 
     if (newPassword !== newPasswordConfirm) {
-        errorMessage.innerText = "Heslá sa nezhodujú.";
+        errorMessage.innerText = tr("msg.passwordsMismatch", "Heslá sa nezhodujú.");
         errorMessage.style.display = "block";
         return;
     }
@@ -191,7 +196,7 @@ async function resetPassword() {
     const tokenParam = params.get("token");
 
     if (!uid || !tokenParam) {
-        errorMessage.innerText = "Odkaz na reset hesla je neplatný. Vyžiadaj si prosím nový.";
+        errorMessage.innerText = tr("msg.invalidLink", "Odkaz je neplatný. Vyžiadaj si prosím nový.");
         errorMessage.style.display = "block";
         return;
     }
@@ -214,7 +219,7 @@ async function resetPassword() {
             errorMessage.style.display = "block";
         }
     } catch (error) {
-        errorMessage.innerText = "Chyba pripojenia k serveru.";
+        errorMessage.innerText = tr("msg.serverError", "Chyba pripojenia k serveru.");
         errorMessage.style.display = "block";
     }
 }
