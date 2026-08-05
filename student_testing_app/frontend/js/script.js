@@ -86,18 +86,9 @@ async function login() {
 
         if (response.ok && data.student) {
             localStorage.setItem("student_id", data.student.id);
-
-            const statsResp = await fetch("/admin/students/summary?token=" + token);
-            const stats = await statsResp.json();
-            const current = stats.find(s => s.id === data.student.id);
-
-            if (current && current.predtest.total_answers > 0) {
-                localStorage.setItem("test_categories", JSON.stringify(["Sorting", "Syntax", "Data Structures", "Scientific Computing"]));
-                localStorage.removeItem("main_test_session");
-                window.location.href = "/hlavnytest";
-            } else {
-                window.location.href = "/predtest";
-            }
+            // Po prihlásení ide používateľ na dashboard (rozcestník),
+            // nie automaticky do testu.
+            window.location.href = "/dashboard";
         } else {
             errorMessage.innerText = data.error || "Neznáma chyba.";
             errorMessage.style.display = "block";

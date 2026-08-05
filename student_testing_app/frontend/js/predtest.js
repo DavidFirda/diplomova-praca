@@ -31,7 +31,7 @@ window.onload = async () => {
 
     if (student && student.predtest.total_answers > 0) {
         localStorage.setItem("test_categories", JSON.stringify(["Data Structures", "Syntax", "Sorting", "Scientific Computing"]));
-        window.location.href = "/hlavnytest";
+        window.location.href = "/dashboard";
         return;
     }
 
@@ -58,7 +58,7 @@ function showQuestion() {
     if (currentIndex >= questionQueue.length) {
         const selectedCategories = ["Data Structures", "Syntax", "Sorting", "Scientific Computing"];
         localStorage.setItem("test_categories", JSON.stringify(selectedCategories));
-        window.location.href = "/hlavnytest";
+        window.location.href = "/dashboard";
         return;
     }
 

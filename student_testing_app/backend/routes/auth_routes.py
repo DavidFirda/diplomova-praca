@@ -151,6 +151,106 @@ def me():
     return jsonify({"student": _student_public(student)}), 200
 
 
+### Úprava profilu (meno/priezvisko/email/login) - prázdne pole = nemení sa ###
+@auth_bp.route("/profile", methods=["PATCH", "PUT"])
+def update_profile():
+    student_id = session.get("student_id")
+    if not student_id:
+        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = Student.query.get(student_id)
+    if not student:
+        session.clear()
+        return jsonify({"error": "Nie si prihlásený."}), 401
+
+    data = request.get_json(silent=True) or {}
+
+    name = (data.get("name") or "").strip()
+    surname = (data.get("surname") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    login = (data.get("login") or "").strip()
+
+    # Meno/priezvisko - meníme len ak je vyplnené
+    if name:
+        student.name = name
+    if surname:
+        student.surname = surname
+
+    # Email - validácia + kontrola, či ho nemá niekto iný
+    if email and email != student.email:
+        if not EMAIL_RE.match(email):
+            return jsonify({"error": "Neplatný formát emailu."}), 400
+        existing = Student.query.filter_by(email=email).first()
+        if existing and existing.id != student.id:
+            return jsonify({"error": "Tento email už používa iný účet."}), 409
+        student.email = email
+
+    # Login - validácia + kontrola unikátnosti
+    if login and login != student.login:
+        if not LOGIN_RE.match(login):
+            return jsonify({"error": "Login smie obsahovať len písmená, číslice, '.', '_', '-' (3-50 znakov)."}), 400
+        existing = Student.query.filter_by(login=login).first()
+        if existing and existing.id != student.id:
+            return jsonify({"error": "Tento login už používa iný účet."}), 409
+        student.login = login
+
+    db.session.commit()
+    return jsonify({"message": "Profil bol aktualizovaný.", "student": _student_public(student)}), 200
+
+
+### Prehľad pre dashboard prihláseného študenta ###
+@auth_bp.route("/dashboard", methods=["GET"])
+def dashboard():
+    from models import StudentAnswer, TestSummary, StudentFeedback
+
+    student_id = session.get("student_id")
+    if not student_id:
+        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = Student.query.get(student_id)
+    if not student:
+        session.clear()
+        return jsonify({"error": "Nie si prihlásený."}), 401
+
+    # Predtest: považujeme za dokončený, ak existuje aspoň jedna odpoveď typu "pretest"
+    pretest_answers = StudentAnswer.query.filter_by(
+        student_id=student_id, test_type="pretest"
+    ).count()
+    pretest_done = pretest_answers > 0
+
+    # Hlavné testy: zoskupené podľa test_session (každá session = jeden absolvovaný test)
+    main_answers = StudentAnswer.query.filter_by(
+        student_id=student_id, test_type="main"
+    ).all()
+    main_sessions = sorted({a.test_session for a in main_answers if a.test_session})
+    main_tests_count = len(main_sessions)
+
+    # Celková štatistika (všetky odpovede)
+    all_answers = StudentAnswer.query.filter_by(student_id=student_id).all()
+    total = len(all_answers)
+    correct = sum(1 for a in all_answers if a.is_correct)
+    accuracy = round(correct / total * 100, 1) if total > 0 else 0.0
+
+    # Dotazník spätnej väzby
+    feedback_done = StudentFeedback.query.filter_by(student_id=student_id).count() > 0
+
+    return jsonify({
+        "student": _student_public(student),
+        "pretest": {
+            "done": pretest_done,
+            "answers": pretest_answers,
+        },
+        "main_tests": {
+            "count": main_tests_count,
+            "sessions": main_sessions,
+        },
+        "stats": {
+            "total_answers": total,
+            "correct_answers": correct,
+            "accuracy": accuracy,
+        },
+        "feedback_done": feedback_done,
+    }), 200
+
+
 ### Zmena hesla (prihlásený používateľ) ###
 @auth_bp.route("/change-password", methods=["POST"])
 def change_password():

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/css/design.css?v=10">
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="dashboard"></div>
+
+    <main class="app-main">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1><span data-i18n="dash.welcome">Vitaj späť</span>, <span id="dash-name">…</span></h1>
+          <p data-i18n="dash.subtitle">Tu je tvoj prehľad. Vyber si, čo chceš robiť.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <div class="app-layout">
+        <div>
+          <!-- Metriky -->
+          <div class="metric-row" style="margin-bottom:24px;">
+            <div class="metric">
+              <div class="metric__label" data-i18n="dash.stats.accuracy">Úspešnosť</div>
+              <div class="metric__value" id="stat-accuracy">–</div>
+            </div>
+            <div class="metric">
+              <div class="metric__label" data-i18n="dash.stats.answers">Odpovede</div>
+              <div class="metric__value" id="stat-answers">0</div>
+            </div>
+            <div class="metric">
+              <div class="metric__label" data-i18n="dash.main.count">Absolvované testy</div>
+              <div class="metric__value" id="main-count">0</div>
+            </div>
+          </div>
+
+          <!-- Úlohy -->
+          <div class="task-list">
+            <!-- Predtest -->
+            <div class="task-row" id="row-pretest">
+              <div class="task-row__icon">
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+              </div>
+              <div class="task-row__body">
+                <div class="task-row__title" data-i18n="dash.pretest.title">Predtest</div>
+                <div class="task-row__desc" data-i18n="dash.pretest.desc">Úvodný test, ktorý zistí tvoju úroveň. Spraví sa iba raz.</div>
+              </div>
+              <div class="task-row__badge" id="pretest-badge" style="display:none;">
+                ✓ <span data-i18n="dash.pretest.done">Predtest dokončený</span>
+              </div>
+              <div class="task-row__action" id="pretest-action">
+                <a class="btn" href="/predtest" data-i18n="dash.pretest.start">Spustiť predtest</a>
+              </div>
+            </div>
+
+            <!-- Hlavné testy -->
+            <div class="task-row" id="row-main">
+              <div class="task-row__icon">
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+              </div>
+              <div class="task-row__body">
+                <div class="task-row__title" data-i18n="dash.main.title">Hlavné testy</div>
+                <div class="task-row__desc" data-i18n="dash.main.desc">Adaptívne testy podľa tvojej výkonnosti. Môžeš ich spraviť viac.</div>
+              </div>
+              <div class="task-row__action" id="main-action">
+                <a class="btn" id="main-btn" href="/hlavnytest" data-i18n="dash.main.start">Spustiť nový test</a>
+              </div>
+            </div>
+
+            <!-- Dotazník -->
+            <div class="task-row">
+              <div class="task-row__icon">
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="task-row__body">
+                <div class="task-row__title" data-i18n="dash.feedback.title">Dotazník</div>
+                <div class="task-row__desc" data-i18n="dash.feedback.desc">Podeľ sa o spätnú väzbu a pomôž nám aplikáciu zlepšiť.</div>
+              </div>
+              <div class="task-row__badge" id="feedback-badge" style="display:none;">
+                ✓ <span data-i18n="dash.feedback.done">Dotazník vyplnený</span>
+              </div>
+              <div class="task-row__action">
+                <a class="btn btn--secondary" href="/feedback" data-i18n="dash.feedback.open">Vyplniť dotazník</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pravý panel - AI chat asistent -->
+        <aside class="side-panel">
+          <div class="chat-panel">
+            <div class="chat-panel__header">
+              <span class="chat-panel__dot"></span>
+              <span data-i18n="chat.title">AdaptPy asistent</span>
+            </div>
+            <div class="chat-panel__messages" id="chat-messages">
+              <div class="chat-msg chat-msg--bot">
+                <span data-i18n="chat.greeting">Ahoj! Som tvoj AI asistent. Opýtaj sa ma na čokoľvek ohľadom Pythonu alebo tvojho progresu.</span>
+              </div>
+            </div>
+            <form class="chat-panel__input" id="chat-form">
+              <input type="text" id="chat-input" autocomplete="off" data-i18n-placeholder="chat.placeholder" placeholder="Napíš správu…" />
+              <button type="submit" class="chat-panel__send" aria-label="Odoslať">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+              </button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/i18n.js?v=10"></script>
+  <script src="/js/sidebar.js?v=10"></script>
+  <script src="/js/topbar-controls.js?v=10"></script>
+  <script src="/js/dashboard.js?v=10"></script>
+  <script src="/js/chat.js?v=10"></script>
+</body>
+</html>

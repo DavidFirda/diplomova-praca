@@ -16,6 +16,22 @@ window.onload = async () => {
         return;
     }
 
+    // Hlavný test je prístupný len po dokončení predtestu.
+    // Overíme to cez server (dashboard endpoint) - neobchádzateľné cez URL.
+    try {
+        const r = await fetch("/api/auth/dashboard", { credentials: "include" });
+        if (r.status === 401) { window.location.href = "/login"; return; }
+        const dash = await r.json();
+        if (!dash.pretest || !dash.pretest.done) {
+            alert("Najprv musíš dokončiť predtest.");
+            window.location.href = "/predtest";
+            return;
+        }
+    } catch (e) {
+        window.location.href = "/dashboard";
+        return;
+    }
+
     // Inicializuj CodeMirror
     const textarea = document.getElementById("student_code");
     codeMirrorEditor = CodeMirror.fromTextArea(textarea, {

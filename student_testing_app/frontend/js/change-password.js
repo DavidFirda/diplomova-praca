@@ -1,3 +1,9 @@
+// Pomocník na preklad hlášok (funguje aj keď i18n.js nie je načítaný)
+function tr(key, fallback) {
+  try { if (typeof I18N !== "undefined") { const v = I18N.t(key); if (v && v !== key) return v; } } catch (e) {}
+  return fallback;
+}
+
 async function changePassword() {
     const currentPassword = document.getElementById("current_password").value;
     const newPassword = document.getElementById("new_password").value;
@@ -8,7 +14,7 @@ async function changePassword() {
     infoMessage.style.display = "none";
 
     if (newPassword !== newPasswordConfirm) {
-        errorMessage.innerText = "Nové heslá sa nezhodujú.";
+        errorMessage.innerText = tr("msg.passwordsMismatch", "Nové heslá sa nezhodujú.");
         errorMessage.style.display = "block";
         return;
     }
@@ -27,9 +33,10 @@ async function changePassword() {
         const data = await response.json();
 
         if (response.ok) {
-            infoMessage.innerText = data.message;
+            infoMessage.innerText = data.message + " " + tr("change.redirect", "Presmerúvam na dashboard…");
             infoMessage.style.display = "block";
             document.getElementById("change-password-form").reset();
+            setTimeout(() => { window.location.href = "/dashboard"; }, 1500);
         } else if (response.status === 401) {
             errorMessage.innerText = "Nie si prihlásený, alebo je aktuálne heslo nesprávne. Prihlás sa prosím znova.";
             errorMessage.style.display = "block";
@@ -38,7 +45,7 @@ async function changePassword() {
             errorMessage.style.display = "block";
         }
     } catch (error) {
-        errorMessage.innerText = "Chyba pripojenia k serveru.";
+        errorMessage.innerText = tr("msg.serverError", "Chyba pripojenia k serveru.");
         errorMessage.style.display = "block";
     }
 }

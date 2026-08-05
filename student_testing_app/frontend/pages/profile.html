@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AdaptPy – Zmena hesla</title>
+  <title>AdaptPy – Profil</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
@@ -16,29 +16,30 @@
     <main class="app-main app-main--centered">
       <div class="app-topbar">
         <div class="app-topbar__greeting">
-          <h1 data-i18n="change.title">Zmena hesla</h1>
+          <h1 data-i18n="profile.title">Môj profil</h1>
+          <p data-i18n="profile.subtitle">Uprav svoje údaje. Prázdne pole ostane nezmenené.</p>
         </div>
         <div class="app-topbar__actions" id="topbar-controls"></div>
       </div>
 
       <div class="centered-card">
         <div class="card">
-          <form id="change-password-form">
-            <label data-i18n="change.current" for="current_password">Aktuálne heslo</label>
-            <input type="password" id="current_password" autocomplete="current-password" required>
-            <label data-i18n="change.new" for="new_password">Nové heslo (min. 8 znakov)</label>
-            <input type="password" id="new_password" autocomplete="new-password" required minlength="8">
-            <label data-i18n="change.confirm" for="new_password_confirm">Zopakuj nové heslo</label>
-            <input type="password" id="new_password_confirm" autocomplete="new-password" required minlength="8">
-            <button type="submit" data-i18n="change.submit">Zmeniť heslo</button>
+          <form id="profile-form">
+            <label data-i18n="profile.name" for="p-name">Meno</label>
+            <input id="p-name" type="text" autocomplete="given-name">
+            <label data-i18n="profile.surname" for="p-surname">Priezvisko</label>
+            <input id="p-surname" type="text" autocomplete="family-name">
+            <label data-i18n="profile.email" for="p-email">Email</label>
+            <input id="p-email" type="email" autocomplete="email">
+            <label data-i18n="profile.login" for="p-login">Login</label>
+            <input id="p-login" type="text" autocomplete="username">
+            <button type="submit" data-i18n="profile.save">Uložiť zmeny</button>
           </form>
           <p id="info-message" class="info-message" style="display:none;"></p>
           <p id="error-message" class="error-message" style="display:none;"></p>
 
-          <span class="bottom-link"><a href="/forgot-password" data-i18n="change.forgot">Zabudol si heslo?</a></span>
-
           <hr class="divider">
-          <a class="btn btn--secondary" href="/dashboard" data-i18n="change.back">Späť na dashboard</a>
+          <a class="btn btn--secondary" href="/change-password" data-i18n="profile.changePassword">Zmeniť heslo</a>
         </div>
       </div>
     </main>
@@ -48,6 +49,6 @@
   <script src="/js/i18n.js?v=10"></script>
   <script src="/js/sidebar.js?v=10"></script>
   <script src="/js/topbar-controls.js?v=10"></script>
-  <script src="/js/change-password.js?v=10"></script>
+  <script src="/js/profile.js?v=10"></script>
 </body>
 </html>

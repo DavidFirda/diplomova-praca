@@ -87,6 +87,8 @@ PAGE_ROUTES = {
     "forgot-password": "forgot-password.html",
     "reset-password": "reset-password.html",
     "change-password": "change-password.html",
+    "dashboard": "dashboard.html",
+    "profile": "profile.html",
     "predtest": "predtest.html",
     "hlavnytest": "hlavnytest.html",
     "analyza": "analyza.html",
