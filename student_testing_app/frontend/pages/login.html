@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prihlásenie</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Prihlásenie</h1>
+        <form id="login-form">
+            <input type="text" id="login" placeholder="Login alebo email" autocomplete="username" required />
+            <input type="password" id="password" placeholder="Heslo" autocomplete="current-password" required />
+            <button type="submit" id="loginButton">Prihlásiť sa</button>
+        </form>
+        <p id="error-message" class="error-message" style="display: none; text-align: center;"></p>
+        <a class="bottom-link" href="/forgot-password">Zabudol si heslo?</a>
+        <a class="bottom-link" href="/register">Nemáš účet? Zaregistruj sa tu</a>
+    </div>
+
+    <script src="/config.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        checkAccessCode();
+    </script>
+</body>
+</html>

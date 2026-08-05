@@ -1,4 +1,6 @@
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -7,10 +9,26 @@ class Student(db.Model):
     __tablename__ = "students"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    surname = db.Column(db.String(100), nullable=False)
     login = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+
+    # Reset hesla
+    reset_token_hash = db.Column(db.String(255), nullable=True)
+    reset_token_expires_at = db.Column(db.DateTime, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     answers = db.relationship("StudentAnswer", backref="student", lazy=True)
     summaries = db.relationship("TestSummary", backref="student", lazy=True)
+
+    def set_password(self, raw_password: str) -> None:
+        # scrypt (werkzeug default) - pomalá, memory-hard funkcia odolná voči brute-force útokom
+        self.password_hash = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password: str) -> bool:
+        return check_password_hash(self.password_hash, raw_password)
 
 # Otázky
 class Question(db.Model):

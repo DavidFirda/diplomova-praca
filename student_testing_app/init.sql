@@ -11,7 +11,13 @@ END $$;
 CREATE TABLE students (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    login VARCHAR(50) UNIQUE NOT NULL
+    surname VARCHAR(100) NOT NULL,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    reset_token_hash VARCHAR(255),
+    reset_token_expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Otázky

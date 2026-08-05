@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Predtest</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Hlavný test</title>
+    <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+</head>
 <body>
 <div class="container">
-    <h1>🧠 Predtest</h1>
-    
+    <h1>🧠 Hlavný test</h1>
+
     <div id="test-container">
         <div class="question-header">
             <p class="left"><strong>Otázka:</strong></p>
@@ -51,16 +52,16 @@
                 text-align: left;
             "></pre>
         </div>
-
+        
         <button id="submit-answer">Odpovedať</button>
         <button id="next-question" style="margin-top:10px; display:none;">➡️ Ďalšia otázka</button>
         <p class= "btn-container" id="result-message"></p>
     </div>
 </div>
 
-<script src="predtest.js"></script>
+<script src="/js/hlavnytest.js"></script>
 <script src="/config.js"></script>
-<script src="/script.js"></script>
+<script src="/js/script.js"></script>
 <script>
   checkAccessCode();
 </script>

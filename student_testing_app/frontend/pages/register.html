@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrácia</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registrácia</h1>
+        <form id="register-form">
+            <input type="text" id="name" placeholder="Meno" autocomplete="given-name" required>
+            <input type="text" id="surname" placeholder="Priezvisko" autocomplete="family-name" required>
+            <input type="email" id="email" placeholder="Email" autocomplete="email" required>
+            <input type="text" id="login" placeholder="Login" autocomplete="username" required>
+            <input type="password" id="password" placeholder="Heslo (min. 8 znakov)" autocomplete="new-password" required minlength="8">
+            <button type="submit">Zaregistrovať sa</button>
+        </form>
+        <p id="error-message" class="error-message" style="display: none; text-align: center;"></p>
+        <a class="bottom-link" href="/login">Už máš účet? Prihlás sa tu</a>
+    </div>
+
+    <script src="/config.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+      checkAccessCode();
+    </script>
+</body>
+</html>

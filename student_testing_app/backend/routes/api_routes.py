@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, request, jsonify, session, Response, send_file
-from capture_output import capture_output, compare_outputs
-from extract_starter_code import extract_starter_code
+from services.capture_output import capture_output, compare_outputs
+from services.extract_starter_code import extract_starter_code
 from models import db, Student, Question, StudentAnswer, TestSummary, StudentFeedback
 from algorithms.random_selector import RandomQuestionSelector
 from algorithms.q_selector import QLearningQuestionSelector
@@ -19,44 +19,11 @@ api_bp = Blueprint('api', __name__)
 def home():
     return jsonify({"message": "API is running!"}), 200
 
-### Registrácia nového študenta ###
-@api_bp.route("/register", methods=["POST"])
-def register():
-    data = request.get_json()
-    name = data.get("name")
-    login = data.get("login")
+# Registrácia a prihlásenie študentov teraz rieši auth_routes.py (auth_bp,
+# prefix /api/auth) - obsahuje heslá, email a reset hesla. Pôvodné /register
+# a /login tu boli zámerne odstránené, aby nezostal nezabezpečený obchádzací
+# spôsob vytvorenia účtu bez hesla.
 
-    if not name or not login:
-        return jsonify({"error": "Name and login are required"}), 400
-
-    existing_student = Student.query.filter_by(login=login).first()
-    if existing_student:
-        return jsonify({"error": "Login already taken"}), 400
-
-    student = Student(name=name, login=login)
-    db.session.add(student)
-    db.session.commit()
-
-    return jsonify({"id": student.id, "name": student.name, "login": student.login, "message": "Registration successful!"}), 201
-
-### Prihlásenie študenta ###
-@api_bp.route("/login", methods=["POST"])
-def login():
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = request.form
-
-    login = data.get("login")
-    if not login:
-        return jsonify({"error": "Login required"}), 400
-
-    student = Student.query.filter_by(login=login).first()
-    if not student:
-        return jsonify({"error": "Invalid login"}), 404
-
-    return jsonify({"id": student.id}), 200
-  
 @api_bp.route("/test/start", methods=["POST"])
 def start_test():
     data = request.get_json()

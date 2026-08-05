@@ -12,7 +12,7 @@ window.onload = async () => {
 
     if (!studentId) {
         alert("Najprv sa prihlás.");
-        window.location.href = "/login.html";
+        window.location.href = "/login";
         return;
     }
 
@@ -34,7 +34,7 @@ async function fetchNextQuestion() {
     if (currentCount >= totalQuestions) {
         alert("✅ Hlavný test hotový!");
         const sessionId = localStorage.getItem("main_test_session");
-        window.location.href = `/analyza.html`;
+        window.location.href = `/analyza`;
         return;
     }
     const testSession = localStorage.getItem("main_test_session");
