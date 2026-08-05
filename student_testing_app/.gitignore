@@ -1,0 +1,34 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+
+# --- Prostredie / tajomstvá ---
+.env
+*.env.local
+
+# --- Flask ---
+student_testing_app/backend/flask_session/*
+!student_testing_app/backend/flask_session/.gitkeep
+
+# --- Docker ---
+*.pid
+
+# --- Runtime dáta pre Q-learning / POMDP mounty ---
+student_testing_app/q_learning_data/*
+!student_testing_app/q_learning_data/.gitkeep
+student_testing_app/pomdp_data/*
+!student_testing_app/pomdp_data/.gitkeep
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Node (frontend, ak pribudne build) ---
+node_modules/

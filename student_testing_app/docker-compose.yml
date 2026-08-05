@@ -7,7 +7,7 @@ services:
     depends_on:
       - db
     env_file:
-      - .env 
+      - .env
     volumes:
       - ./backend:/app/backend
       - ./frontend:/app/frontend
@@ -15,8 +15,6 @@ services:
       - ./load_questions.py:/app/load_questions.py
       - ${Q_LEARNING_MOUNT}
       - ${POMDP_MOUNT}
-
-
 
   db:
     image: postgres:16-alpine
@@ -30,9 +28,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data 
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-  pgdata: 
-  q_learning_data: 
-  pomdp_data:
+  pgdata:
