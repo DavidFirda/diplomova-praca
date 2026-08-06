@@ -31,7 +31,15 @@
   }
   window.adaptpyLogout = logout;
 
-  function render() {
+  async function fetchStudent() {
+    try {
+      const r = await fetch("/api/auth/me", { credentials: "include" });
+      if (r.ok) { const d = await r.json(); return d.student || null; }
+    } catch (e) {}
+    return null;
+  }
+
+  function render(student) {
     const mount = document.getElementById("sidebar-mount");
     if (!mount) return;
     const active = mount.getAttribute("data-active") || "dashboard";
@@ -43,6 +51,25 @@
       </a>
     `).join("");
 
+    // Profilová karta hore (ako referencia): avatar + meno + login
+    let profileHtml = "";
+    if (student) {
+      const fullName = (student.name && student.surname)
+        ? `${student.name} ${student.surname}`
+        : (student.name || student.login || "");
+      const initial = ((student.name || student.login || "?")[0] || "?").toUpperCase();
+      profileHtml = `
+        <a class="sidebar__profile" href="/profile" title="Profil">
+          <span class="sidebar__profile-avatar">${initial}</span>
+          <span class="sidebar__profile-info">
+            <span class="sidebar__profile-name">${fullName}</span>
+            <span class="sidebar__profile-sub">${student.login || ""}</span>
+          </span>
+        </a>
+        <hr class="sidebar__divider">
+      `;
+    }
+
     mount.innerHTML = `
       <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
       <aside class="sidebar" id="sidebar">
@@ -50,6 +77,7 @@
           <img src="/assets/logo.svg" alt="" />
           <span>Adapt<span class="accent-py">Py</span></span>
         </a>
+        ${profileHtml}
         <nav class="sidebar__nav">
           ${links}
         </nav>
@@ -77,9 +105,14 @@
     if (typeof THEME !== "undefined") THEME.apply();
   }
 
+  async function init() {
+    const student = await fetchStudent();
+    render(student);
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", render);
+    document.addEventListener("DOMContentLoaded", init);
   } else {
-    render();
+    init();
   }
 })();
