@@ -86,6 +86,9 @@ async function login() {
 
         if (response.ok && data.student) {
             localStorage.setItem("student_id", data.student.id);
+            // Značka pre túto kartu - session-guard podľa nej pozná,
+            // že karta nebola medzičasom zatvorená.
+            if (window.adaptpyMarkTabSession) window.adaptpyMarkTabSession();
             // Po prihlásení ide používateľ na dashboard (rozcestník),
             // nie automaticky do testu.
             window.location.href = "/dashboard";

@@ -14,6 +14,8 @@
     feedback: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     logout: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
     course: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    adminUsers: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    adminFeedback: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>',
   };
 
   const NAV = [
@@ -48,7 +50,7 @@
     return false;
   }
 
-  function render(student, pretestDone) {
+  function render(student, pretestDone, isAdmin) {
     const mount = document.getElementById("sidebar-mount");
     if (!mount) return;
     const active = mount.getAttribute("data-active") || "dashboard";
@@ -62,6 +64,25 @@
         <span data-i18n="${item.i18n}">${item.label}</span>
       </a>
     `).join("");
+
+    // Admin sekcia - len pre admina
+    let adminHtml = "";
+    if (isAdmin) {
+      const adminNav = [
+        { key: "adminUsers", href: "/admin-users", i18n: "sb.adminUsers", label: "Používatelia", active: "admin-users" },
+        { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník (správa)", active: "admin-feedback" },
+      ];
+      const adminLinks = adminNav.map(item => `
+        <a class="sidebar__link ${item.active === active ? "active" : ""}" href="${item.href}">
+          <span class="ic">${ICONS[item.key]}</span>
+          <span data-i18n="${item.i18n}">${item.label}</span>
+        </a>
+      `).join("");
+      adminHtml = `
+        <div class="sidebar__section-label" data-i18n="sb.adminSection">Administrácia</div>
+        ${adminLinks}
+      `;
+    }
 
     // Profilová karta hore (ako referencia): avatar + meno + login
     let profileHtml = "";
@@ -92,6 +113,7 @@
         ${profileHtml}
         <nav class="sidebar__nav">
           ${links}
+          ${adminHtml}
         </nav>
         <div class="sidebar__spacer"></div>
         <a class="sidebar__link" href="https://github.com/ianmagyar/introduction-to-python" target="_blank" rel="noopener">
@@ -121,9 +143,24 @@
     if (typeof THEME !== "undefined") THEME.apply();
   }
 
+  async function fetchIsAdmin() {
+    try {
+      const r = await fetch("/api/admin/me", { credentials: "include" });
+      if (r.ok) { const d = await r.json(); return !!d.is_admin; }
+    } catch (e) {}
+    return false;
+  }
+
   async function init() {
-    const [student, pretestDone] = await Promise.all([fetchStudent(), fetchPretestDone()]);
-    render(student, pretestDone);
+    // Guard: ak bola karta zatvorená a otvorená nanovo, odhlás a presmeruj na login.
+    if (window.adaptpySessionGuard) {
+      const ok = await window.adaptpySessionGuard();
+      if (!ok) return; // guard už presmeroval
+    }
+    const [student, pretestDone, isAdmin] = await Promise.all([
+      fetchStudent(), fetchPretestDone(), fetchIsAdmin()
+    ]);
+    render(student, pretestDone, isAdmin);
   }
 
   if (document.readyState === "loading") {

@@ -14,6 +14,9 @@ class Student(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
+    # Rola používateľa: "user" (predvolená) alebo "admin"
+    role = db.Column(db.String(20), nullable=False, default="user")
+
     # Reset hesla
     reset_token_hash = db.Column(db.String(255), nullable=True)
     reset_token_expires_at = db.Column(db.DateTime, nullable=True)
@@ -93,3 +96,33 @@ class StudentFeedback(db.Model):
     future_interest = db.Column(db.String(20))
     ui_satisfaction = db.Column(db.String(20))
     improvement_suggestion = db.Column(db.Text)
+
+
+# ===== Dynamický dotazník (spravovateľný adminom) =====
+
+# Otázka dotazníka - admin ich môže pridávať/upravovať/mazať.
+class FeedbackQuestion(db.Model):
+    __tablename__ = "feedback_questions"
+    id = db.Column(db.Integer, primary_key=True)
+    # kľúč otázky (stabilný identifikátor pre odpovede), napr. "gender"
+    qkey = db.Column(db.String(60), unique=True, nullable=False)
+    # text otázky SK / EN
+    label_sk = db.Column(db.Text, nullable=False)
+    label_en = db.Column(db.Text, nullable=False)
+    # typ: "select" (výber z možností), "text", "number", "textarea"
+    qtype = db.Column(db.String(20), nullable=False, default="select")
+    # možnosti pre select - JSON pole reťazcov (napr. ["Áno","Nie"]); inak prázdne
+    options_json = db.Column(db.Text, nullable=True)
+    required = db.Column(db.Boolean, default=True)
+    # poradie zobrazenia
+    position = db.Column(db.Integer, default=0)
+    active = db.Column(db.Boolean, default=True)
+
+# Odpoveď študenta na dynamický dotazník (kľúč-hodnota).
+class FeedbackResponse(db.Model):
+    __tablename__ = "feedback_responses"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    qkey = db.Column(db.String(60), nullable=False)
+    value = db.Column(db.Text, nullable=True)
+    __table_args__ = (db.UniqueConstraint("student_id", "qkey", name="uq_student_qkey"),)

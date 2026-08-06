@@ -9,6 +9,7 @@ from flask_session import Session
 from routes.api_routes import api_bp
 from routes.admin_routes import admin_bp
 from routes.auth_routes import auth_bp
+from routes.admin_api_routes import admin_api_bp
 from models import db
 from dotenv import load_dotenv
 
@@ -48,7 +49,9 @@ app.config['FRONTEND_BASE_URL'] = os.getenv("FRONTEND_BASE_URL", "http://localho
 app.config['SESSION_TYPE'] = 'sqlalchemy'
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['SESSION_SQLALCHEMY_TABLE'] = 'flask_sessions'
-app.config['SESSION_PERMANENT'] = True
+# SESSION_PERMANENT = False => session cookie zanikne pri zatvorení prehliadača,
+# takže po zavretí karty/okna sa musí používateľ znova prihlásiť.
+app.config['SESSION_PERMANENT'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_USE_SIGNER'] = True  # cookie obsahuje len podpísané session ID, nie dáta
 
@@ -67,10 +70,86 @@ with app.app_context():
     Session(app)
     db.create_all()  # znova, aby sa vytvorila aj tabuľka flask_sessions z Flask-Session
 
+    # Jednoduchá migrácia: pridaj stĺpec 'role' do students, ak ešte neexistuje.
+    # (db.create_all nepridáva stĺpce do existujúcich tabuliek.)
+    try:
+        from sqlalchemy import inspect, text
+        inspector = inspect(db.engine)
+        cols = [c["name"] for c in inspector.get_columns("students")]
+        if "role" not in cols:
+            with db.engine.begin() as conn:
+                conn.execute(text(
+                    "ALTER TABLE students ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'"
+                ))
+            print("[migrácia] Pridaný stĺpec students.role")
+    except Exception as e:
+        print(f"[migrácia] role stĺpec - preskočené/chyba: {e}")
+
+    # Seed dotazníkových otázok, ak tabuľka je prázdna (prvotné naplnenie
+    # pôvodnými 15 otázkami, aby dotazník fungoval hneď a admin ich mohol upravovať).
+    try:
+        from models import FeedbackQuestion
+        import json as _json
+        if FeedbackQuestion.query.count() == 0:
+            yn = ["Áno", "Skôr áno", "Skôr nie", "Nie"]
+            seed = [
+                ("gender", "Aké je tvoje pohlavie?", "What is your gender?", "select", ["Muž", "Žena", "Iné", "Nechcem uviesť"]),
+                ("age", "Aký je tvoj vek?", "What is your age?", "number", []),
+                ("experience", "Akú máš skúsenosť s programovaním?", "What is your programming experience?", "select", ["Žiadna", "Základná", "Pokročilá", "Profesionálna"]),
+                ("field_of_study", "Aký je tvoj študijný odbor?", "What is your field of study?", "text", []),
+                ("understand_questions", "Rozumel/a si úlohám?", "Did you understand the tasks?", "select", yn),
+                ("easy_navigation", "Bolo používanie aplikácie pre teba intuitívne?", "Was using the app intuitive?", "select", yn),
+                ("motivation_level", "Ako by si ohodnotil/a svoju motiváciu?", "How would you rate your motivation?", "select", ["Vysoká", "Skôr vysoká", "Skôr nízka", "Nízka"]),
+                ("helpful_feedback", "Pomohla ti spätná väzba k odpovediam?", "Did the feedback help you?", "select", yn),
+                ("overall_usefulness", "Bol pre teba test užitočný?", "Was the test useful?", "select", yn),
+                ("difficulty_match", "Boli úlohy primerané tvojej úrovni?", "Did tasks match your level?", "select", yn),
+                ("improved_skills", "Myslíš si, že si sa zlepšil/a?", "Do you think you improved?", "select", yn),
+                ("time_spent", "Koľko času si venoval/a testu?", "How much time did you spend?", "select", ["Menej ako 20 minút", "20 – 40 minút", "40 – 60 minút", "Viac ako 1 hodina"]),
+                ("future_interest", "Chcel/a by si riešiť viac úloh?", "Would you like more tasks?", "select", yn),
+                ("ui_satisfaction", "Bol dizajn aplikácie vyhovujúci?", "Was the app design satisfactory?", "select", yn),
+                ("improvement_suggestion", "Máš návrhy na zlepšenie?", "Any suggestions for improvement?", "textarea", []),
+            ]
+            for i, (qkey, sk, en, qtype, opts) in enumerate(seed):
+                db.session.add(FeedbackQuestion(
+                    qkey=qkey, label_sk=sk, label_en=en, qtype=qtype,
+                    options_json=_json.dumps(opts, ensure_ascii=False),
+                    required=(qtype != "textarea"), position=i, active=True,
+                ))
+            db.session.commit()
+            print("[seed] Naplnených 15 dotazníkových otázok")
+    except Exception as e:
+        print(f"[seed] dotazník otázky - preskočené/chyba: {e}")
+
+    # Automatické vytvorenie admin účtu, ak ešte neexistuje.
+    # Login: Admin | Heslo: pythonadmin | Rola: admin
+    try:
+        from models import Student
+        admin = Student.query.filter_by(login="Admin").first()
+        if not admin:
+            admin = Student(
+                name="Admin",
+                surname="AdaptPy",
+                login="Admin",
+                email="admin@adaptpy.local",
+                role="admin",
+            )
+            admin.set_password("pythonadmin")
+            db.session.add(admin)
+            db.session.commit()
+            print("[seed] Vytvorený admin účet (login: Admin, heslo: pythonadmin)")
+        elif getattr(admin, "role", "user") != "admin":
+            # ak účet Admin existuje ale nemá admin rolu, oprav to
+            admin.role = "admin"
+            db.session.commit()
+            print("[seed] Účtu Admin nastavená rola admin")
+    except Exception as e:
+        print(f"[seed] admin účet - preskočené/chyba: {e}")
+
 # ===== Registrácia API Blueprintov =====
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(api_bp, url_prefix="/api")
 app.register_blueprint(admin_bp, url_prefix="/admin")
+app.register_blueprint(admin_api_bp, url_prefix="/api/admin")
 
 # ===== Frontend Routy =====
 
@@ -95,6 +174,8 @@ PAGE_ROUTES = {
     "feedback": "feedback.html",
     "feedback-visualization": "feedback_visualization.html",
     "algorithm-comparison": "algorithm_comparison.html",
+    "admin-users": "admin_users.html",
+    "admin-feedback": "admin_feedback.html",
 }
 
 for route_path, page_file in PAGE_ROUTES.items():

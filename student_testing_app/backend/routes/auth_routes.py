@@ -57,6 +57,7 @@ def _student_public(student: Student) -> dict:
         "surname": student.surname,
         "login": student.login,
         "email": student.email,
+        "role": getattr(student, "role", "user") or "user",
     }
 
 
@@ -94,9 +95,8 @@ def register():
     db.session.add(student)
     db.session.commit()
 
+    # Po registrácii NEPRIHLASUJEME - používateľ sa musí prihlásiť sám.
     session.clear()
-    session["student_id"] = student.id
-    session.permanent = True
 
     return jsonify({"message": "Registrácia úspešná!", "student": _student_public(student)}), 201
 
@@ -126,7 +126,9 @@ def login():
 
     session.clear()
     session["student_id"] = student.id
-    session.permanent = True
+    # session.permanent = False => cookie zanikne pri zatvorení prehliadača,
+    # takže po zavretí karty/okna sa musí používateľ znova prihlásiť.
+    session.permanent = False
 
     return jsonify({"message": "Prihlásenie úspešné.", "student": _student_public(student)}), 200
 

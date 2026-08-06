@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Správa dotazníka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/css/design2.css?v=20" />
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="admin-feedback"></div>
+
+    <main class="app-main">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="adminF.title">Správa dotazníka</h1>
+          <p data-i18n="adminF.subtitle">Pridávaj, upravuj a maž otázky. Zmeny sa hneď prejavia používateľom.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <div class="admin-fb-actions">
+        <button class="btn" id="add-question-btn" data-i18n="adminF.add">+ Pridať otázku</button>
+      </div>
+
+      <div class="card" id="admin-fb-card">
+        <div class="admin-loading" data-i18n="adminF.loading">Načítavam otázky…</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modál na pridanie/úpravu otázky -->
+  <div class="admin-modal" id="q-modal" style="display:none;">
+    <div class="admin-modal__backdrop" onclick="adminCloseQ()"></div>
+    <div class="admin-modal__panel">
+      <div class="admin-modal__header">
+        <h2 id="q-modal-title" data-i18n="adminF.newQuestion">Nová otázka</h2>
+        <button class="icon-btn" onclick="adminCloseQ()" aria-label="Zavrieť">✕</button>
+      </div>
+      <div class="admin-modal__body">
+        <div class="form-field">
+          <label data-i18n="adminF.qkey">Kľúč (identifikátor, bez medzier)</label>
+          <input type="text" id="q-key" placeholder="napr. gender" />
+        </div>
+        <div class="form-field">
+          <label data-i18n="adminF.labelSk">Text otázky (SK)</label>
+          <input type="text" id="q-label-sk" />
+        </div>
+        <div class="form-field">
+          <label data-i18n="adminF.labelEn">Text otázky (EN)</label>
+          <input type="text" id="q-label-en" />
+        </div>
+        <div class="form-field">
+          <label data-i18n="adminF.qtype">Typ</label>
+          <select id="q-type">
+            <option value="select" data-i18n="adminF.typeSelect">Výber z možností</option>
+            <option value="text" data-i18n="adminF.typeText">Text</option>
+            <option value="number" data-i18n="adminF.typeNumber">Číslo</option>
+            <option value="textarea" data-i18n="adminF.typeTextarea">Dlhý text</option>
+          </select>
+        </div>
+        <div class="form-field" id="q-options-field">
+          <label data-i18n="adminF.options">Možnosti (každá na nový riadok)</label>
+          <textarea id="q-options" rows="4" placeholder="Áno&#10;Nie"></textarea>
+        </div>
+        <label class="admin-check">
+          <input type="checkbox" id="q-required" checked>
+          <span data-i18n="adminF.required">Povinná</span>
+        </label>
+        <div class="admin-modal__footer">
+          <button class="btn" id="q-save-btn" data-i18n="adminF.save">Uložiť</button>
+          <p class="admin-hint" id="q-hint"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/session-guard.js?v=20"></script>
+  <script src="/js/i18n.js?v=20"></script>
+  <script src="/js/sidebar.js?v=20"></script>
+  <script src="/js/topbar-controls.js?v=20"></script>
+  <script src="/js/admin_feedback.js?v=20"></script>
+</body>
+</html>

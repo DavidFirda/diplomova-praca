@@ -2,7 +2,7 @@ import json
 from flask import Blueprint, request, jsonify, session, Response, send_file
 from services.capture_output import capture_output, compare_outputs
 from services.extract_starter_code import extract_starter_code
-from models import db, Student, Question, StudentAnswer, TestSummary, StudentFeedback
+from models import db, Student, Question, StudentAnswer, TestSummary, StudentFeedback, FeedbackQuestion, FeedbackResponse
 from algorithms.random_selector import RandomQuestionSelector
 from algorithms.q_selector import QLearningQuestionSelector
 from algorithms.pomdp_selector import POMDPQuestionSelector
@@ -127,7 +127,7 @@ def evaluate_answer():
     if not code or not code.strip() or code.strip() == starter_code.strip():
         return jsonify({
             "correct": False,
-            "message": "🛠️ Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
+            "message": "Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
         })
 
     attempt_key = (student_id, test_session, question_id)
@@ -242,7 +242,7 @@ def evaluate_answer():
         student_attempts[attempt_key] += 1
         return jsonify({
             "correct": False,
-            "message": "🛠️ Výstup nie je správny. Skús to ešte raz opraviť!",
+            "message": "Výstup nie je správny. Skús to ešte raz opraviť!",
             "student_output": student_output
         })
     
@@ -379,76 +379,72 @@ def test_analysis():
         "percentile_rank": percentile
     })
 
+@api_bp.route("/feedback/questions", methods=["GET"])
+def feedback_questions():
+    """Verejné: aktívne otázky dotazníka pre používateľa (z DB)."""
+    qs = FeedbackQuestion.query.filter_by(active=True).order_by(
+        FeedbackQuestion.position, FeedbackQuestion.id
+    ).all()
+    out = []
+    for q in qs:
+        try:
+            opts = json.loads(q.options_json) if q.options_json else []
+        except Exception:
+            opts = []
+        out.append({
+            "qkey": q.qkey,
+            "label_sk": q.label_sk,
+            "label_en": q.label_en,
+            "qtype": q.qtype,
+            "options": opts,
+            "required": q.required,
+        })
+    return jsonify({"questions": out})
+
+
 @api_bp.route("/feedback", methods=["POST"])
 def feedback():
-    data = request.get_json()
+    data = request.get_json() or {}
     student_id = data.get("student_id")
-
     if not student_id:
         return jsonify({"error": "Chýba student_id"}), 400
 
-    fields = [
-        "gender", "age", "experience", "field_of_study", "understand_questions",
-        "easy_navigation", "motivation_level", "helpful_feedback", "overall_usefulness",
-        "difficulty_match", "improved_skills", "time_spent", "future_interest",
-        "ui_satisfaction", "improvement_suggestion",
-    ]
-
-    # Ak už dotazník existuje, aktualizuj ho (nevytváraj duplikát)
-    existing = StudentFeedback.query.filter_by(student_id=student_id).first()
-    if existing:
-        for f in fields:
-            if f in data:
-                setattr(existing, f, data.get(f))
-        db.session.commit()
-        return jsonify({"message": "Odpovede boli aktualizované. Ďakujeme!", "updated": True})
-
-    feedback = StudentFeedback(student_id=student_id, **{f: data.get(f) for f in fields})
-    db.session.add(feedback)
+    answers = data.get("answers") or {}
+    # ulož každú odpoveď ako FeedbackResponse (upsert podľa qkey)
+    updated = False
+    for qkey, value in answers.items():
+        existing = FeedbackResponse.query.filter_by(student_id=student_id, qkey=qkey).first()
+        if existing:
+            existing.value = str(value) if value is not None else None
+            updated = True
+        else:
+            db.session.add(FeedbackResponse(student_id=student_id, qkey=qkey, value=str(value) if value is not None else None))
     db.session.commit()
-    return jsonify({"message": "Ďakujeme za vyplnenie dotazníka!", "updated": False})
+
+    msg = "Odpovede boli aktualizované. Ďakujeme!" if updated else "Ďakujeme za vyplnenie dotazníka!"
+    return jsonify({"message": msg, "updated": updated})
 
 
 @api_bp.route("/feedback/get", methods=["POST"])
 def get_feedback():
-    data = request.get_json()
+    data = request.get_json() or {}
     student_id = data.get("student_id")
     if not student_id:
         return jsonify({"error": "Chýba student_id"}), 400
 
-    fb = StudentFeedback.query.filter_by(student_id=student_id).first()
-    if not fb:
-        return jsonify({"submitted": False, "feedback": None})
+    responses = FeedbackResponse.query.filter_by(student_id=student_id).all()
+    if not responses:
+        return jsonify({"submitted": False, "feedback": {}})
 
-    return jsonify({
-        "submitted": True,
-        "feedback": {
-            "gender": fb.gender,
-            "age": fb.age,
-            "experience": fb.experience,
-            "field_of_study": fb.field_of_study,
-            "understand_questions": fb.understand_questions,
-            "easy_navigation": fb.easy_navigation,
-            "motivation_level": fb.motivation_level,
-            "helpful_feedback": fb.helpful_feedback,
-            "overall_usefulness": fb.overall_usefulness,
-            "difficulty_match": fb.difficulty_match,
-            "improved_skills": fb.improved_skills,
-            "time_spent": fb.time_spent,
-            "future_interest": fb.future_interest,
-            "ui_satisfaction": fb.ui_satisfaction,
-            "improvement_suggestion": fb.improvement_suggestion,
-        },
-    })
+    fb = {r.qkey: r.value for r in responses}
+    return jsonify({"submitted": True, "feedback": fb})
 
 
 @api_bp.route("/feedback/check", methods=["POST"])
 def check_feedback_submitted():
-    data = request.get_json()
+    data = request.get_json() or {}
     student_id = data.get("student_id")
-
     if not student_id:
         return jsonify({"error": "Chýba student_id"}), 400
-
-    existing = StudentFeedback.query.filter_by(student_id=student_id).first()
+    existing = FeedbackResponse.query.filter_by(student_id=student_id).first()
     return jsonify({"submitted": bool(existing)})

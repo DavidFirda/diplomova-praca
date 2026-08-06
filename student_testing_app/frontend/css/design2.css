@@ -1120,3 +1120,119 @@ body, .sidebar, .card, .metric, .task-row, .navbar, .chat-panel {
   max-width: 420px; margin: 0 auto 22px;
 }
 .fb-thanks .btn { width: auto; display: inline-block; }
+
+/* ---------- Rola používateľa v profile ---------- */
+.profile-role-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 18px;
+  color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
+}
+.role-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: var(--radius-full);
+  font-size: 0.82rem; font-weight: 700;
+  text-transform: capitalize;
+}
+.role-badge {
+  background: var(--primary-soft); color: var(--primary);
+}
+.role-badge--admin {
+  background: rgba(155, 126, 240, 0.15); color: var(--accent);
+}
+
+/* ---------- Admin sekcia v sidebare ---------- */
+.sidebar__section-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-faint);
+  padding: 14px 12px 6px; margin-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   ADMIN PANEL
+   ============================================================ */
+.admin-loading, .admin-muted { color: var(--text-muted); }
+.admin-muted { font-size: 0.85rem; }
+.admin-hint { font-size: 0.85rem; margin-top: 10px; min-height: 1.2em; }
+.admin-hint--ok { color: var(--success); }
+.admin-hint--err { color: var(--danger); }
+
+/* malé tlačidlá */
+.btn--sm { width: auto; min-height: 34px; padding: 6px 14px; font-size: 0.82rem; }
+.btn--danger-outline {
+  background: transparent; color: var(--danger);
+  border: 1.5px solid var(--danger); box-shadow: none;
+}
+.btn--danger-outline:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); box-shadow: none; }
+
+/* Tabuľka používateľov */
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.admin-table th, .admin-table td {
+  padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.admin-table th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.admin-table td { color: var(--text); }
+.admin-role-select { width: auto; min-width: 130px; margin: 0; padding: 7px 10px; font-size: 0.85rem; }
+.admin-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Modál */
+.admin-modal { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.admin-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+.admin-modal__panel {
+  position: relative; z-index: 1;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  width: 100%; max-width: 640px; max-height: 85vh; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+.admin-modal__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.admin-modal__header h2 { margin: 0; font-size: 1.15rem; }
+.admin-modal__header .icon-btn { width: 34px; min-width: 34px; height: 34px; padding: 0; }
+.admin-modal__body { padding: 20px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.admin-modal__footer { margin-top: 8px; }
+
+/* Odpovede v modáli */
+.admin-test-section { margin-bottom: 22px; }
+.admin-test-section__head, .admin-session__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.admin-test-section h3 { margin: 0 0 10px; font-size: 1rem; }
+.admin-session { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; }
+.admin-answer { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; }
+.admin-answer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; flex-wrap: wrap; }
+.admin-answer__code { width: 100%; margin: 0 0 8px; font-family: var(--font-mono); font-size: 0.82rem; }
+.admin-answer__actions { display: flex; gap: 8px; }
+.admin-check { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text); cursor: pointer; }
+.admin-check input { width: auto; margin: 0; }
+
+/* Otázky dotazníka */
+.admin-fb-actions { margin-bottom: 16px; }
+.admin-fb-actions .btn { width: auto; }
+.admin-q {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.admin-q:last-child { border-bottom: none; }
+.admin-q__main { flex: 1; min-width: 0; }
+.admin-q__label { color: var(--text); font-weight: 600; font-size: 0.92rem; margin-bottom: 5px; }
+.admin-q__meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.78rem; }
+.admin-q__badge { background: var(--primary-soft); color: var(--primary); padding: 2px 8px; border-radius: var(--radius-full); font-weight: 600; }
+.admin-q__req { background: var(--surface-2); color: var(--text-muted); padding: 2px 8px; border-radius: var(--radius-full); }
+.admin-q__inactive { background: var(--danger-soft); color: var(--danger); padding: 2px 8px; border-radius: var(--radius-full); }
+.admin-q__opts { color: var(--text-muted); font-size: 0.8rem; margin-top: 5px; }
+.admin-q__actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; flex-wrap: wrap; }
+.admin-order-btn {
+  width: 28px; min-width: 28px; height: 28px; padding: 0; font-size: 0.7rem;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+  border-radius: var(--radius-sm); box-shadow: none;
+}
+.admin-order-btn:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); transform: none; box-shadow: none; }
+.admin-order-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  .admin-hide-sm { display: none; }
+}

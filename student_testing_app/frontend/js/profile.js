@@ -16,6 +16,21 @@
       set("p-surname", s.surname);
       set("p-email", s.email);
       set("p-login", s.login);
+
+      // Rola (len na zobrazenie)
+      const role = (s.role || "user").toLowerCase();
+      const roleLabel = document.getElementById("p-role-label");
+      const roleBadge = document.getElementById("p-role-badge");
+      if (roleLabel) {
+        const key = role === "admin" ? "role.admin" : "role.user";
+        let text = role;
+        try { if (typeof I18N !== "undefined") { const v = I18N.t(key); if (v && v !== key) text = v; } } catch (e) {}
+        roleLabel.textContent = text;
+        roleLabel.setAttribute("data-i18n", key);
+      }
+      if (roleBadge) {
+        roleBadge.classList.toggle("role-badge--admin", role === "admin");
+      }
     } catch (e) {
       window.location.href = "/login";
     }
