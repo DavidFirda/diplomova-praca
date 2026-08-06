@@ -129,7 +129,17 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
 
     const result = await response.json();
     resultBox.innerText = result.student_output || "";
-    resultMessage.innerText = result.message || (result.correct ? "✔️ Správne!" : "❌ Nesprávne!");
+    resultMessage.innerText = result.message || (result.correct ? "Správne!" : "Nesprávne!");
+
+    // Zafarbi hlášku podľa výsledku (zladené s témou)
+    resultMessage.classList.remove("test-result--correct", "test-result--wrong", "test-result--info");
+    if (result.correct) {
+        resultMessage.classList.add("test-result--correct");
+    } else if (result.message && !result.student_output) {
+        resultMessage.classList.add("test-result--info");
+    } else {
+        resultMessage.classList.add("test-result--wrong");
+    }
 
     const isFinal = result.correct || (!result.message && result.correct === false);
 

@@ -3,77 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Analýza výsledkov</title>
+  <title>AdaptPy – Štatistika</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
-  <link rel="stylesheet" href="/css/styles.css?v=12" />
-  <style>
-    .center-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 40px;
-    }
-
-    .result-block {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-
-    .text-info {
-      font-size: 1.1em;
-    }
-
-    .chart-wrapper {
-      width: 150px;
-      height: 150px;
-    }
-
-    #analysis-content p {
-      text-align: left;
-    }
-
-    .btn-container {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    .metrics {
-      display: flex;
-      justify-content: center;
-      margin-top: 30px;
-    }
-
-    .metric-content {
-      text-align: left;
-      margin: 10px auto;
-      max-width: 400px;
-      width: 100%;
-    }
-
-  </style>
+  <link rel="stylesheet" href="/css/design2.css?v=17" />
 </head>
 <body>
-  <div class="container">
-    <h1 style="text-align: center;">Analýza výsledkov testu</h1>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="stats"></div>
 
-    <div id="analysis-content">
-      <p>🔄 Načítavam tvoje štatistiky...</p>
-    </div>
+    <main class="app-main app-main--centered">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="stats.title">Štatistika</h1>
+          <p data-i18n="stats.subtitle">Prehľad tvojich výsledkov.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
 
-    <div class="btn-container">
-      <a href="/feedback" class="btn">Na dotazník</a>
-    </div>
+      <div class="centered-card" style="max-width:640px;">
+        <!-- Výsledky posledného testu -->
+        <div class="card" id="test-result-card" style="display:none; margin-bottom:18px;">
+          <div class="stats-hero">
+            <div class="stats-donut"><canvas id="circleChart"></canvas></div>
+            <div class="stats-big">
+              <div class="stats-big__value" id="test-correct">–</div>
+              <div class="stats-big__label" data-i18n="stats.correctOfTotal">správnych odpovedí</div>
+            </div>
+          </div>
+          <div id="test-metrics" style="text-align:center; color:var(--text-muted); font-size:0.9rem;"></div>
+        </div>
+
+        <!-- Výsledky predtestu podľa kategórií -->
+        <div class="card" id="pretest-cats-card" style="display:none;">
+          <div class="stats-section-title" data-i18n="stats.pretestByCategory">Výsledky predtestu podľa kategórií</div>
+          <div class="cat-list" id="pretest-cats"></div>
+        </div>
+
+        <div class="card" id="stats-loading">
+          <div class="stats-loading" data-i18n="stats.loading">Načítavam tvoje štatistiky…</div>
+        </div>
+      </div>
+    </main>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/js/analyza.js?v=12"></script>
   <script src="/config.js"></script>
-  <script src="/js/script.js?v=12"></script>
-  <script>
-    checkAccessCode();
-  </script>
+  <script src="/js/i18n.js?v=17"></script>
+  <script src="/js/sidebar.js?v=17"></script>
+  <script src="/js/topbar-controls.js?v=17"></script>
+  <script src="/js/analyza.js?v=17"></script>
+  <script src="/js/script.js?v=17"></script>
+  <script> checkAccessCode(); </script>
 </body>
 </html>

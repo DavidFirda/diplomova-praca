@@ -1,70 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sk">
 <head>
-    <meta charset="UTF-8">
-    <title>Hlavný test</title>
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-  <link rel="stylesheet" href="/css/styles.css?v=12">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Hlavný test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/css/design2.css?v=17">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
 </head>
 <body>
-<div class="container">
-    <h1>🧠 Hlavný test</h1>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="tests"></div>
 
-    <div id="test-container">
-        <div class="question-header">
-            <p class="left"><strong>Otázka:</strong></p>
-            <p class="right" id="question-counter"></p>
+    <main class="app-main app-main--centered">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="test.main">Hlavný test</h1>
         </div>
-    
-        <p id="instruction" class="left-align"></p>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
 
-        <div style="display: flex; align-items: center; margin-top: 20px;">
-            <p style="margin: 0; margin-right: 8px;"><strong>Vstup:</strong></p>
-            <div class="tooltip">
-                <span style="font-weight: bold; font-size: 14px; border-radius: 50%; background: #ddd; padding: 0 6px;">i</span>
-                <span class="tooltiptext">
-                    Nezabudni použiť vstup, ktorý je uvedený pri otázke.
-                    V niektorých prípadoch budeš potrebovať aj print().
-                    Výstup kódu sa zobrazí pod odpoveďou.
-                    Máš maximálne 2 pokusy.
-                </span>
+      <div class="centered-card" style="max-width:720px;">
+        <div class="test-card" id="test-container">
+          <div class="test-header">
+            <span class="test-header__label"><span data-i18n="test.question">Otázka</span>:</span>
+            <span class="test-counter" id="question-counter"></span>
+          </div>
+
+          <p id="instruction" class="test-instruction"></p>
+
+          <div class="test-input-row">
+            <strong><span data-i18n="test.input">Vstup</span>:</strong>
+            <div class="test-tooltip">
+              <span class="test-tooltip__icon">i</span>
+              <span class="test-tooltip__text" data-i18n="test.inputHint">Nezabudni použiť vstup uvedený pri otázke. V niektorých prípadoch budeš potrebovať aj print(). Výstup kódu sa zobrazí pod odpoveďou. Máš maximálne 2 pokusy.</span>
             </div>
+          </div>
+
+          <pre id="input" class="test-input-plain"></pre>
+          <p class="test-category" id="category"></p>
+
+          <textarea id="student_code" name="code"></textarea>
+          <input type="hidden" id="question_id">
+
+          <pre id="output-box" class="test-output"></pre>
+
+          <div id="solution-box" class="test-solution" style="display:none;">
+            <h3 data-i18n="test.solution">Správne riešenie:</h3>
+            <pre id="solution-code"></pre>
+          </div>
+
+          <button id="submit-answer" data-i18n="test.submit">Odpovedať</button>
+          <button id="next-question" class="btn--secondary" style="margin-top:10px; display:none;" data-i18n="test.next">Ďalšia otázka</button>
+          <p class="test-result" id="result-message"></p>
         </div>
+      </div>
+    </main>
+  </div>
 
-        <pre id="input" class="input-plain"></pre>
-        <p class="category-label" id="category"></p>
-        <textarea id="student_code" name="code"></textarea>
-        <input type="hidden" id="question_id">
-        <pre id="output-box" style="background:#f8f8f8; padding:10px; margin-top:10px; text-align:left; border:1px solid #ccc; border-radius:5px;
-                                    white-space:pre-wrap; word-break:break-word; overflow-x:auto;"></pre>
-
-        <div id="solution-box" style="display: none; text-align: left;">
-            <h3>Správne riešenie:</h3>
-            <pre id="solution-code" style="
-                background: #f4f4f4;
-                padding: 10px;
-                white-space: pre-wrap;
-                word-break: break-word;
-                border-radius: 5px;
-                border: 1px solid #ccc;
-                text-align: left;
-            "></pre>
-        </div>
-        
-        <button id="submit-answer">Odpovedať</button>
-        <button id="next-question" style="margin-top:10px; display:none;">➡️ Ďalšia otázka</button>
-        <p class= "btn-container" id="result-message"></p>
-    </div>
-</div>
-
-<script src="/js/hlavnytest.js?v=12"></script>
-<script src="/config.js"></script>
-<script src="/js/script.js?v=12"></script>
-<script>
-  checkAccessCode();
-</script>
+  <script src="/config.js"></script>
+  <script src="/js/i18n.js?v=17"></script>
+  <script src="/js/sidebar.js?v=17"></script>
+  <script src="/js/topbar-controls.js?v=17"></script>
+  <script src="/js/hlavnytest.js?v=17"></script>
+  <script src="/js/script.js?v=17"></script>
+  <script> checkAccessCode(); </script>
 </body>
 </html>

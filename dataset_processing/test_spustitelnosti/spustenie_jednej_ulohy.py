@@ -32,7 +32,7 @@ expected_output, expected_error = capture_output(first_question_output)
 
 # Výpis výsledku
 if expected_error:
-    print("🛠️ Výstup nie je správny. Skús to ešte raz opraviť:")
+    print("Výstup nie je správny. Skús to ešte raz opraviť:")
     print("Chyba:", expected_error)
 else:
     print("✅ Výstup bol úspešne spustený:")
@@ -104,7 +104,7 @@ expected_output, expected_error = capture_output(first_question_output)
 
 # Výpis výsledku
 if expected_error:
-    print("🛠️ Výstup nie je správny. Skús to ešte raz opraviť:")
+    print("Výstup nie je správny. Skús to ešte raz opraviť:")
     print("Chyba:", expected_error)
 else:
     print("✅ Výstup bol úspešne spustený:")

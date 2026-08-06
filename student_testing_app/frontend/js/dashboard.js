@@ -19,13 +19,11 @@
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set("dash-name", displayName);
 
-  // Predtest
+  // Predtest - po dokončení celá karta zmizne
   const pretestDone = data.pretest && data.pretest.done;
   if (pretestDone) {
-    const badge = document.getElementById("pretest-badge");
-    const action = document.getElementById("pretest-action");
-    if (badge) badge.style.display = "inline-flex";
-    if (action) action.style.display = "none";
+    const rowPretest = document.getElementById("row-pretest");
+    if (rowPretest) rowPretest.style.display = "none";
   }
 
   // Hlavné testy
@@ -51,6 +49,8 @@
   if (data.feedback_done) {
     const fb = document.getElementById("feedback-badge");
     if (fb) fb.style.display = "inline-flex";
+    const fbBtn = document.getElementById("feedback-btn");
+    if (fbBtn) fbBtn.textContent = (typeof I18N !== "undefined") ? I18N.t("dash.feedback.edit") : "Upraviť odpovede";
   }
 
   if (typeof I18N !== "undefined") I18N.apply();

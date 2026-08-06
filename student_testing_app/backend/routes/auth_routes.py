@@ -210,9 +210,9 @@ def dashboard():
         session.clear()
         return jsonify({"error": "Nie si prihlásený."}), 401
 
-    # Predtest: považujeme za dokončený, ak existuje aspoň jedna odpoveď typu "pretest"
+    # Predtest: považujeme za dokončený, ak existuje aspoň jedna odpoveď typu "predtest"
     pretest_answers = StudentAnswer.query.filter_by(
-        student_id=student_id, test_type="pretest"
+        student_id=student_id, test_type="predtest"
     ).count()
     pretest_done = pretest_answers > 0
 
@@ -251,7 +251,62 @@ def dashboard():
     }), 200
 
 
-### Zmena hesla (prihlásený používateľ) ###
+### Štatistiky - výsledky predtestu podľa kategórií ###
+@auth_bp.route("/stats", methods=["GET"])
+def stats():
+    student_id = session.get("student_id")
+    if not student_id:
+        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = Student.query.get(student_id)
+    if not student:
+        session.clear()
+        return jsonify({"error": "Nie si prihlásený."}), 401
+
+    from models import StudentAnswer
+
+    def by_category(test_type):
+        answers = StudentAnswer.query.filter_by(
+            student_id=student_id, test_type=test_type
+        ).all()
+        cats = {}
+        for a in answers:
+            cat = a.category or "Ostatné"
+            if cat not in cats:
+                cats[cat] = {"total": 0, "correct": 0}
+            cats[cat]["total"] += 1
+            if a.is_correct:
+                cats[cat]["correct"] += 1
+        result = []
+        for cat, v in sorted(cats.items()):
+            acc = round(v["correct"] / v["total"] * 100, 1) if v["total"] > 0 else 0.0
+            result.append({
+                "category": cat,
+                "total": v["total"],
+                "correct": v["correct"],
+                "accuracy": acc,
+            })
+        return result
+
+    pretest_cats = by_category("predtest")
+    main_cats = by_category("main")
+
+    # Celkové čísla predtestu
+    pretest_total = sum(c["total"] for c in pretest_cats)
+    pretest_correct = sum(c["correct"] for c in pretest_cats)
+    pretest_acc = round(pretest_correct / pretest_total * 100, 1) if pretest_total > 0 else 0.0
+
+    return jsonify({
+        "pretest": {
+            "done": pretest_total > 0,
+            "total": pretest_total,
+            "correct": pretest_correct,
+            "accuracy": pretest_acc,
+            "categories": pretest_cats,
+        },
+        "main": {
+            "categories": main_cats,
+        },
+    }), 200
 @auth_bp.route("/change-password", methods=["POST"])
 def change_password():
     student_id = session.get("student_id")

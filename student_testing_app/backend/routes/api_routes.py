@@ -387,28 +387,60 @@ def feedback():
     if not student_id:
         return jsonify({"error": "Chýba student_id"}), 400
 
-    feedback = StudentFeedback(
-        student_id=student_id,
-        gender=data.get("gender"),
-        age=data.get("age"),
-        experience=data.get("experience"),
-        field_of_study=data.get("field_of_study"),
-        understand_questions=data.get("understand_questions"),
-        easy_navigation=data.get("easy_navigation"),
-        motivation_level=data.get("motivation_level"),
-        helpful_feedback=data.get("helpful_feedback"),
-        overall_usefulness=data.get("overall_usefulness"),
-        difficulty_match=data.get("difficulty_match"),
-        improved_skills=data.get("improved_skills"),
-        time_spent=data.get("time_spent"),
-        future_interest=data.get("future_interest"),
-        ui_satisfaction=data.get("ui_satisfaction"),
-        improvement_suggestion=data.get("improvement_suggestion")
-    )
+    fields = [
+        "gender", "age", "experience", "field_of_study", "understand_questions",
+        "easy_navigation", "motivation_level", "helpful_feedback", "overall_usefulness",
+        "difficulty_match", "improved_skills", "time_spent", "future_interest",
+        "ui_satisfaction", "improvement_suggestion",
+    ]
 
+    # Ak už dotazník existuje, aktualizuj ho (nevytváraj duplikát)
+    existing = StudentFeedback.query.filter_by(student_id=student_id).first()
+    if existing:
+        for f in fields:
+            if f in data:
+                setattr(existing, f, data.get(f))
+        db.session.commit()
+        return jsonify({"message": "Odpovede boli aktualizované. Ďakujeme!", "updated": True})
+
+    feedback = StudentFeedback(student_id=student_id, **{f: data.get(f) for f in fields})
     db.session.add(feedback)
     db.session.commit()
-    return jsonify({"message": "Ďakujeme za vyplnenie dotazníka!"})
+    return jsonify({"message": "Ďakujeme za vyplnenie dotazníka!", "updated": False})
+
+
+@api_bp.route("/feedback/get", methods=["POST"])
+def get_feedback():
+    data = request.get_json()
+    student_id = data.get("student_id")
+    if not student_id:
+        return jsonify({"error": "Chýba student_id"}), 400
+
+    fb = StudentFeedback.query.filter_by(student_id=student_id).first()
+    if not fb:
+        return jsonify({"submitted": False, "feedback": None})
+
+    return jsonify({
+        "submitted": True,
+        "feedback": {
+            "gender": fb.gender,
+            "age": fb.age,
+            "experience": fb.experience,
+            "field_of_study": fb.field_of_study,
+            "understand_questions": fb.understand_questions,
+            "easy_navigation": fb.easy_navigation,
+            "motivation_level": fb.motivation_level,
+            "helpful_feedback": fb.helpful_feedback,
+            "overall_usefulness": fb.overall_usefulness,
+            "difficulty_match": fb.difficulty_match,
+            "improved_skills": fb.improved_skills,
+            "time_spent": fb.time_spent,
+            "future_interest": fb.future_interest,
+            "ui_satisfaction": fb.ui_satisfaction,
+            "improvement_suggestion": fb.improvement_suggestion,
+        },
+    })
+
 
 @api_bp.route("/feedback/check", methods=["POST"])
 def check_feedback_submitted():

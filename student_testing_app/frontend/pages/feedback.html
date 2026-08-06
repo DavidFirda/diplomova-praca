@@ -3,139 +3,187 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dotazník</title>
+  <title>AdaptPy – Dotazník</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
-  <link rel="stylesheet" href="/css/styles.css?v=12" />
+  <link rel="stylesheet" href="/css/design2.css?v=17" />
 </head>
 <body>
-  <div class="container">
-    <h1>🎓 Poprosím ťa ešte o vyplnenie dotazníka.</h1>
-    <form id="feedback-form">
-      <label>Aké je tvoje pohlavie?</label><br />
-      <select name="gender" required>
-        <option value="">-- Vyber --</option>
-        <option value="Muž">Muž</option>
-        <option value="Žena">Žena</option>
-        <option value="Iné">Iné</option>
-        <option value="Nechcem uviesť">Nechcem uviesť</option>
-      </select><br /><br />
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="feedback"></div>
 
-      <label>Aký je tvoj vek?</label><br />
-      <input type="number" name="age" required min="10" max="100" /><br /><br />
+    <main class="app-main app-main--centered">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="fb.title">Dotazník</h1>
+          <p data-i18n="fb.subtitle">Pomôž nám aplikáciu zlepšiť. Ďakujeme za tvoj čas.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
 
-      <label>Akú máš skúsenosť s programovaním?</label><br />
-      <select name="experience" required>
-        <option value="Žiadna">Žiadna</option>
-        <option value="Základná">Základná</option>
-        <option value="Pokročilá">Pokročilá</option>
-        <option value="Profesionálna">Profesionálna</option>
-      </select><br /><br />
+      <div class="centered-card" style="max-width:640px;">
+        <div class="card">
+          <form id="feedback-form" class="form-grid">
+            <div class="form-field">
+              <label data-i18n="fb.gender">Aké je tvoje pohlavie?</label>
+              <select name="gender" required>
+                <option value="" data-i18n="fb.choose">-- Vyber --</option>
+                <option value="Muž">Muž</option>
+                <option value="Žena">Žena</option>
+                <option value="Iné">Iné</option>
+                <option value="Nechcem uviesť">Nechcem uviesť</option>
+              </select>
+            </div>
 
-      <label>Aký je tvoj študijný odbor?</label><br />
-      <input type="text" name="field_of_study" required /><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.age">Aký je tvoj vek?</label>
+              <input type="number" name="age" required min="10" max="100" />
+            </div>
 
-      <label>Rozumel/a si úlohám?</label><br />
-      <select name="understand_questions" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.experience">Akú máš skúsenosť s programovaním?</label>
+              <select name="experience" required>
+                <option value="Žiadna">Žiadna</option>
+                <option value="Základná">Základná</option>
+                <option value="Pokročilá">Pokročilá</option>
+                <option value="Profesionálna">Profesionálna</option>
+              </select>
+            </div>
 
-      <label>Bolo používanie aplikácie pre teba intuitívne?</label><br />
-      <select name="easy_navigation" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.field">Aký je tvoj študijný odbor?</label>
+              <input type="text" name="field_of_study" required />
+            </div>
 
-      <label>Ako by si ohodnotil/a svoju motiváciu počas riešenia testu?</label><br />
-        <select name="motivation_level" required>
-            <option value="">-- Vyber --</option>
-            <option value="Vysoká">Vysoká</option>
-            <option value="Skôr vysoká">Skôr vysoká</option>
-            <option value="Skôr nízka">Skôr nízka</option>
-            <option value="Nízka">Nízka</option>
-        </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.understand">Rozumel/a si úlohám?</label>
+              <select name="understand_questions" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <label>Pomohla ti spätná väzba k odpovediam?</label><br />
-      <select name="helpful_feedback" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.intuitive">Bolo používanie aplikácie pre teba intuitívne?</label>
+              <select name="easy_navigation" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <label>Bol pre teba test užitočný?</label><br />
-      <select name="overall_usefulness" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.motivation">Ako by si ohodnotil/a svoju motiváciu počas riešenia testu?</label>
+              <select name="motivation_level" required>
+                <option value="">-- Vyber --</option>
+                <option value="Vysoká">Vysoká</option>
+                <option value="Skôr vysoká">Skôr vysoká</option>
+                <option value="Skôr nízka">Skôr nízka</option>
+                <option value="Nízka">Nízka</option>
+              </select>
+            </div>
 
-      <label>Myslíš si, že úlohy boli primerané tvojej úrovni?</label><br />
-      <select name="difficulty_match" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.helpful">Pomohla ti spätná väzba k odpovediam?</label>
+              <select name="helpful_feedback" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <label>Myslíš si, že si sa zlepšil/a v programovaní?</label><br />
-      <select name="improved_skills" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.useful">Bol pre teba test užitočný?</label>
+              <select name="overall_usefulness" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <label>Koľko času si približne venoval/a riešeniu testu?</label><br />
-      <select name="time_spent" required>
-        <option value="">-- Vyber --</option>
-        <option value="Menej ako 20 minút">Menej ako 20 minút</option>
-        <option value="20 – 40 minút">20 – 40 minút</option>
-        <option value="40 – 60 minút">40 – 60 minút</option>
-        <option value="Viac ako 1 hodina">Viac ako 1 hodina</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.difficulty">Myslíš si, že úlohy boli primerané tvojej úrovni?</label>
+              <select name="difficulty_match" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <label>Chcel/a by si v budúcnosti riešiť viac takýchto úloh?</label><br />
-      <select name="future_interest" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.improved">Myslíš si, že si sa zlepšil/a v programovaní?</label>
+              <select name="improved_skills" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <label>Bola pre teba vizuálna stránka a dizajn aplikácie vyhovujúca?</label><br />
-      <select name="ui_satisfaction" required>
-        <option value="">-- Vyber --</option>
-        <option value="Áno">Áno</option>
-        <option value="Skôr áno">Skôr áno</option>
-        <option value="Skôr nie">Skôr nie</option>
-        <option value="Nie">Nie</option>
-      </select><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.time">Koľko času si približne venoval/a riešeniu testu?</label>
+              <select name="time_spent" required>
+                <option value="">-- Vyber --</option>
+                <option value="Menej ako 20 minút">Menej ako 20 minút</option>
+                <option value="20 – 40 minút">20 – 40 minút</option>
+                <option value="40 – 60 minút">40 – 60 minút</option>
+                <option value="Viac ako 1 hodina">Viac ako 1 hodina</option>
+              </select>
+            </div>
 
-      <label>Máš návrhy na zlepšenie?</label><br />
-      <textarea name="improvement_suggestion" rows="4" style="width: 100%;"></textarea><br /><br />
+            <div class="form-field">
+              <label data-i18n="fb.future">Chcel/a by si v budúcnosti riešiť viac takýchto úloh?</label>
+              <select name="future_interest" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
 
-      <button type="submit" class="btn">Odoslať</button>
-    </form>
+            <div class="form-field">
+              <label data-i18n="fb.design">Bola pre teba vizuálna stránka a dizajn aplikácie vyhovujúca?</label>
+              <select name="ui_satisfaction" required>
+                <option value="">-- Vyber --</option>
+                <option value="Áno">Áno</option>
+                <option value="Skôr áno">Skôr áno</option>
+                <option value="Skôr nie">Skôr nie</option>
+                <option value="Nie">Nie</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label data-i18n="fb.suggestion">Máš návrhy na zlepšenie?</label>
+              <textarea name="improvement_suggestion" rows="4"></textarea>
+            </div>
+
+            <button type="submit" data-i18n="fb.submit">Odoslať</button>
+          </form>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <script src="/js/feedback.js?v=12"></script>
   <script src="/config.js"></script>
-  <script src="/js/script.js?v=12"></script>
-  <script>
-    checkAccessCode();
-  </script>
+  <script src="/js/i18n.js?v=17"></script>
+  <script src="/js/sidebar.js?v=17"></script>
+  <script src="/js/topbar-controls.js?v=17"></script>
+  <script src="/js/feedback.js?v=17"></script>
+  <script src="/js/script.js?v=17"></script>
+  <script> checkAccessCode(); </script>
 </body>
 </html>
