@@ -231,11 +231,15 @@ def dashboard():
     correct = sum(1 for a in all_answers if a.is_correct)
     accuracy = round(correct / total * 100, 1) if total > 0 else 0.0
 
-    # Dotazník spätnej väzby
-    feedback_done = StudentFeedback.query.filter_by(student_id=student_id).count() > 0
+    # Dotazník spätnej väzby (nový dynamický systém: FeedbackResponse)
+    from models import FeedbackResponse
+    feedback_done = FeedbackResponse.query.filter_by(student_id=student_id).count() > 0
+
+    is_admin = (getattr(student, "role", "user") or "user") == "admin"
 
     return jsonify({
         "student": _student_public(student),
+        "is_admin": is_admin,
         "pretest": {
             "done": pretest_done,
             "answers": pretest_answers,

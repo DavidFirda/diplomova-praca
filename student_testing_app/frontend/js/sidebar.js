@@ -157,9 +157,20 @@
       const ok = await window.adaptpySessionGuard();
       if (!ok) return; // guard už presmeroval
     }
-    const [student, pretestDone, isAdmin] = await Promise.all([
-      fetchStudent(), fetchPretestDone(), fetchIsAdmin()
-    ]);
+    // Jedno zdieľané volanie /api/auth/dashboard (deduplikované) namiesto
+    // 3 samostatných (/me, /dashboard, /admin/me) - výrazne rýchlejšie.
+    let student = null, pretestDone = false, isAdmin = false;
+    if (window.adaptpyGetDashboard) {
+      const dash = await window.adaptpyGetDashboard();
+      if (dash && !dash._unauth) {
+        student = dash.student || null;
+        pretestDone = !!(dash.pretest && dash.pretest.done);
+        isAdmin = !!dash.is_admin;
+      }
+    } else {
+      // fallback (ak by guard nebol načítaný)
+      [student, pretestDone, isAdmin] = await Promise.all([fetchStudent(), fetchPretestDone(), fetchIsAdmin()]);
+    }
     render(student, pretestDone, isAdmin);
   }
 

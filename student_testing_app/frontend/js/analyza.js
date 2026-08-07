@@ -52,6 +52,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (e) { /* ticho */ }
 
   if (loading) loading.style.display = "none";
+
+  // Ak sa nezobrazil ani test ani predtest → prázdny stav
+  const hasTestCard = document.getElementById("test-result-card").style.display === "block";
+  const hasPretestCard = document.getElementById("pretest-cats-card").style.display === "block";
+  if (!hasTestCard && !hasPretestCard) {
+    const empty = document.getElementById("stats-empty");
+    if (empty) empty.style.display = "block";
+  }
 });
 
 function renderDonut(correct, incorrect) {

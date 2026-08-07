@@ -1238,3 +1238,14 @@ body, .sidebar, .card, .metric, .task-row, .navbar, .chat-panel {
 @media (max-width: 640px) {
   .admin-hide-sm { display: none; }
 }
+
+.stats-empty { text-align: center; padding: 30px 16px; }
+.stats-empty__icon {
+  width: 56px; height: 56px; margin: 0 auto 16px;
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--text-muted);
+}
+.stats-empty__icon svg { width: 28px; height: 28px; }
+.stats-empty__title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.stats-empty__text { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; max-width: 400px; margin: 0 auto 20px; }
+.stats-empty .btn { width: auto; display: inline-block; }

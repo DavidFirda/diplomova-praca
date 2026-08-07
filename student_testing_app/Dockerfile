@@ -18,7 +18,9 @@ EXPOSE 5000
 ENV FLASK_APP=backend/app.py
 
 
-CMD ["sh", "-c", "-u","python load_questions.py && exec python backend/app.py"]
+#CMD ["sh", "-c", "-u","python load_questions.py && exec python backend/app.py"]
+
+CMD ["sh", "-c", "python load_questions.py && exec gunicorn --chdir backend --bind 0.0.0.0:5000 --workers 4 --threads 2 --timeout 60 app:app"]
 
 #EXPOSE 5000
 

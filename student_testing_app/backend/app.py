@@ -38,6 +38,17 @@ if not database_url:
     raise RuntimeError("DATABASE_URL nie je nastavený v .env!")
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Connection pool - drží otvorené spojenia na DB (Neon), aby sa pri každom
+# requeste neotváralo nové (to má na cloud DB citeľnú latenciu).
+# pool_pre_ping overí, či je spojenie živé (Neon zatvára nečinné spojenia).
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_size": 5,
+    "max_overflow": 10,
+    "pool_recycle": 280,      # recykluj spojenie po ~4.5 min (Neon zatvára nečinné)
+    "pool_pre_ping": True,    # over živosť spojenia pred použitím
+    "pool_timeout": 30,
+}
 app.config['ADMIN_TOKEN'] = os.getenv("ADMIN_TOKEN")
 
 # URL, na ktorú sa v emaili s resetom hesla generuje odkaz na reset-password.html

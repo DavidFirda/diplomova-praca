@@ -4,9 +4,11 @@
 (async function () {
   let data;
   try {
-    const r = await fetch("/api/auth/dashboard", { credentials: "include" });
-    if (r.status === 401) { window.location.href = "/login"; return; }
-    data = await r.json();
+    // Zdieľané volanie (deduplikované so sidebar/guard) - nevolá sa druhýkrát.
+    data = window.adaptpyGetDashboard
+      ? await window.adaptpyGetDashboard()
+      : await (await fetch("/api/auth/dashboard", { credentials: "include" })).json();
+    if (!data || data._unauth) { window.location.href = "/login"; return; }
   } catch (e) {
     window.location.href = "/login";
     return;
