@@ -4,6 +4,104 @@ function tr(key, fallback) {
   return fallback;
 }
 
+// Preloží chybovú hlášku zo servera: ak má error_key, použije i18n preklad,
+// inak zobrazí surový text (data.error / data.message) alebo generickú chybu.
+function adaptpyErrText(data) {
+  if (data && data.error_key) {
+    const t = tr(data.error_key, null);
+    if (t) return t;
+  }
+  return (data && (data.error || data.message)) || tr("msg.unknownError", "Neznáma chyba.");
+}
+
+// Naformátuje sekundy na "M:SS" (napr. 125 -> "2:05").
+function adaptpyFmtTime(secs) {
+  secs = Math.max(0, Math.floor(secs));
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+// Spustí odpočet po prekročení limitu: zablokuje tlačidlo a nad chybovou
+// hláškou zobrazí časovač, dokedy sa nedá skúsiť znova. Po vypršaní tlačidlo
+// znova povolí. Funguje v SK aj EN (texty cez i18n).
+let _adaptpyLockoutTimer = null;
+// Kľúč v localStorage, kam sa uloží čas (timestamp ms), dokedy trvá blokovanie.
+var ADAPTPY_LOCKOUT_KEY = "adaptpy_login_lockout_until";
+
+function adaptpyStartLockout(seconds, buttonId, buttonI18nKey, skipStore) {
+  const errorMessage = document.getElementById("error-message");
+  const btn = document.getElementById(buttonId);
+  let remaining = Math.max(1, parseInt(seconds, 10) || 60);
+
+  // ulož čas konca blokovania, aby prežil refresh stránky
+  if (!skipStore) {
+    try {
+      localStorage.setItem(ADAPTPY_LOCKOUT_KEY, String(Date.now() + remaining * 1000));
+    } catch (e) {}
+  }
+
+  if (_adaptpyLockoutTimer) clearInterval(_adaptpyLockoutTimer);
+
+  // zablokuj tlačidlo
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = "0.6";
+    btn.style.cursor = "not-allowed";
+  }
+
+  function render() {
+    if (errorMessage) {
+      const line1 = tr("auth.retryIn", "Skús to znova o") + " " + adaptpyFmtTime(remaining);
+      const line2 = tr("auth.tooManyLogin", "Príliš veľa pokusov o prihlásenie.");
+      errorMessage.innerHTML =
+        '<span style="font-weight:600;font-variant-numeric:tabular-nums;">' + line1 + "</span><br>" + line2;
+      errorMessage.style.display = "block";
+    }
+  }
+  render();
+
+  _adaptpyLockoutTimer = setInterval(function () {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(_adaptpyLockoutTimer);
+      _adaptpyLockoutTimer = null;
+      try { localStorage.removeItem(ADAPTPY_LOCKOUT_KEY); } catch (e) {}
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = "";
+        btn.style.cursor = "";
+      }
+      if (errorMessage) {
+        errorMessage.innerText = tr("auth.canRetryNow", "Teraz to môžeš skúsiť znova.");
+      }
+      return;
+    }
+    render();
+  }, 1000);
+}
+
+// Pri načítaní stránky obnoví časovač, ak blokovanie ešte trvá (prežije refresh).
+function adaptpyRestoreLockout(buttonId) {
+  try {
+    const until = parseInt(localStorage.getItem(ADAPTPY_LOCKOUT_KEY), 10);
+    if (!until) return;
+    const remainingMs = until - Date.now();
+    if (remainingMs > 0) {
+      adaptpyStartLockout(Math.ceil(remainingMs / 1000), buttonId, "login.submit", true);
+    } else {
+      localStorage.removeItem(ADAPTPY_LOCKOUT_KEY);
+    }
+  } catch (e) {}
+}
+
+// Po načítaní stránky skús obnoviť prípadný bežiaci lockout na login tlačidle.
+document.addEventListener("DOMContentLoaded", function () {
+  if (document.getElementById("loginButton")) {
+    adaptpyRestoreLockout("loginButton");
+  }
+});
+
 function checkAccessCode() {
     const access = sessionStorage.getItem("access_granted");
     if (!access || access !== "true") {
@@ -92,8 +190,11 @@ async function login() {
             // Po prihlásení ide používateľ na dashboard (rozcestník),
             // nie automaticky do testu.
             window.location.href = "/dashboard";
+        } else if (response.status === 429) {
+            // Príliš veľa pokusov - spusti odpočet a zablokuj tlačidlo
+            adaptpyStartLockout(data.retry_after || 60, "loginButton", "login.submit");
         } else {
-            errorMessage.innerText = data.error || "Neznáma chyba.";
+            errorMessage.innerText = adaptpyErrText(data);
             errorMessage.style.display = "block";
         }
     } catch (error) {
@@ -131,7 +232,7 @@ async function register() {
             alert("Registrácia úspešná! Teraz sa môžeš prihlásiť.");
             window.location.href = "/login";
         } else {
-            errorMessage.innerText = data.error || "Neznáma chyba.";
+            errorMessage.innerText = adaptpyErrText(data);
             errorMessage.style.display = "block";
         }
     } catch (error) {
@@ -166,7 +267,7 @@ async function forgotPassword() {
             infoMessage.innerText = msg;
             infoMessage.style.display = "block";
         } else {
-            errorMessage.innerText = data.error || "Neznáma chyba.";
+            errorMessage.innerText = adaptpyErrText(data);
             errorMessage.style.display = "block";
         }
     } catch (error) {
@@ -214,7 +315,7 @@ async function resetPassword() {
             infoMessage.style.display = "block";
             setTimeout(() => { window.location.href = "/login"; }, 2000);
         } else {
-            errorMessage.innerText = data.error || "Neznáma chyba.";
+            errorMessage.innerText = adaptpyErrText(data);
             errorMessage.style.display = "block";
         }
     } catch (error) {

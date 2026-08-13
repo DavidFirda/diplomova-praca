@@ -97,11 +97,14 @@ Kód študenta sa spúšťa cez `exec()` a jeho výstup sa porovnáva s očakáv
 Login a reset hesla majú jednoduchý **in-memory** rate limiter (obmedzenie
 počtu pokusov za časové okno).
 
-> ⚠️ Limiter drží stav v pamäti jedného procesu. Pri viacerých workeroch
-> (napr. gunicorn) má každý worker vlastný počítač, takže reálny limit je
-> násobne vyšší. Pre produkčné nasadenie so škálovaním je vhodný
-> **Flask-Limiter + Redis** (zdieľaný stav medzi workermi). Detaily nižšie
-> v hlavnom README / v komentároch v kóde.
+Implementácia je v **`services/rate_limiter.py`** a používa **Redis** (zdieľané
+počítadlo cez sliding-window sorted set), takže limit platí **naprieč všetkými
+gunicorn workermi**. Redis službu poskytuje `docker-compose.yml` a prepája sa
+cez premennú `REDIS_URL`.
+
+> Ak `REDIS_URL` nie je nastavený alebo je Redis nedostupný, limiter automaticky
+> prepne na **in-memory** režim (fallback) — aplikácia funguje aj bez Redisu
+> (napr. pri lokálnom vývoji), ale limit vtedy platí len v rámci jedného procesu.
 
 ---
 

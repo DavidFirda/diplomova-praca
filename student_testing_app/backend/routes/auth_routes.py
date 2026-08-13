@@ -2,13 +2,13 @@ import re
 import time
 import hashlib
 import secrets
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, request, jsonify, session, current_app
 
 from models import db, Student
 from services.mail_utils import send_email
+from services.rate_limiter import rate_limited as _rate_limited, retry_after as _retry_after
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -16,22 +16,11 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LOGIN_RE = re.compile(r"^[A-Za-z0-9_.-]{3,50}$")
 RESET_TOKEN_TTL_MINUTES = 30
 
-# --- Veľmi jednoduchý in-memory rate limiter ---
-# Chráni pred hrubou silou pri /login a spamovaním /forgot-password.
-# Poznámka: funguje len v rámci jedného procesu/kontajnera. Pri škálovaní
-# na viac backend instancií (produkcia) je potrebné nahradiť napr.
-# Flask-Limiter + Redis, ktoré zdieľajú stav medzi instanciami.
-_attempts = defaultdict(list)
-
-
-def _rate_limited(key: str, max_attempts: int, window_seconds: int) -> bool:
-    now = time.time()
-    window_start = now - window_seconds
-    _attempts[key] = [t for t in _attempts[key] if t > window_start]
-    if len(_attempts[key]) >= max_attempts:
-        return True
-    _attempts[key].append(now)
-    return False
+# --- Rate limiter ---
+# Ochrana pred hrubou silou pri /login a spamom /forgot-password.
+# Implementacia je v services/rate_limiter.py a pouziva Redis (ak je REDIS_URL
+# nastaveny), takze limit plati napriec vsetkymi gunicorn workermi. Bez Redisu
+# automaticky prepne na in-memory rezim (len jeden proces).
 
 
 def _client_ip() -> str:
@@ -72,23 +61,23 @@ def register():
     password = data.get("password") or ""
 
     if not name or not surname or not login or not email or not password:
-        return jsonify({"error": "Vyplň prosím všetky polia."}), 400
+        return jsonify({"error": "Vyplň prosím všetky polia.", "error_key": "auth.fillAllFields"}), 400
 
     if not LOGIN_RE.match(login):
-        return jsonify({"error": "Login smie obsahovať len písmená, číslice, '.', '_', '-' (3-50 znakov)."}), 400
+        return jsonify({"error": "Login smie obsahovať len písmená, číslice, '.', '_', '-' (3-50 znakov).", "error_key": "auth.invalidLogin"}), 400
 
     if not EMAIL_RE.match(email):
-        return jsonify({"error": "Neplatný formát emailu."}), 400
+        return jsonify({"error": "Neplatný formát emailu.", "error_key": "auth.invalidEmail"}), 400
 
     pw_error = _validate_password_strength(password)
     if pw_error:
         return jsonify({"error": pw_error}), 400
 
     if Student.query.filter_by(login=login).first():
-        return jsonify({"error": "Tento login je už obsadený."}), 409
+        return jsonify({"error": "Tento login je už obsadený.", "error_key": "auth.loginTaken"}), 409
 
     if Student.query.filter_by(email=email).first():
-        return jsonify({"error": "Tento email je už zaregistrovaný."}), 409
+        return jsonify({"error": "Tento email je už zaregistrovaný.", "error_key": "auth.emailTaken"}), 409
 
     student = Student(name=name, surname=surname, login=login, email=email)
     student.set_password(password)
@@ -98,7 +87,7 @@ def register():
     # Po registrácii NEPRIHLASUJEME - používateľ sa musí prihlásiť sám.
     session.clear()
 
-    return jsonify({"message": "Registrácia úspešná!", "student": _student_public(student)}), 201
+    return jsonify({"message": "Registrácia úspešná!", "error_key": "auth.registerSuccess", "student": _student_public(student)}), 201
 
 
 ### Prihlásenie ###
@@ -109,11 +98,16 @@ def login():
     password = data.get("password") or ""
 
     if not identifier or not password:
-        return jsonify({"error": "Zadaj login/email a heslo."}), 400
+        return jsonify({"error": "Zadaj login/email a heslo.", "error_key": "auth.enterCredentials"}), 400
 
     limiter_key = f"login:{_client_ip()}:{identifier.lower()}"
     if _rate_limited(limiter_key, max_attempts=10, window_seconds=300):
-        return jsonify({"error": "Príliš veľa pokusov o prihlásenie. Skús to znova o pár minút."}), 429
+        secs = _retry_after(limiter_key, window_seconds=300)
+        return jsonify({
+            "error": "Príliš veľa pokusov o prihlásenie. Skús to znova o pár minút.",
+            "error_key": "auth.tooManyLogin",
+            "retry_after": secs,
+        }), 429
 
     student = Student.query.filter(
         (Student.login == identifier) | (Student.email == identifier.lower())
@@ -122,7 +116,7 @@ def login():
     # Zámerne rovnaká chybová hláška pre "neexistuje" aj "zlé heslo" -
     # nechceme útočníkovi prezradiť, ktoré loginy/emaily v systéme existujú.
     if not student or not student.check_password(password):
-        return jsonify({"error": "Nesprávny login/email alebo heslo."}), 401
+        return jsonify({"error": "Nesprávny login/email alebo heslo.", "error_key": "auth.wrongCredentials"}), 401
 
     session.clear()
     session["student_id"] = student.id
@@ -130,14 +124,14 @@ def login():
     # takže po zavretí karty/okna sa musí používateľ znova prihlásiť.
     session.permanent = False
 
-    return jsonify({"message": "Prihlásenie úspešné.", "student": _student_public(student)}), 200
+    return jsonify({"message": "Prihlásenie úspešné.", "error_key": "auth.loginSuccess", "student": _student_public(student)}), 200
 
 
 ### Odhlásenie ###
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
     session.clear()
-    return jsonify({"message": "Odhlásené."}), 200
+    return jsonify({"message": "Odhlásené.", "error_key": "auth.loggedOut"}), 200
 
 
 ### Info o aktuálne prihlásenom študentovi (podľa session cookie) ###
@@ -145,11 +139,11 @@ def logout():
 def me():
     student_id = session.get("student_id")
     if not student_id:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
     student = Student.query.get(student_id)
     if not student:
         session.clear()
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
     return jsonify({"student": _student_public(student)}), 200
 
 
@@ -158,11 +152,11 @@ def me():
 def update_profile():
     student_id = session.get("student_id")
     if not student_id:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
     student = Student.query.get(student_id)
     if not student:
         session.clear()
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
 
     data = request.get_json(silent=True) or {}
 
@@ -180,23 +174,23 @@ def update_profile():
     # Email - validácia + kontrola, či ho nemá niekto iný
     if email and email != student.email:
         if not EMAIL_RE.match(email):
-            return jsonify({"error": "Neplatný formát emailu."}), 400
+            return jsonify({"error": "Neplatný formát emailu.", "error_key": "auth.invalidEmail"}), 400
         existing = Student.query.filter_by(email=email).first()
         if existing and existing.id != student.id:
-            return jsonify({"error": "Tento email už používa iný účet."}), 409
+            return jsonify({"error": "Tento email už používa iný účet.", "error_key": "auth.emailUsedByOther"}), 409
         student.email = email
 
     # Login - validácia + kontrola unikátnosti
     if login and login != student.login:
         if not LOGIN_RE.match(login):
-            return jsonify({"error": "Login smie obsahovať len písmená, číslice, '.', '_', '-' (3-50 znakov)."}), 400
+            return jsonify({"error": "Login smie obsahovať len písmená, číslice, '.', '_', '-' (3-50 znakov).", "error_key": "auth.invalidLogin"}), 400
         existing = Student.query.filter_by(login=login).first()
         if existing and existing.id != student.id:
-            return jsonify({"error": "Tento login už používa iný účet."}), 409
+            return jsonify({"error": "Tento login už používa iný účet.", "error_key": "auth.loginUsedByOther"}), 409
         student.login = login
 
     db.session.commit()
-    return jsonify({"message": "Profil bol aktualizovaný.", "student": _student_public(student)}), 200
+    return jsonify({"message": "Profil bol aktualizovaný.", "error_key": "auth.profileUpdated", "student": _student_public(student)}), 200
 
 
 ### Prehľad pre dashboard prihláseného študenta ###
@@ -206,11 +200,11 @@ def dashboard():
 
     student_id = session.get("student_id")
     if not student_id:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
     student = Student.query.get(student_id)
     if not student:
         session.clear()
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
 
     # Predtest: považujeme za dokončený, ak existuje aspoň jedna odpoveď typu "predtest"
     pretest_answers = StudentAnswer.query.filter_by(
@@ -262,11 +256,11 @@ def dashboard():
 def stats():
     student_id = session.get("student_id")
     if not student_id:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
     student = Student.query.get(student_id)
     if not student:
         session.clear()
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
 
     from models import StudentAnswer
 
@@ -317,7 +311,7 @@ def stats():
 def change_password():
     student_id = session.get("student_id")
     if not student_id:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
 
     data = request.get_json(silent=True) or {}
     current_password = data.get("current_password") or ""
@@ -325,7 +319,7 @@ def change_password():
 
     student = Student.query.get(student_id)
     if not student or not student.check_password(current_password):
-        return jsonify({"error": "Aktuálne heslo nie je správne."}), 401
+        return jsonify({"error": "Aktuálne heslo nie je správne.", "error_key": "auth.wrongCurrentPassword"}), 401
 
     pw_error = _validate_password_strength(new_password)
     if pw_error:
@@ -336,7 +330,7 @@ def change_password():
     student.reset_token_expires_at = None
     db.session.commit()
 
-    return jsonify({"message": "Heslo bolo zmenené."}), 200
+    return jsonify({"message": "Heslo bolo zmenené.", "error_key": "auth.passwordChanged"}), 200
 
 
 ### Žiadosť o reset hesla (zabudnuté heslo) ###
@@ -346,11 +340,16 @@ def forgot_password():
     email = (data.get("email") or "").strip().lower()
 
     if not email or not EMAIL_RE.match(email):
-        return jsonify({"error": "Zadaj platný email."}), 400
+        return jsonify({"error": "Zadaj platný email.", "error_key": "auth.enterValidEmail"}), 400
 
     limiter_key = f"forgot:{_client_ip()}:{email}"
     if _rate_limited(limiter_key, max_attempts=5, window_seconds=900):
-        return jsonify({"error": "Príliš veľa žiadostí. Skús to znova neskôr."}), 429
+        secs = _retry_after(limiter_key, window_seconds=900)
+        return jsonify({
+            "error": "Príliš veľa žiadostí. Skús to znova neskôr.",
+            "error_key": "auth.tooManyForgot",
+            "retry_after": secs,
+        }), 429
 
     student = Student.query.filter_by(email=email).first()
 
@@ -452,7 +451,7 @@ def reset_password():
     new_password = data.get("new_password") or ""
 
     if not uid or not raw_token:
-        return jsonify({"error": "Neplatný alebo neúplný odkaz na reset hesla."}), 400
+        return jsonify({"error": "Neplatný alebo neúplný odkaz na reset hesla.", "error_key": "auth.invalidResetLink"}), 400
 
     pw_error = _validate_password_strength(new_password)
     if pw_error:
@@ -460,18 +459,18 @@ def reset_password():
 
     student = Student.query.get(uid)
     if not student or not student.reset_token_hash or not student.reset_token_expires_at:
-        return jsonify({"error": "Odkaz na reset hesla je neplatný alebo už bol použitý."}), 400
+        return jsonify({"error": "Odkaz na reset hesla je neplatný alebo už bol použitý.", "error_key": "auth.resetLinkUsed"}), 400
 
     expires_at = student.reset_token_expires_at
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
 
     if datetime.now(timezone.utc) > expires_at:
-        return jsonify({"error": "Platnosť odkazu vypršala. Vyžiadaj si prosím nový."}), 400
+        return jsonify({"error": "Platnosť odkazu vypršala. Vyžiadaj si prosím nový.", "error_key": "auth.resetLinkExpired"}), 400
 
     # secrets.compare_digest chráni pred "timing attack" pri porovnávaní tokenu
     if not secrets.compare_digest(student.reset_token_hash, _hash_token(raw_token)):
-        return jsonify({"error": "Odkaz na reset hesla je neplatný alebo už bol použitý."}), 400
+        return jsonify({"error": "Odkaz na reset hesla je neplatný alebo už bol použitý.", "error_key": "auth.resetLinkUsed"}), 400
 
     student.set_password(new_password)
     # Token je jednorazový - po použití ho zneplatníme
@@ -479,4 +478,4 @@ def reset_password():
     student.reset_token_expires_at = None
     db.session.commit()
 
-    return jsonify({"message": "Heslo bolo úspešne zmenené. Môžeš sa prihlásiť."}), 200
+    return jsonify({"message": "Heslo bolo úspešne zmenené. Môžeš sa prihlásiť.", "error_key": "auth.passwordResetDone"}), 200

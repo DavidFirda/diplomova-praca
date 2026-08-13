@@ -83,6 +83,7 @@ def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | Non
                 server.sendmail(mail_sender, [to_email], msg.as_string())
 
         logger.info("Email odoslaný na %s", to_email)
+        print(f"[mail] ✓ Email ÚSPEŠNE odoslaný na {to_email}", flush=True)
         return True
 
     except smtplib.SMTPAuthenticationError:
@@ -90,9 +91,16 @@ def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | Non
             "SMTP autentifikácia zlyhala. Skontroluj MAIL_USERNAME a MAIL_PASSWORD "
             "(pri Gmaile musí ísť o App Password, nie bežné heslo)."
         )
+        print(
+            "[mail] ✗ SMTP AUTENTIFIKÁCIA ZLYHALA. Pri Gmaile musíš použiť App "
+            "Password (nie bežné heslo) a mať zapnuté 2FA. Skontroluj MAIL_USERNAME "
+            "a MAIL_PASSWORD v .env.",
+            flush=True,
+        )
         return False
-    except Exception:
+    except Exception as e:
         logger.exception("Odoslanie emailu zlyhalo (to=%s)", to_email)
+        print(f"[mail] ✗ Odoslanie emailu ZLYHALO (to={to_email}): {e}", flush=True)
         return False
 
 
@@ -105,9 +113,19 @@ def send_email(to_email: str, subject: str, text_body: str, html_body: str | Non
       takže volajúci HTTP request neblokuje a neprezrádza časom, či email existuje.
     """
     if not _mail_configured():
+        print(
+            "[mail] SMTP NIE JE nastavený (chýba MAIL_SERVER alebo MAIL_PASSWORD "
+            "v .env) -> DEV režim, email sa NEODOSIELA, len vypíše nižšie.",
+            flush=True,
+        )
         _dev_print(to_email, subject, text_body)
         return
 
+    print(
+        f"[mail] Odosielam email cez SMTP ({os.getenv('MAIL_SERVER')}:{os.getenv('MAIL_PORT', '587')}) "
+        f"na {to_email} ...",
+        flush=True,
+    )
     thread = threading.Thread(
         target=_send_smtp,
         args=(to_email, subject, text_body, html_body),

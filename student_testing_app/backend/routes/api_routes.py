@@ -127,7 +127,7 @@ def evaluate_answer():
     if not code or not code.strip() or code.strip() == starter_code.strip():
         return jsonify({
             "correct": False,
-            "message": "Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
+            "message": "🛠️ Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
         })
 
     attempt_key = (student_id, test_session, question_id)
@@ -242,7 +242,7 @@ def evaluate_answer():
         student_attempts[attempt_key] += 1
         return jsonify({
             "correct": False,
-            "message": "Výstup nie je správny. Skús to ešte raz opraviť!",
+            "message": "🛠️ Výstup nie je správny. Skús to ešte raz opraviť!",
             "student_output": student_output
         })
     

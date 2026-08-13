@@ -4,9 +4,6 @@ Klientská časť aplikácie: čisté **HTML, CSS a vanilla JavaScript** (bez
 frameworku). Súbory servíruje Flask backend; stránky sú namapované na URL
 v `backend/app.py` (`PAGE_ROUTES`).
 
-> Detailnú mapu súborov (ktorý súbor na čo slúži, kam ísť pri konkrétnej úprave)
-> nájdeš v **[`STRUKTURA.md`](STRUKTURA.md)**.
-
 ---
 
 ## Štruktúra
@@ -23,8 +20,7 @@ frontend/
 │   ├── auth/     # prihlásenie/registrácia: script, buddies, pw-toggle
 │   ├── pages/    # logika stránok: dashboard, profile, analyza, feedback, ...
 │   └── admin/    # admin panel: admin_users, admin_feedback
-├── assets/       # favicon, logo (SVG)
-└── STRUKTURA.md  # podrobná mapa súborov
+└── assets/       # favicon, logo (SVG)
 ```
 
 ---
@@ -81,4 +77,3 @@ verziu. Po zmene stačí `Ctrl+Shift+R`.
 | Admin panel vzhľad | `css/parts/07-admin.css` |
 | Preklady (SK/EN) | `js/core/i18n.js` |
 
-Úplná mapa je v **[`STRUKTURA.md`](STRUKTURA.md)**.

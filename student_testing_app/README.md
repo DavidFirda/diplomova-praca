@@ -74,8 +74,7 @@ diplomova-praca/
 │   ├── backend/               # server (Flask API, modely, algoritmy)
 │   │   └── README.md          # dokumentácia backendu
 │   ├── frontend/              # klient (HTML/CSS/JS)
-│   │   ├── README.md          # dokumentácia frontendu
-│   │   └── STRUKTURA.md       # detailná mapa CSS/JS súborov
+│   │   └── README.md          # dokumentácia frontendu
 │   ├── docker-compose.yml
 │   ├── Dockerfile
 │   └── .env.example

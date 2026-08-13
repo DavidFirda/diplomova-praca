@@ -3,11 +3,18 @@ services:
     build: .
     ports:
       - "5000:5000"
-    #depends_on:
-    #  db:
-    #    condition: service_healthy
+    # Lokálna DB je zakomentovaná nižšie - appka teraz beží proti Neonu
+    # (DATABASE_URL v .env ukazuje priamo na Neon), takže backend nečaká
+    # na žiadnu lokálnu "db" službu.
     env_file:
       - .env
+    # REDIS_URL prepojí backend s Redis službou nižšie (zdieľaný rate limiter
+    # naprieč workermi). Ak ho zmažeš/necháš prázdny, limiter beží in-memory.
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: on-failure
     volumes:
       - ./backend:/app/backend
@@ -16,6 +23,21 @@ services:
       - ./load_questions.py:/app/load_questions.py
       - ${Q_LEARNING_MOUNT}
       - ${POMDP_MOUNT}
+
+  # --- Redis (zdieľaný rate limiter medzi gunicorn workermi) ---
+  redis:
+    image: redis:7-alpine
+    restart: on-failure
+    # Port sa mapuje von len ak by si chcel Redis skúmať zvonka; pre chod
+    # aplikácie netreba (backend siaha na "redis" cez internú sieť).
+    # ports:
+    #   - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
 
 #  db:
 #    image: postgres:16-alpine
