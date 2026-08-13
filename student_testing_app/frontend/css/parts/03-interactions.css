@@ -1,0 +1,115 @@
+/* ============================================================
+   design - vylepšené interakcie a prechody
+   ============================================================ */
+
+/* Karty metrík - zdvih + modrý okraj pri hover */
+.metric {
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.metric:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Task riadky - výraznejší hover */
+.task-row {
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.task-row:hover:not(.task-row--locked) {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Sidebar položky - jemný posun pri hover */
+.sidebar__link {
+  transition: background var(--transition), color var(--transition), transform 0.15s ease;
+}
+.sidebar__link:hover { transform: translateX(3px); }
+
+/* Sekundárne tlačidlo - modrý okraj pri hover */
+.btn--secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+  transform: translateY(-2px);
+}
+
+/* ---------- Profilová karta v sidebare (ako referencia Smartech) ---------- */
+.sidebar__profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 10px;
+  margin-bottom: 8px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  transition: background var(--transition);
+}
+.sidebar__profile:hover { background: var(--surface-hover); }
+.sidebar__profile-avatar {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff; font-weight: 700; font-size: 1.05rem;
+  display: grid; place-items: center;
+}
+.sidebar__profile-info { min-width: 0; }
+.sidebar__profile-name {
+  color: var(--text); font-weight: 700; font-size: 0.9rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar__profile-sub {
+  color: var(--text-muted); font-size: 0.76rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar__divider {
+  height: 1px; background: var(--border); margin: 6px 4px 10px; border: none;
+}
+
+/* ---------- Animovaný prepínač témy (posuvník slnko/mesiac) ---------- */
+.theme-slider {
+  position: relative;
+  width: 66px; min-width: 66px;
+  height: 40px; min-height: 40px;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background var(--transition), border-color var(--transition);
+}
+.theme-slider:hover { border-color: var(--border-strong); transform: none; box-shadow: none; }
+.theme-slider__knob {
+  position: absolute; top: 4px; left: 4px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: grid; place-items: center;
+  color: #fff;
+  transition: transform var(--transition-bounce), background var(--transition);
+}
+:root[data-theme="dark"] .theme-slider__knob { transform: translateX(26px); }
+.theme-slider__knob svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2; }
+.theme-slider__sun { display: block; }
+.theme-slider__moon { display: none; }
+:root[data-theme="dark"] .theme-slider__sun { display: none; }
+:root[data-theme="dark"] .theme-slider__moon { display: block; }
+
+/* Plynulý prechod celej stránky pri zmene témy */
+body, .sidebar, .card, .metric, .task-row, .navbar, .chat-panel {
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+/* Logo v sidebare/navbare - jemné zväčšenie pri hover */
+.sidebar__brand img, .navbar__brand-logo {
+  transition: transform var(--transition-bounce);
+}
+.sidebar__brand:hover img, .navbar__brand:hover .navbar__brand-logo {
+  transform: scale(1.08) rotate(-3deg);
+}
+

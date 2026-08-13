@@ -1,0 +1,9 @@
+/* AdaptPy - hlavný CSS. Spája časti z parts/. Uprav konkrétnu časť podľa oblasti. */
+@import url("parts/01-tokens.css"); /* Dizajn systém - farby, fonty, tlačidlá, premenné */
+@import url("parts/02-app-shell.css"); /* App shell - sidebar layout (dashboard, profil...) */
+@import url("parts/03-interactions.css"); /* Vylepšené interakcie a prechody */
+@import url("parts/04-test-pages.css"); /* Test stránky (predtest, hlavný test) */
+@import url("parts/05-feedback.css"); /* Dotazník (feedback) - form grid */
+@import url("parts/06-stats.css"); /* Štatistiky (analyza) */
+@import url("parts/07-admin.css"); /* Admin panel */
+@import url("parts/08-auth.css"); /* Auth split-screen + postavičky (login/register/forgot/reset) */

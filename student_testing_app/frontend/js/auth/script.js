@@ -158,7 +158,12 @@ async function forgotPassword() {
         let data = await response.json();
 
         if (response.ok) {
-            infoMessage.innerText = data.message;
+            let msg = data.message;
+            if (data.message_key && typeof I18N !== "undefined") {
+                const t = I18N.t(data.message_key);
+                if (t && t !== data.message_key) msg = t;
+            }
+            infoMessage.innerText = msg;
             infoMessage.style.display = "block";
         } else {
             errorMessage.innerText = data.error || "Neznáma chyba.";

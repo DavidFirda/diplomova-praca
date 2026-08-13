@@ -1,0 +1,163 @@
+/* ============================================================
+   Test stránky (predtest, hlavný test) - design štýl
+   ============================================================ */
+.test-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 4vw, 32px);
+  box-shadow: var(--shadow-sm);
+}
+.test-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.test-header__label { font-weight: 700; color: var(--text); font-size: 1.05rem; }
+.test-counter {
+  padding: 5px 14px; border-radius: var(--radius-full);
+  background: var(--primary-soft); color: var(--primary);
+  font-size: 0.85rem; font-weight: 700;
+}
+.test-instruction {
+  color: var(--text); font-size: 1rem; line-height: 1.6;
+  margin: 0 0 20px; text-align: left;
+}
+.test-input-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.test-input-row strong { color: var(--text); font-size: 0.95rem; }
+.test-input-plain {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px; margin: 0 0 14px;
+  color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
+  white-space: pre-wrap; word-break: break-word; text-align: left;
+}
+.test-category {
+  color: var(--text-muted); font-size: 0.85rem; margin: 0 0 14px; text-align: left;
+}
+.test-category strong { color: var(--text); }
+
+/* Info tooltip */
+.test-tooltip { position: relative; display: inline-flex; }
+.test-tooltip__icon {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 0.8rem; font-weight: 700;
+  display: grid; place-items: center; cursor: help;
+}
+.test-tooltip__text {
+  visibility: hidden; opacity: 0;
+  position: absolute; left: 50%; bottom: 130%; transform: translateX(-50%);
+  width: 260px; padding: 12px 14px;
+  background: var(--surface); color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md); font-size: 0.82rem; line-height: 1.5;
+  z-index: 20; transition: opacity var(--transition), visibility var(--transition);
+  text-align: left;
+}
+.test-tooltip:hover .test-tooltip__text { visibility: visible; opacity: 1; }
+
+/* CodeMirror editor - zladený s témou */
+.test-card .CodeMirror {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  height: auto; min-height: 180px;
+  font-family: var(--font-mono); font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+.CodeMirror {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+}
+.CodeMirror-gutters {
+  background: var(--surface-2) !important;
+  border-right: 1px solid var(--border) !important;
+}
+.CodeMirror-linenumber { color: var(--text-faint) !important; }
+.CodeMirror-cursor { border-left: 1px solid var(--text) !important; }
+.CodeMirror-selected { background: var(--primary-soft) !important; }
+.CodeMirror-line { color: var(--text); }
+
+/* CodeMirror scrollbar - decentný, zladený s témou (obe témy) */
+.CodeMirror-scroll { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.CodeMirror-scrollbar-filler,
+.CodeMirror-gutter-filler { background: transparent !important; }
+.CodeMirror-hscrollbar,
+.CodeMirror-vscrollbar {
+  background: transparent !important;
+  outline: none !important;
+}
+/* webkit (Chrome/Edge/Opera) - tenký decentný scrollbar bez svetlého pruhu */
+.CodeMirror-hscrollbar::-webkit-scrollbar { height: 8px; }
+.CodeMirror-vscrollbar::-webkit-scrollbar { width: 8px; }
+.CodeMirror-hscrollbar::-webkit-scrollbar-track,
+.CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.CodeMirror ::-webkit-scrollbar-track { background: transparent !important; }
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb,
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.CodeMirror ::-webkit-scrollbar-thumb {
+  background: var(--border-strong) !important;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover,
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint) !important;
+  background-clip: content-box;
+}
+.CodeMirror ::-webkit-scrollbar { height: 8px; width: 8px; }
+
+/* Python syntax highlighting - zladené s tmavou/svetlou témou */
+:root[data-theme="dark"] .cm-keyword { color: #c792ea !important; }
+:root[data-theme="dark"] .cm-def { color: #82aaff !important; }
+:root[data-theme="dark"] .cm-variable { color: #e8eaf0 !important; }
+:root[data-theme="dark"] .cm-variable-2 { color: #7fdbca !important; }
+:root[data-theme="dark"] .cm-builtin { color: #82aaff !important; }
+:root[data-theme="dark"] .cm-string { color: #c3e88d !important; }
+:root[data-theme="dark"] .cm-number { color: #f78c6c !important; }
+:root[data-theme="dark"] .cm-comment { color: #676e95 !important; }
+:root[data-theme="dark"] .cm-operator { color: #89ddff !important; }
+:root[data-theme="dark"] .cm-punctuation { color: #e8eaf0 !important; }
+:root[data-theme="dark"] .cm-property { color: #82aaff !important; }
+
+:root[data-theme="light"] .cm-keyword { color: #9b7ef0 !important; }
+:root[data-theme="light"] .cm-def { color: #4a6fd4 !important; }
+:root[data-theme="light"] .cm-builtin { color: #4a6fd4 !important; }
+:root[data-theme="light"] .cm-string { color: #4a9d6e !important; }
+:root[data-theme="light"] .cm-number { color: #c76a35 !important; }
+:root[data-theme="light"] .cm-comment { color: #a89f90 !important; }
+
+/* Výstup a riešenie */
+.test-output {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px; margin: 0 0 14px;
+  color: var(--text); font-family: var(--font-mono); font-size: 0.88rem;
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+  text-align: left; min-height: 0;
+}
+.test-output:empty { display: none; }
+.test-solution { text-align: left; margin-bottom: 16px; }
+.test-solution h3 { font-size: 1rem; margin-bottom: 8px; }
+.test-solution pre {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px; color: var(--text);
+  font-family: var(--font-mono); font-size: 0.88rem;
+  white-space: pre-wrap; word-break: break-word; text-align: left;
+}
+.test-result {
+  margin: 14px 0 0; text-align: center; font-weight: 600;
+  color: var(--text); font-size: 0.95rem;
+  padding: 0 10px; line-height: 1.5;
+}
+.test-result:empty { display: none; }
+.test-result--correct { color: var(--success); }
+.test-result--wrong { color: var(--danger); }
+.test-result--info { color: var(--warning); }
+

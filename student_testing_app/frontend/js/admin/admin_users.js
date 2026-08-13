@@ -37,9 +37,11 @@
         </td>
         <td class="admin-hide-sm">${u.pretest_answers > 0 ? "✓" : "–"}</td>
         <td class="admin-hide-sm">${u.main_tests}</td>
-        <td class="admin-actions">
-          <button class="btn btn--secondary btn--sm" data-tests="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.tests","Testy")}</button>
-          <button class="btn btn--danger-outline btn--sm" data-del="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.delete","Vymazať")}</button>
+        <td>
+          <div class="admin-actions">
+            <button class="btn btn--secondary btn--sm" data-i18n="adminU.tests" data-tests="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.tests","Testy")}</button>
+            <button class="btn btn--danger-outline btn--sm" data-i18n="adminU.delete" data-del="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.delete","Vymazať")}</button>
+          </div>
         </td>
       </tr>
     `).join("");

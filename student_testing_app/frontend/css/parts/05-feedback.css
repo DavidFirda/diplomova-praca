@@ -1,0 +1,16 @@
+/* ============================================================
+   Dotazník (feedback) - form grid
+   ============================================================ */
+.form-grid { display: flex; flex-direction: column; gap: 18px; }
+.form-field { display: flex; flex-direction: column; gap: 7px; text-align: left; }
+.form-field label {
+  font-weight: 600; font-size: 0.9rem; color: var(--text);
+}
+.form-field select,
+.form-field input,
+.form-field textarea {
+  width: 100%; margin: 0;
+}
+.form-field textarea { resize: vertical; min-height: 90px; font-family: var(--font); }
+.form-grid button[type="submit"] { margin-top: 6px; }
+

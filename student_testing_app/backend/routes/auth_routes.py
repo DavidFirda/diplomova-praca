@@ -357,7 +357,8 @@ def forgot_password():
     # Vždy rovnaká odpoveď bez ohľadu na to, či email existuje -
     # zabraňuje "user enumeration" (zisťovaniu, kto je v systéme zaregistrovaný).
     generic_response = jsonify({
-        "message": "Ak je tento email zaregistrovaný, poslali sme naň link na reset hesla."
+        "message": "Ak je tento email zaregistrovaný, poslali sme naň link na reset hesla.",
+        "message_key": "forgot.sent"
     })
 
     if not student:

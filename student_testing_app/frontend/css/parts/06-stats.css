@@ -1,0 +1,128 @@
+/* ============================================================
+   Štatistiky (analyza) - design
+   ============================================================ */
+.stats-hero {
+  display: flex; align-items: center; justify-content: center;
+  gap: 32px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.stats-donut { width: 160px; height: 160px; flex-shrink: 0; }
+.stats-big { text-align: center; }
+.stats-big__value { font-size: 2.4rem; font-weight: 800; color: var(--text); line-height: 1; }
+.stats-big__label { color: var(--text-muted); font-size: 0.9rem; margin-top: 6px; }
+
+.stats-section-title {
+  font-size: 1.05rem; font-weight: 700; color: var(--text);
+  margin: 8px 0 14px; text-align: left;
+}
+
+/* Kategórie z predtestu - progress bary */
+.cat-list { display: flex; flex-direction: column; gap: 14px; }
+.cat-row { text-align: left; }
+.cat-row__head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 6px;
+}
+.cat-row__name { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+.cat-row__val { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
+.cat-bar {
+  height: 9px; border-radius: 999px;
+  background: var(--surface-2); overflow: hidden;
+}
+.cat-bar__fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.stats-loading { text-align: center; color: var(--text-muted); padding: 30px; }
+
+/* ---------- Dotazník: info hláška + poďakovanie ---------- */
+.fb-message {
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  font-size: 0.88rem; margin-bottom: 16px; text-align: left;
+}
+.fb-message--info { background: var(--primary-soft); color: var(--primary); }
+.fb-message--error { background: var(--danger-soft); color: var(--danger); }
+
+.fb-thanks { text-align: center; padding: 24px 12px; }
+.fb-thanks__icon {
+  width: 64px; height: 64px; margin: 0 auto 18px;
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--success-soft); color: var(--success);
+}
+.fb-thanks__icon svg { width: 32px; height: 32px; }
+.fb-thanks__title {
+  font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: 10px;
+}
+.fb-thanks__text {
+  color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;
+  max-width: 420px; margin: 0 auto 22px;
+}
+.fb-thanks .btn { width: auto; display: inline-block; }
+
+/* ---------- Rola používateľa v profile ---------- */
+.profile-role-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 18px;
+  color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
+}
+.role-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: var(--radius-full);
+  font-size: 0.82rem; font-weight: 700;
+  text-transform: capitalize;
+}
+.role-badge {
+  background: var(--primary-soft); color: var(--primary);
+}
+.role-badge--admin {
+  background: rgba(155, 126, 240, 0.15); color: var(--accent);
+}
+
+/* ---------- Admin sekcia v sidebare ---------- */
+.sidebar__section-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-faint);
+  padding: 14px 12px 6px; margin-top: 6px;
+  border-top: 1px solid var(--border);
+}
+/* Prázdny stav štatistík - vycentrovaný, decentný */
+.stats-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 48px 32px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.stats-empty__icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+.stats-empty__icon svg {
+  width: 34px;
+  height: 34px;
+}
+.stats-empty__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.stats-empty__text {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.stats-empty .btn {
+  width: auto;
+  min-width: 200px;
+}
