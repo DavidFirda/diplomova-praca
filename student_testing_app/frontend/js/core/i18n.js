@@ -64,14 +64,12 @@ const TRANSLATIONS = {
     "register.hasAccount": "Už máš účet? Prihlás sa",
 
     // forgot
-    "forgot.title": "Zabudnuté heslo",
     "forgot.desc": "Zadaj email, na ktorý si sa registroval. Pošleme ti naň odkaz na nastavenie nového hesla.",
     "forgot.email": "Email",
     "forgot.submit": "Odoslať odkaz na reset",
     "forgot.back": "Späť na prihlásenie",
 
     // reset
-    "reset.title": "Nové heslo",
     "reset.new": "Nové heslo (min. 8 znakov)",
     "reset.confirm": "Zopakuj nové heslo",
     "reset.submit": "Nastaviť nové heslo",
@@ -121,9 +119,6 @@ const TRANSLATIONS = {
     // štatistika
     "stats.title": "Štatistika",
     "stats.subtitle": "Prehľad tvojich výsledkov.",
-    "stats.emptyTitle": "Zatiaľ žiadne dáta",
-    "stats.emptyText": "Pre tento účet nemáme žiadne výsledky. Najprv absolvuj predtest alebo test a tvoje štatistiky sa ti zobrazia.",
-    "stats.emptyBtn": "Späť na prehľad",
     "stats.loading": "Načítavam tvoje štatistiky…",
     "stats.correctOfTotal": "správnych odpovedí",
     "stats.accuracy": "Správnosť",
@@ -331,13 +326,11 @@ const TRANSLATIONS = {
     "register.submit": "Create account",
     "register.hasAccount": "Already have an account? Sign in",
 
-    "forgot.title": "Forgot password",
     "forgot.desc": "Enter the email you registered with. We'll send you a link to set a new password.",
     "forgot.email": "Email",
     "forgot.submit": "Send reset link",
     "forgot.back": "Back to sign in",
 
-    "reset.title": "New password",
     "reset.new": "New password (min. 8 chars)",
     "reset.confirm": "Repeat new password",
     "reset.submit": "Set new password",
@@ -381,9 +374,6 @@ const TRANSLATIONS = {
 
     "stats.title": "Statistics",
     "stats.subtitle": "An overview of your results.",
-    "stats.emptyTitle": "No data yet",
-    "stats.emptyText": "We have no results for this account yet. Take the pre-test or a test first and your statistics will appear here.",
-    "stats.emptyBtn": "Back to dashboard",
     "stats.loading": "Loading your statistics…",
     "stats.correctOfTotal": "correct answers",
     "stats.accuracy": "Accuracy",

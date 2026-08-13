@@ -131,39 +131,28 @@ with app.app_context():
     except Exception as e:
         print(f"[seed] dotazník otázky - preskočené/chyba: {e}")
 
-    # Automatické vytvorenie admin účtu z .env premenných.
-    # Prihlasovacie údaje NIE SÚ v kóde - definuj ich v .env:
-    #   ADMIN_LOGIN, ADMIN_PASSWORD, ADMIN_EMAIL, ADMIN_NAME, ADMIN_SURNAME
+    # Automatické vytvorenie admin účtu, ak ešte neexistuje.
+    # Login: Admin | Heslo: pythonadmin | Rola: admin
     try:
         from models import Student
-
-        admin_login = os.getenv("ADMIN_LOGIN")
-        admin_password = os.getenv("ADMIN_PASSWORD")
-
-        if not admin_login or not admin_password:
-            print("[seed] ADMIN_LOGIN/ADMIN_PASSWORD nie sú v .env - admin účet preskočený")
-        else:
-            admin_email = os.getenv("ADMIN_EMAIL", "admin@adaptpy.local")
-            admin_name = os.getenv("ADMIN_NAME", "Admin")
-            admin_surname = os.getenv("ADMIN_SURNAME", "AdaptPy")
-
-            admin = Student.query.filter_by(login=admin_login).first()
-            if not admin:
-                admin = Student(
-                    name=admin_name,
-                    surname=admin_surname,
-                    login=admin_login,
-                    email=admin_email,
-                    role="admin",
-                )
-                admin.set_password(admin_password)
-                db.session.add(admin)
-                db.session.commit()
-                print(f"[seed] Vytvorený admin účet (login: {admin_login})")
-            elif getattr(admin, "role", "user") != "admin":
-                admin.role = "admin"
-                db.session.commit()
-                print("[seed] Existujúcemu účtu nastavená rola admin")
+        admin = Student.query.filter_by(login="Admin").first()
+        if not admin:
+            admin = Student(
+                name="Admin",
+                surname="AdaptPy",
+                login="Admin",
+                email="admin@adaptpy.local",
+                role="admin",
+            )
+            admin.set_password("pythonadmin")
+            db.session.add(admin)
+            db.session.commit()
+            print("[seed] Vytvorený admin účet (login: Admin, heslo: pythonadmin)")
+        elif getattr(admin, "role", "user") != "admin":
+            # ak účet Admin existuje ale nemá admin rolu, oprav to
+            admin.role = "admin"
+            db.session.commit()
+            print("[seed] Účtu Admin nastavená rola admin")
     except Exception as e:
         print(f"[seed] admin účet - preskočené/chyba: {e}")
 
@@ -247,4 +236,9 @@ def not_found(e):
     return send_from_directory(PAGES_FOLDER, "index.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Produkčne beží aplikácia cez gunicorn (pozri Dockerfile), nie cez app.run().
+    # Tento blok slúži len na lokálny vývoj. Debug je štandardne VYPNUTÝ -
+    # zapnúť sa dá len explicitne cez FLASK_DEBUG=true v .env (nikdy nie v produkcii,
+    # lebo debug režim sprístupní interaktívnu konzolu na serveri).
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode)

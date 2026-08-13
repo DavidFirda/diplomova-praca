@@ -1,0 +1,26 @@
+# Automatická normalizácia koncov riadkov.
+# Git bude v repozitári ukladať LF a pri checkoute na Windows konvertovať podľa potreby.
+* text=auto
+
+# Explicitne LF pre kód a textové súbory (konzistentné naprieč OS)
+*.py    text eol=lf
+*.js    text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.env.example text eol=lf
+Dockerfile text eol=lf
+
+# Binárne súbory - git ich nemá meniť
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.svg   text eol=lf
+*.pdf   binary
+*.ico   binary
+*.zip   binary
