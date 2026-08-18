@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Správa cvičení</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="admin-exercises"></div>
+
+    <main class="app-main">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="exadmin.title">Správa cvičení</h1>
+          <p data-i18n="exadmin.subtitle">Nahrávaj, upravuj, publikuj a sprístupňuj cvičenia. Zmeny sa hneď prejavia študentom.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <!-- Nahratie nového notebooku -->
+      <div class="card">
+        <h3 data-i18n="exadmin.uploadTitle">Nahrať nové cvičenie (.ipynb)</h3>
+        <div class="exadmin-upload">
+          <div class="full">
+            <label data-i18n="exadmin.file">Súbor .ipynb</label>
+            <input type="file" id="ex-file" accept=".ipynb" />
+          </div>
+          <div>
+            <label data-i18n="exadmin.titleSk">Názov (SK)</label>
+            <input type="text" id="ex-title-sk" placeholder="napr. Cvičenie 1: Úvod" />
+          </div>
+          <div>
+            <label data-i18n="exadmin.titleEn">Názov (EN)</label>
+            <input type="text" id="ex-title-en" placeholder="e.g. Lab 1: Introduction" />
+          </div>
+          <div>
+            <label data-i18n="exadmin.order">Poradie</label>
+            <input type="number" id="ex-order" placeholder="1" />
+          </div>
+          <div>
+            <label data-i18n="exadmin.descSk">Popis (SK)</label>
+            <input type="text" id="ex-desc-sk" placeholder="Čo sa v cvičení preberá" />
+          </div>
+          <div class="full">
+            <button class="btn" id="ex-upload-btn" data-i18n="exadmin.upload">Nahrať cvičenie</button>
+            <div class="info-message" id="ex-upload-msg" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zoznam cvičení -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <h3 style="margin:0;" data-i18n="exadmin.listTitle">Existujúce cvičenia</h3>
+          <button class="btn btn--secondary" id="ex-rescan" style="width:auto; min-height:38px; padding:8px 16px;" data-i18n="exadmin.rescan">Znovu naskenovať priečinok</button>
+        </div>
+        <div id="ex-admin-list" class="exadmin-table">
+          <div class="ex-empty" data-i18n="exadmin.loading">Načítavam…</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modál: úprava metadát -->
+  <div class="admin-modal" id="ex-edit-modal" style="display:none;">
+    <div class="admin-modal__backdrop" onclick="exadminCloseEdit()"></div>
+    <div class="admin-modal__panel">
+      <div class="admin-modal__header">
+        <h2 data-i18n="exadmin.editTitle">Upraviť cvičenie</h2>
+        <button class="icon-btn" onclick="exadminCloseEdit()" aria-label="Zavrieť">✕</button>
+      </div>
+      <div class="admin-modal__body" id="ex-edit-body"></div>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/core/session-guard.js"></script>
+  <script src="/js/core/i18n.js"></script>
+  <script src="/js/core/sidebar.js"></script>
+  <script src="/js/core/topbar-controls.js"></script>
+  <script src="/js/admin/admin_exercises.js"></script>
+</body>
+</html>

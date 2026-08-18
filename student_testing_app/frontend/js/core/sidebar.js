@@ -16,6 +16,8 @@
     course: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
     adminUsers: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     adminFeedback: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>',
+    exercises: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 4h11l5 5v11a0 0 0 0 1 0 0H4z"/><path d="M14 4v5h5"/><path d="M8 13l2 2 4-4"/></svg>',
+    adminExercises: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/><path d="M8 14h6M8 17h4"/></svg>',
   };
 
   const NAV = [
@@ -23,6 +25,7 @@
     { key: "profile", href: "/profile", i18n: "sb.profile", label: "Profil" },
     { key: "pretest", href: "/predtest", i18n: "sb.pretest", label: "Predtest" },
     { key: "tests", href: "/hlavnytest", i18n: "sb.tests", label: "Testy" },
+    { key: "exercises", href: "/cvicenia", i18n: "sb.exercises", label: "Cvičenia" },
     { key: "stats", href: "/analyza", i18n: "sb.stats", label: "Štatistika" },
     { key: "feedback", href: "/feedback", i18n: "sb.feedback", label: "Dotazník" },
   ];
@@ -70,6 +73,7 @@
     if (isAdmin) {
       const adminNav = [
         { key: "adminUsers", href: "/admin-users", i18n: "sb.adminUsers", label: "Používatelia", active: "admin-users" },
+        { key: "adminExercises", href: "/admin-exercises", i18n: "sb.adminExercises", label: "Cvičenia (správa)", active: "admin-exercises" },
         { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník (správa)", active: "admin-feedback" },
       ];
       const adminLinks = adminNav.map(item => `

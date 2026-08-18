@@ -10,7 +10,10 @@ from routes.api_routes import api_bp
 from routes.admin_routes import admin_bp
 from routes.auth_routes import auth_bp
 from routes.admin_api_routes import admin_api_bp
+from routes.exercise_routes import exercise_bp
+from routes.admin_exercise_routes import admin_exercise_bp
 from models import db
+import models_exercises
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -95,6 +98,12 @@ with app.app_context():
             print("[migrácia] Pridaný stĺpec students.role")
     except Exception as e:
         print(f"[migrácia] role stĺpec - preskočené/chyba: {e}")
+
+    try:
+        from services.notebook_scan import sync_exercises
+        sync_exercises()
+    except Exception as e:
+        print(f"[cvičenia] sken priečinka preskočený/chyba: {e}") 
 
     # Seed dotazníkových otázok, ak tabuľka je prázdna (prvotné naplnenie
     # pôvodnými 15 otázkami, aby dotazník fungoval hneď a admin ich mohol upravovať).
@@ -183,6 +192,8 @@ app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(api_bp, url_prefix="/api")
 app.register_blueprint(admin_bp, url_prefix="/admin")
 app.register_blueprint(admin_api_bp, url_prefix="/api/admin")
+app.register_blueprint(exercise_bp, url_prefix="/api/exercises")
+app.register_blueprint(admin_exercise_bp, url_prefix="/api/admin/exercises")
 
 # ===== Frontend Routy =====
 
@@ -209,6 +220,9 @@ PAGE_ROUTES = {
     "algorithm-comparison": "algorithm_comparison.html",
     "admin-users": "admin_users.html",
     "admin-feedback": "admin_feedback.html",
+    "cvicenia": "cvicenia.html",
+    "cvicenie": "cvicenie.html",
+    "admin-exercises": "admin_exercises.html",
 }
 
 for route_path, page_file in PAGE_ROUTES.items():
