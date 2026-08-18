@@ -40,6 +40,9 @@
       <div class="ex-nb-col">
         <div id="ex-head"><div class="ex-empty" data-i18n="ex.loading">Načítavam cvičenie…</div></div>
         <div id="ex-cells"></div>
+        <div class="ex-addcell-note-bar" id="ex-addcell-bar" style="display:none;">
+          <span class="ex-addcell-note" data-i18n="ex.scratchHint">Vlastné bunky na experimentovanie – nezapočítavajú sa do progresu. Pridať ich môžeš kdekoľvek cez „＋“.</span>
+        </div>
       </div>
       <aside class="side-panel">
         <div class="chat-panel">
@@ -168,6 +171,7 @@
   function renderCells(cells) {
     cellsEl.innerHTML = "";
     editors = [];
+    cellsEl.appendChild(insertBar());          // vsuvka nad prvou bunkou
     cells.forEach(cell => {
       if (cell.type === "markdown") {
         const div = document.createElement("div");
@@ -180,10 +184,21 @@
       } else if (cell.type === "code") {
         cellsEl.appendChild(buildCodeCell(cell));
       }
+      cellsEl.appendChild(insertBar());        // vsuvka po každej bunke
     });
-    // CodeMirror si zmeria rozmery až keď je v DOM -> po vložení prekresli,
-    // inak je kód viditeľný až po kliknutí do bunky.
     refreshEditors();
+  }
+
+  // tenká vsuvka s "＋" - vloží vlastnú bunku presne na toto miesto
+  function insertBar() {
+    const bar = document.createElement("div");
+    bar.className = "ex-insert";
+    bar.innerHTML = `<button class="ex-insert__btn" title="${tr("ex.insertHere", "Pridať bunku sem")}">
+        <span class="ex-insert__plus">＋</span>
+        <span class="ex-insert__label">${tr("ex.insertHere", "Pridať bunku sem")}</span>
+      </button>`;
+    bar.querySelector(".ex-insert__btn").addEventListener("click", () => addScratchCellAt(bar));
+    return bar;
   }
 
   function refreshEditors() {
@@ -194,21 +209,24 @@
   }
 
   function buildCodeCell(cell) {
+    const custom = !!cell.custom;
     const wrap = document.createElement("div");
-    wrap.className = "nb-code" + (cell.done ? " nb-code--done" : "");
+    wrap.className = "nb-code" + (cell.done ? " nb-code--done" : "") + (custom ? " nb-code--custom" : "");
     wrap.innerHTML = `
       <div class="nb-code__toolbar">
         <button class="btn nb-code__run">${RUN_ICON}<span>${tr("ex.run", "Spustiť")}</span></button>
-        <span class="nb-code__status ${cell.done ? "nb-code__status--ok" : "nb-code__status--idle"}">
-          ${cell.done ? "✓ " + tr("ex.cellDone", "hotová") : tr("ex.cellIdle", "nespustená")}
+        ${custom ? `<button class="nb-code__remove" title="${tr("ex.removeCell", "Odstrániť bunku")}">✕</button>` : ""}
+        <span class="nb-code__status ${custom ? "nb-code__status--custom" : (cell.done ? "nb-code__status--ok" : "nb-code__status--idle")}">
+          ${custom ? tr("ex.scratchCell", "vlastná bunka") : (cell.done ? "✓ " + tr("ex.cellDone", "hotová") : tr("ex.cellIdle", "nespustená"))}
         </span>
       </div>
       <div class="nb-code__editor"></div>
       <div class="nb-code__output"></div>`;
 
     const editorHost = wrap.querySelector(".nb-code__editor");
+    const initialCode = (cell.saved != null) ? cell.saved : (cell.source || "");
     const cm = CodeMirror(editorHost, {
-      value: cell.source || "",
+      value: initialCode,
       mode: "python",
       lineNumbers: true,
       indentUnit: 4,
@@ -219,10 +237,37 @@
     const outEl = wrap.querySelector(".nb-code__output");
     const runBtn = wrap.querySelector(".nb-code__run");
 
-    const rec = { code_index: cell.code_index, cm, statusEl, outEl, wrap };
+    const rec = { code_index: cell.code_index, cm, statusEl, outEl, wrap, custom };
     editors.push(rec);
     runBtn.addEventListener("click", () => runCell(rec, runBtn));
+
+    if (custom) {
+      const rmBtn = wrap.querySelector(".nb-code__remove");
+      if (rmBtn) rmBtn.addEventListener("click", () => {
+        editors = editors.filter(e => e !== rec);
+        // uprac aj vsuvku, ktorú sme vložili spolu s bunkou
+        const next = wrap.nextElementSibling;
+        if (next && next.classList.contains("ex-insert")) next.remove();
+        wrap.remove();
+      });
+    }
     return wrap;
+  }
+
+  // vlastná (scratch) bunka - beží cez rovnaký /run, ale index je mimo rozsahu
+  // code-buniek notebooku, takže sa nezapočítava do progresu
+  let scratchCounter = 1000;
+  function addScratchCellAt(afterBar) {
+    const parent = afterBar.parentNode;
+    if (!parent) return;
+    const wrap = buildCodeCell({ type: "code", code_index: scratchCounter++, source: "", done: false, custom: true });
+    const newBar = insertBar();
+    // poradie: [afterBar] -> [wrap] -> [newBar] -> (pôvodne nasledujúce)
+    parent.insertBefore(wrap, afterBar.nextSibling);
+    parent.insertBefore(newBar, wrap.nextSibling);
+    const rec = editors[editors.length - 1];
+    requestAnimationFrame(() => { try { rec.cm.refresh(); rec.cm.focus(); } catch (e) {} });
+    wrap.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   async function runCell(rec, runBtn) {
@@ -246,6 +291,12 @@
       }
       rec.outEl.className = "nb-code__output" + (data.ok ? "" : " nb-code__output--err");
       rec.outEl.textContent = (data.output || "") + (data.error || "");
+      if (rec.custom) {
+        // vlastná bunka: iba výstup, žiadny vplyv na progres
+        rec.statusEl.className = "nb-code__status " + (data.ok ? "nb-code__status--custom" : "nb-code__status--err");
+        rec.statusEl.textContent = data.ok ? tr("ex.scratchCell", "vlastná bunka") : tr("ex.cellErr", "chyba");
+        return;
+      }
       if (data.ok) {
         rec.wrap.classList.add("nb-code--done");
         rec.statusEl.className = "nb-code__status nb-code__status--ok";
@@ -306,6 +357,11 @@
       renderCells(ex.cells || []);
       updateHeadBar();
       hookLangChange();
+
+      // poznámka o vlastných bunkách
+      const bar = document.getElementById("ex-addcell-bar");
+      if (bar) bar.style.display = "flex";
+
       if (typeof I18N !== "undefined") I18N.apply();
     } catch (e) {
       root.innerHTML = lockedCard(tr("ex.loadError", "Cvičenie sa nepodarilo načítať."));

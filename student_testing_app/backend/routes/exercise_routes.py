@@ -1,13 +1,8 @@
 # ============================================================
 # AdaptPy - CVIČENIA (študentská časť).  Prefix: /api/exercises
 #
-# Autentifikácia cez session (session["student_id"]) - rovnako
-# ako zvyšok appky.
-#
-# Odomykanie cvičenia (sekvenčné) = OBOJE naraz:
-#   1) admin ho SPRÍSTUPNIL (accessible = True), a zároveň
-#   2) PREDCHÁDZAJÚCE cvičenie (podľa poradia) je DOKONČENÉ.
-# Prvé cvičenie nemá predchodcu, takže mu stačí byť sprístupnené.
+# Ukladáme aj ODPOVEDE študenta (kód, ktorý napísal v každej bunke),
+# aby sa mu po znovunačítaní vrátili do editorov.
 # ============================================================
 import json
 from datetime import datetime, timezone
@@ -22,7 +17,6 @@ from services.run_notebook_cell import run_cell, reset_namespace
 exercise_bp = Blueprint("exercise", __name__)
 
 
-# ---------- pomocníci ----------
 def _current_student():
     sid = session.get("student_id")
     if not sid:
@@ -37,7 +31,7 @@ def _get_progress(student_id, exercise_id):
     if p is None:
         p = ExerciseProgress(
             student_id=student_id, exercise_id=exercise_id,
-            done_cells_json="[]", percent=0, status="not_started",
+            done_cells_json="[]", answers_json="{}", percent=0, status="not_started",
         )
         db.session.add(p)
         db.session.commit()
@@ -49,6 +43,13 @@ def _done_cells(progress):
         return set(json.loads(progress.done_cells_json or "[]"))
     except Exception:
         return set()
+
+
+def _answers(progress):
+    try:
+        return json.loads(progress.answers_json or "{}") or {}
+    except Exception:
+        return {}
 
 
 def _recalc_percent(exercise, done):
@@ -68,7 +69,6 @@ def _cell_source(cell):
 
 
 def _prev_completed(student_id, exercise):
-    """True, ak je predchádzajúce publikované cvičenie dokončené (alebo neexistuje)."""
     prev = (
         Exercise.query.filter(
             Exercise.published == True,  # noqa: E712
@@ -129,13 +129,12 @@ def list_exercises():
             "locked": not unlocked,
             "lock_reason": lock_reason,
         })
-
         prev_completed = (p.status == "completed")
 
     return jsonify({"exercises": result})
 
 
-# ---------- detail + obsah notebooku (bunky) ----------
+# ---------- detail + obsah notebooku (bunky) + uložené odpovede ----------
 @exercise_bp.route("/<int:ex_id>", methods=["GET"])
 def get_exercise(ex_id):
     student = _current_student()
@@ -145,7 +144,6 @@ def get_exercise(ex_id):
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published:
         return jsonify({"error": "Cvičenie neexistuje."}), 404
-
     if not ex.accessible:
         return jsonify({"error": "Cvičenie zatiaľ nie je sprístupnené.",
                         "locked": True, "lock_reason": "not_accessible"}), 403
@@ -160,6 +158,7 @@ def get_exercise(ex_id):
 
     p = _get_progress(student.id, ex.id)
     done = _done_cells(p)
+    answers = _answers(p)
 
     cells = []
     code_index = 0
@@ -171,7 +170,8 @@ def get_exercise(ex_id):
             cells.append({
                 "type": "code",
                 "code_index": code_index,
-                "source": _cell_source(c),
+                "source": _cell_source(c),                 # pôvodný predpis
+                "saved": answers.get(str(code_index)),      # čo si napísal študent (ak niečo)
                 "done": code_index in done,
             })
             code_index += 1
@@ -189,32 +189,26 @@ def get_exercise(ex_id):
         "topics": topics,
         "code_cells": ex.code_cells,
         "cells": cells,
-        "progress": {
-            "percent": p.percent,
-            "status": p.status,
-            "done_cells": sorted(done),
-        },
+        "progress": {"percent": p.percent, "status": p.status, "done_cells": sorted(done)},
     })
 
 
-# ---------- sprievodný súbor (obrázok/dataset) z notebooku ----------
+# ---------- sprievodný súbor (obrázok/dataset) ----------
 @exercise_bp.route("/<int:ex_id>/asset/<path:relpath>", methods=["GET"])
 def get_asset(ex_id, relpath):
-    # prístup len prihlásenému študentovi a len k sprístupnenému cvičeniu
     student = _current_student()
     if not student:
         return jsonify({"error": "Nie si prihlásený."}), 401
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published or not ex.accessible:
         return jsonify({"error": "Nedostupné."}), 403
-
     full = asset_path(relpath)
     if not full:
         return jsonify({"error": "Súbor sa nenašiel."}), 404
     return send_file(full)
 
 
-# ---------- spustenie code-bunky ----------
+# ---------- spustenie code-bunky (+ uloženie odpovede) ----------
 @exercise_bp.route("/<int:ex_id>/run", methods=["POST"])
 def run_exercise_cell(ex_id):
     student = _current_student()
@@ -233,15 +227,25 @@ def run_exercise_cell(ex_id):
     if code_index is None:
         return jsonify({"error": "Chýba code_index."}), 400
 
-    # pracovný priečinok cvičenia, aby kód našiel svoje dátové súbory
     workdir = source_dir_for_slug(ex.slug)
     res = run_cell(student.id, ex.id, code, workdir=workdir)
 
+    ci = int(code_index)
+    # "vlastné" bunky (mimo rozsahu code-buniek notebooku) sa dajú spúšťať,
+    # ale NEzapočítavajú sa do progresu a neukladajú sa ako odpovede.
+    is_real = (0 <= ci < (ex.code_cells or 0))
+
     p = _get_progress(student.id, ex.id)
     done = _done_cells(p)
-    if res["ok"]:
-        done.add(int(code_index))
+    if res["ok"] and is_real:
+        done.add(ci)
     p.done_cells_json = json.dumps(sorted(done))
+
+    if is_real:
+        answers = _answers(p)
+        answers[str(ci)] = code
+        p.answers_json = json.dumps(answers, ensure_ascii=False)
+
     p.percent = _recalc_percent(ex, done)
     if p.status == "not_started" and (res["ok"] or done):
         p.status = "in_progress"
@@ -257,7 +261,31 @@ def run_exercise_cell(ex_id):
     })
 
 
-# ---------- reset behu (spusti odznova) ----------
+# ---------- priebežné uloženie odpovede (bez spustenia) ----------
+@exercise_bp.route("/<int:ex_id>/save", methods=["POST"])
+def save_answer(ex_id):
+    student = _current_student()
+    if not student:
+        return jsonify({"error": "Nie si prihlásený."}), 401
+    ex = Exercise.query.get(ex_id)
+    if not ex or not ex.published or not ex.accessible:
+        return jsonify({"error": "Cvičenie nie je dostupné."}), 403
+
+    data = request.get_json(silent=True) or {}
+    code_index = data.get("code_index")
+    code = data.get("code", "")
+    if code_index is None:
+        return jsonify({"error": "Chýba code_index."}), 400
+
+    p = _get_progress(student.id, ex.id)
+    answers = _answers(p)
+    answers[str(int(code_index))] = code
+    p.answers_json = json.dumps(answers, ensure_ascii=False)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+# ---------- reset behu ----------
 @exercise_bp.route("/<int:ex_id>/reset", methods=["POST"])
 def reset_exercise(ex_id):
     student = _current_student()
@@ -280,16 +308,13 @@ def complete_exercise(ex_id):
 
     p = _get_progress(student.id, ex.id)
     if ex.code_cells and p.percent < 100:
-        return jsonify({
-            "error": "Najprv spusti všetky bunky bez chyby.",
-            "percent": p.percent,
-        }), 400
+        return jsonify({"error": "Najprv spusti všetky bunky bez chyby.",
+                        "percent": p.percent}), 400
 
     p.status = "completed"
     p.percent = 100
     p.completed_at = datetime.now(timezone.utc)
     db.session.commit()
-
     return jsonify({"ok": True, "status": p.status, "percent": p.percent})
 
 
@@ -299,13 +324,11 @@ def download_exercise(ex_id):
     student = _current_student()
     if not student:
         return jsonify({"error": "Nie si prihlásený."}), 401
-
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published or not ex.accessible:
         return jsonify({"error": "Cvičenie nie je dostupné."}), 403
     if not _prev_completed(student.id, ex):
         return jsonify({"error": "Cvičenie je zamknuté."}), 403
-
     return send_file(
         exercise_path(ex.filename),
         as_attachment=True,

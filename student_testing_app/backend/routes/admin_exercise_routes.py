@@ -1,14 +1,5 @@
 # ============================================================
 # AdaptPy - CVIČENIA (admin časť).  Prefix: /api/admin/exercises
-#
-# Autentifikácia: session + rola "admin" (rovnaký vzor ako
-# admin_api_routes.py). Admin vie:
-#   - nahrať nový notebook (.ipynb)
-#   - upraviť metadáta (nadpis, popis, poradie, témy)
-#   - nahradiť súbor / upraviť obsah notebooku (raw JSON)
-#   - publikovať / sprístupniť (dva nezávislé prepínače)
-#   - zmazať cvičenie
-#   - znovu naskenovať priečinok
 # ============================================================
 import json
 import os
@@ -49,30 +40,32 @@ def _slug_from_filename(filename):
     return os.path.splitext(os.path.basename(filename))[0]
 
 
+def _cell_source(cell):
+    src = cell.get("source", "")
+    return "".join(src) if isinstance(src, list) else (src or "")
+
+
+def _load_notebook(ex):
+    with open(exercise_path(ex.filename), "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def _serialize(ex, with_stats=False):
     try:
         topics = json.loads(ex.topics_json or "[]")
     except Exception:
         topics = []
     data = {
-        "id": ex.id,
-        "slug": ex.slug,
-        "filename": ex.filename,
+        "id": ex.id, "slug": ex.slug, "filename": ex.filename,
         "order_index": ex.order_index,
         "title_sk": ex.title_sk, "title_en": ex.title_en,
         "description_sk": ex.description_sk, "description_en": ex.description_en,
-        "topics": topics,
-        "code_cells": ex.code_cells,
-        "published": ex.published,
-        "accessible": ex.accessible,
+        "topics": topics, "code_cells": ex.code_cells,
+        "published": ex.published, "accessible": ex.accessible,
     }
     if with_stats:
-        completed = ExerciseProgress.query.filter_by(
-            exercise_id=ex.id, status="completed"
-        ).count()
-        in_progress = ExerciseProgress.query.filter_by(
-            exercise_id=ex.id, status="in_progress"
-        ).count()
+        completed = ExerciseProgress.query.filter_by(exercise_id=ex.id, status="completed").count()
+        in_progress = ExerciseProgress.query.filter_by(exercise_id=ex.id, status="in_progress").count()
         data["stats"] = {"completed": completed, "in_progress": in_progress}
     return data
 
@@ -84,6 +77,67 @@ def _serialize(ex, with_stats=False):
 def list_all():
     exercises = Exercise.query.order_by(Exercise.order_index, Exercise.id).all()
     return jsonify({"exercises": [_serialize(e, with_stats=True) for e in exercises]})
+
+
+# ---------- progres + ODPOVEDE študenta (pre admina) ----------
+@admin_exercise_bp.route("/user/<int:uid>", methods=["GET"])
+@admin_required
+def user_exercises(uid):
+    student = Student.query.get(uid)
+    if not student:
+        return jsonify({"error": "Používateľ neexistuje."}), 404
+
+    exercises = Exercise.query.filter_by(published=True).order_by(
+        Exercise.order_index, Exercise.id
+    ).all()
+
+    out = []
+    for ex in exercises:
+        p = ExerciseProgress.query.filter_by(student_id=uid, exercise_id=ex.id).first()
+        percent = p.percent if p else 0
+        status = p.status if p else "not_started"
+        try:
+            done = set(json.loads(p.done_cells_json or "[]")) if p else set()
+        except Exception:
+            done = set()
+        try:
+            answers = json.loads(p.answers_json or "{}") if p else {}
+        except Exception:
+            answers = {}
+
+        cells = []
+        try:
+            nb = _load_notebook(ex)
+            ci = 0
+            for c in nb.get("cells", []):
+                if c.get("cell_type") == "code":
+                    ans = answers.get(str(ci))
+                    cells.append({
+                        "code_index": ci,
+                        "prompt": _cell_source(c),          # pôvodný predpis
+                        "answer": ans,                       # odpoveď študenta (alebo None)
+                        "answered": ans is not None,
+                        "ran_ok": ci in done,                # bežalo bez chyby?
+                    })
+                    ci += 1
+        except Exception:
+            pass
+
+        out.append({
+            "id": ex.id, "order_index": ex.order_index,
+            "title_sk": ex.title_sk, "title_en": ex.title_en,
+            "code_cells": ex.code_cells,
+            "percent": percent, "status": status,
+            "cells": cells,
+        })
+
+    return jsonify({
+        "student": {
+            "id": student.id, "name": student.name, "surname": student.surname,
+            "login": student.login, "email": student.email,
+        },
+        "exercises": out,
+    })
 
 
 # ---------- nahratie nového notebooku ----------
@@ -117,7 +171,6 @@ def upload_exercise():
     if Exercise.query.filter_by(slug=slug).first():
         return jsonify({"error": "Cvičenie s týmto slug už existuje."}), 409
 
-    # nadpis / témy vytiahneme rovnako ako pri skene
     title = notebook_scan._extract_title(nb, fallback=slug)
     topics = notebook_scan._extract_topics(nb)
     order = request.form.get("order_index")
@@ -127,17 +180,14 @@ def upload_exercise():
         order = notebook_scan._order_from_filename(filename)
 
     ex = Exercise(
-        slug=slug,
-        filename=filename,
-        order_index=order,
+        slug=slug, filename=filename, order_index=order,
         title_sk=(request.form.get("title_sk") or title),
         title_en=(request.form.get("title_en") or title),
         description_sk=request.form.get("description_sk") or "",
         description_en=request.form.get("description_en") or "",
         topics_json=json.dumps(topics, ensure_ascii=False),
         code_cells=_count_code_cells(nb),
-        published=False,
-        accessible=False,
+        published=False, accessible=False,
     )
     db.session.add(ex)
     db.session.commit()
@@ -167,7 +217,6 @@ def patch_exercise(ex_id):
         ex.published = bool(data["published"])
     if "accessible" in data:
         ex.accessible = bool(data["accessible"])
-        # sprístupniť sa dá len publikované cvičenie
         if ex.accessible and not ex.published:
             ex.published = True
 
@@ -175,7 +224,7 @@ def patch_exercise(ex_id):
     return jsonify({"exercise": _serialize(ex, with_stats=True)})
 
 
-# ---------- surový obsah notebooku (na úpravu v appke) ----------
+# ---------- surový obsah notebooku ----------
 @admin_exercise_bp.route("/<int:ex_id>/raw", methods=["GET"])
 @admin_required
 def get_raw(ex_id):
@@ -190,7 +239,7 @@ def get_raw(ex_id):
     return jsonify({"filename": ex.filename, "content": content})
 
 
-# ---------- uloženie upraveného notebooku (raw JSON) ----------
+# ---------- uloženie upraveného notebooku ----------
 @admin_exercise_bp.route("/<int:ex_id>/raw", methods=["PUT"])
 @admin_required
 def put_raw(ex_id):
@@ -213,7 +262,7 @@ def put_raw(ex_id):
     return jsonify({"exercise": _serialize(ex, with_stats=True)})
 
 
-# ---------- nahradenie súboru (nová verzia notebooku) ----------
+# ---------- nahradenie súboru ----------
 @admin_exercise_bp.route("/<int:ex_id>/file", methods=["PUT"])
 @admin_required
 def replace_file(ex_id):

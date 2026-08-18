@@ -39,6 +39,7 @@
         <td class="admin-hide-sm">${u.main_tests}</td>
         <td>
           <div class="admin-actions">
+            <a class="btn btn--secondary btn--sm" href="/admin-user-exercises?uid=${u.id}" data-i18n="adminU.exercises">${tr("adminU.exercises","Cvičenia")}</a>
             <button class="btn btn--secondary btn--sm" data-i18n="adminU.tests" data-tests="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.tests","Testy")}</button>
             <button class="btn btn--danger-outline btn--sm" data-i18n="adminU.delete" data-del="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.delete","Vymazať")}</button>
           </div>

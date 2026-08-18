@@ -223,6 +223,7 @@ PAGE_ROUTES = {
     "cvicenia": "cvicenia.html",
     "cvicenie": "cvicenie.html",
     "admin-exercises": "admin_exercises.html",
+    "admin-user-exercises": "admin_user_exercises.html",
 }
 
 for route_path, page_file in PAGE_ROUTES.items():

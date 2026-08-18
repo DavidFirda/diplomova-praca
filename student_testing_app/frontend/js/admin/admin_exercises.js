@@ -1,7 +1,9 @@
 /* ============================================================
    AdaptPy - admin: správa cvičení.
-   Upload notebooku, úprava metadát, prepínače Publikované /
-   Sprístupnené, poradie, mazanie, rescan priečinka.
+   - responzívne karty
+   - prepínače Publikované / Sprístupnené, poradie, mazanie, rescan
+   - EDITOR NOTEBOOKU: úprava markdown aj code buniek, pridať/zmazať/
+     presunúť bunku, uložiť späť do .ipynb
    ============================================================ */
 (function () {
   const listEl = document.getElementById("ex-admin-list");
@@ -19,32 +21,34 @@
 
   let items = [];
 
+  // ---------- zoznam ----------
   function itemRow(ex) {
     const stats = ex.stats || { completed: 0, in_progress: 0 };
     return `
       <div class="exadmin-item" data-id="${ex.id}">
         <div class="exadmin-item__ord">${ex.order_index}</div>
-        <div class="exadmin-item__body">
+        <div class="exadmin-item__main">
           <div class="exadmin-item__title">${esc(ex.title_sk || ex.slug)}</div>
           <div class="exadmin-item__meta">
             ${esc(ex.filename)} · ${ex.code_cells} ${tr("exadmin.cells", "buniek")}
             · ✓ ${stats.completed} ${tr("exadmin.completedBy", "dokončili")}
           </div>
-        </div>
-        <div class="exadmin-item__flags">
-          <label class="ex-toggle">
-            <input type="checkbox" class="ex-pub" ${ex.published ? "checked" : ""}>
-            <span class="ex-toggle__track"></span>
-            <span>${tr("exadmin.published", "Publikované")}</span>
-          </label>
-          <label class="ex-toggle">
-            <input type="checkbox" class="ex-acc" ${ex.accessible ? "checked" : ""}>
-            <span class="ex-toggle__track"></span>
-            <span>${tr("exadmin.accessible", "Sprístupnené")}</span>
-          </label>
-          <div class="exadmin-item__actions">
-            <button class="btn btn--secondary ex-edit">${tr("exadmin.edit", "Upraviť")}</button>
-            <button class="btn btn--secondary ex-del">${tr("exadmin.delete", "Vymazať")}</button>
+          <div class="exadmin-item__controls">
+            <label class="ex-toggle">
+              <input type="checkbox" class="ex-pub" ${ex.published ? "checked" : ""}>
+              <span class="ex-toggle__track"></span>
+              <span>${tr("exadmin.published", "Publikované")}</span>
+            </label>
+            <label class="ex-toggle">
+              <input type="checkbox" class="ex-acc" ${ex.accessible ? "checked" : ""}>
+              <span class="ex-toggle__track"></span>
+              <span>${tr("exadmin.accessible", "Sprístupnené")}</span>
+            </label>
+            <div class="exadmin-item__actions">
+              <button class="btn btn--secondary ex-notebook">${tr("exadmin.notebook", "Upraviť notebook")}</button>
+              <button class="btn btn--secondary ex-edit">${tr("exadmin.edit", "Metadáta")}</button>
+              <button class="btn btn--secondary ex-del">${tr("exadmin.delete", "Vymazať")}</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -60,6 +64,7 @@
       const id = +el.getAttribute("data-id");
       el.querySelector(".ex-pub").addEventListener("change", e => patch(id, { published: e.target.checked }));
       el.querySelector(".ex-acc").addEventListener("change", e => patch(id, { accessible: e.target.checked }));
+      el.querySelector(".ex-notebook").addEventListener("click", () => openNotebook(id));
       el.querySelector(".ex-edit").addEventListener("click", () => openEdit(id));
       el.querySelector(".ex-del").addEventListener("click", () => del(id));
     });
@@ -90,10 +95,7 @@
         body: JSON.stringify(body),
       });
       const d = await r.json();
-      if (r.ok && d.exercise) {
-        items = items.map(x => x.id === id ? d.exercise : x);
-        render();
-      }
+      if (r.ok && d.exercise) { items = items.map(x => x.id === id ? d.exercise : x); render(); }
     } catch (e) {}
   }
 
@@ -108,7 +110,7 @@
     } catch (e) {}
   }
 
-  // ---- upload ----
+  // ---------- upload ----------
   const uploadBtn = document.getElementById("ex-upload-btn");
   const uploadMsg = document.getElementById("ex-upload-msg");
   function showMsg(text, isErr) {
@@ -131,20 +133,14 @@
       const d = await r.json();
       if (!r.ok) { showMsg(d.error || tr("exadmin.uploadErr", "Nahratie zlyhalo."), true); return; }
       showMsg(tr("exadmin.uploaded", "Cvičenie nahraté. Nezabudni ho publikovať a sprístupniť."), false);
-      fileInput.value = "";
-      document.getElementById("ex-title-sk").value = "";
-      document.getElementById("ex-title-en").value = "";
-      document.getElementById("ex-desc-sk").value = "";
-      document.getElementById("ex-order").value = "";
+      ["ex-file", "ex-title-sk", "ex-title-en", "ex-desc-sk", "ex-order"].forEach(i => { const el = document.getElementById(i); if (el) el.value = ""; });
       load();
     } catch (e) {
       showMsg(tr("exadmin.uploadErr", "Nahratie zlyhalo."), true);
-    } finally {
-      uploadBtn.disabled = false;
-    }
+    } finally { uploadBtn.disabled = false; }
   });
 
-  // ---- rescan ----
+  // ---------- rescan ----------
   const rescanBtn = document.getElementById("ex-rescan");
   if (rescanBtn) rescanBtn.addEventListener("click", async () => {
     rescanBtn.disabled = true;
@@ -155,7 +151,7 @@
     } catch (e) {} finally { rescanBtn.disabled = false; }
   });
 
-  // ---- edit modal ----
+  // ---------- edit metadát (existujúci modál v HTML) ----------
   const modal = document.getElementById("ex-edit-modal");
   const modalBody = document.getElementById("ex-edit-body");
   window.exadminCloseEdit = () => { modal.style.display = "none"; };
@@ -176,33 +172,201 @@
       <input type="number" id="edit-order" value="${ex.order_index}" />
       <label>${tr("exadmin.topics", "Témy / časti (každá na nový riadok)")}</label>
       <textarea id="edit-topics">${esc((ex.topics || []).join("\n"))}</textarea>
-      <label>${tr("exadmin.replaceFile", "Nahradiť .ipynb (voliteľné)")}</label>
-      <input type="file" id="edit-file" accept=".ipynb" />
       <button class="btn" id="edit-save">${tr("exadmin.save", "Uložiť")}</button>
     `;
     modal.style.display = "flex";
     document.getElementById("edit-save").addEventListener("click", async () => {
-      const body = {
+      await patch(id, {
         title_sk: document.getElementById("edit-title-sk").value,
         title_en: document.getElementById("edit-title-en").value,
         description_sk: document.getElementById("edit-desc-sk").value,
         description_en: document.getElementById("edit-desc-en").value,
         order_index: document.getElementById("edit-order").value,
         topics: document.getElementById("edit-topics").value.split("\n").map(s => s.trim()).filter(Boolean),
-      };
-      await patch(id, body);
-      const fileInput = document.getElementById("edit-file");
-      if (fileInput.files.length) {
-        const fd = new FormData();
-        fd.append("file", fileInput.files[0]);
-        try {
-          await fetch(`/api/admin/exercises/${id}/file`, { method: "PUT", credentials: "include", body: fd });
-        } catch (e) {}
-        await load();
-      }
+      });
       modal.style.display = "none";
     });
   }
 
+  // ============================================================
+  //  EDITOR NOTEBOOKU (markdown + code bunky)
+  // ============================================================
+  let nbObj = null;      // načítaný notebook (JSON)
+  let nbExId = null;
+
+  function ensureNbModal() {
+    if (document.getElementById("nbedit-modal")) return;
+    const el = document.createElement("div");
+    el.className = "nbedit-modal";
+    el.id = "nbedit-modal";
+    el.style.display = "none";
+    el.innerHTML = `
+      <div class="nbedit-backdrop"></div>
+      <div class="nbedit-panel">
+        <div class="nbedit-header">
+          <h2 class="nbedit-title">${tr("exadmin.nbTitle", "Úprava notebooku")}: <span id="nbedit-name"></span></h2>
+          <div class="nbedit-header__actions">
+            <button class="btn btn--secondary btn--sm" id="nbedit-add-md">+ ${tr("exadmin.textCell", "Text")}</button>
+            <button class="btn btn--secondary btn--sm" id="nbedit-add-code">+ ${tr("exadmin.codeCell", "Kód")}</button>
+            <button class="btn btn--sm" id="nbedit-save">${tr("exadmin.save", "Uložiť")}</button>
+            <button class="icon-btn" id="nbedit-close" aria-label="Zavrieť">✕</button>
+          </div>
+        </div>
+        <div class="nbedit-hint" id="nbedit-hint"></div>
+        <div class="nbedit-body" id="nbedit-cells"></div>
+      </div>`;
+    document.body.appendChild(el);
+    el.querySelector(".nbedit-backdrop").addEventListener("click", closeNotebook);
+    el.querySelector("#nbedit-close").addEventListener("click", closeNotebook);
+    el.querySelector("#nbedit-add-md").addEventListener("click", () => addCell("markdown"));
+    el.querySelector("#nbedit-add-code").addEventListener("click", () => addCell("code"));
+    el.querySelector("#nbedit-save").addEventListener("click", saveNotebook);
+  }
+
+  function closeNotebook() {
+    const m = document.getElementById("nbedit-modal");
+    if (m) m.style.display = "none";
+    nbObj = null; nbExId = null;
+  }
+
+  function cellSourceToText(cell) {
+    const s = cell.source;
+    return Array.isArray(s) ? s.join("") : (s || "");
+  }
+
+  function autoGrow(ta) {
+    ta.style.height = "auto";
+    ta.style.height = Math.min(600, Math.max(70, ta.scrollHeight + 2)) + "px";
+  }
+
+  function cellBlock(type, text) {
+    const block = document.createElement("div");
+    block.className = "nbedit-cell";
+    block.dataset.type = type;
+    block.innerHTML = `
+      <div class="nbedit-cell__bar">
+        <span class="nbedit-cell__tag nbedit-cell__tag--${type}">${type === "code" ? tr("exadmin.codeCell", "Kód") : tr("exadmin.textCell", "Text")}</span>
+        <div class="nbedit-cell__ops">
+          <button class="nbedit-op" data-op="up" title="Hore">↑</button>
+          <button class="nbedit-op" data-op="down" title="Dole">↓</button>
+          <button class="nbedit-op" data-op="type" title="Prepnúť typ">⇄ ${type === "code" ? tr("exadmin.textCell", "Text") : tr("exadmin.codeCell", "Kód")}</button>
+          <button class="nbedit-op nbedit-op--del" data-op="del" title="Zmazať">✕</button>
+        </div>
+      </div>
+      <textarea class="nbedit-cell__src" spellcheck="false"></textarea>`;
+    const ta = block.querySelector("textarea");
+    ta.value = text;
+    ta.classList.toggle("nbedit-cell__src--code", type === "code");
+    ta.addEventListener("input", () => autoGrow(ta));
+
+    block.querySelectorAll(".nbedit-op").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const op = btn.dataset.op;
+        if (op === "del") { if (confirm(tr("exadmin.delCell", "Zmazať túto bunku?"))) block.remove(); }
+        else if (op === "up") { const prev = block.previousElementSibling; if (prev) block.parentNode.insertBefore(block, prev); }
+        else if (op === "down") { const next = block.nextElementSibling; if (next) block.parentNode.insertBefore(next, block); }
+        else if (op === "type") {
+          const newType = block.dataset.type === "code" ? "markdown" : "code";
+          const replacement = cellBlock(newType, ta.value);
+          block.replaceWith(replacement);
+          requestAnimationFrame(() => autoGrow(replacement.querySelector("textarea")));
+        }
+      });
+    });
+    return block;
+  }
+
+  function addCell(type) {
+    const host = document.getElementById("nbedit-cells");
+    const block = cellBlock(type, "");
+    host.appendChild(block);
+    const ta = block.querySelector("textarea");
+    autoGrow(ta); ta.focus();
+    block.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function openNotebook(id) {
+    ensureNbModal();
+    nbExId = id;
+    const ex = items.find(x => x.id === id);
+    document.getElementById("nbedit-name").textContent = ex ? (ex.filename || ex.slug) : "";
+    const host = document.getElementById("nbedit-cells");
+    const hint = document.getElementById("nbedit-hint");
+    host.innerHTML = `<div class="ex-empty">${tr("exadmin.loading", "Načítavam…")}</div>`;
+    hint.textContent = "";
+    document.getElementById("nbedit-modal").style.display = "flex";
+
+    try {
+      const r = await fetch(`/api/admin/exercises/${id}/raw`, { credentials: "include" });
+      const d = await r.json();
+      if (!r.ok) { host.innerHTML = `<div class="ex-empty">${esc(d.error || tr("exadmin.loadError", "Načítanie zlyhalo."))}</div>`; return; }
+      nbObj = JSON.parse(d.content);
+      if (!nbObj.cells) nbObj.cells = [];
+      host.innerHTML = "";
+      nbObj.cells.forEach(c => {
+        const type = c.cell_type === "code" ? "code" : "markdown";
+        const block = cellBlock(type, cellSourceToText(c));
+        host.appendChild(block);
+      });
+      requestAnimationFrame(() => host.querySelectorAll("textarea").forEach(autoGrow));
+    } catch (e) {
+      host.innerHTML = `<div class="ex-empty">${tr("exadmin.parseErr", "Notebook sa nepodarilo prečítať (neplatný JSON).")}</div>`;
+    }
+  }
+
+  async function saveNotebook() {
+    if (!nbObj || nbExId == null) return;
+    const hint = document.getElementById("nbedit-hint");
+    const blocks = [...document.querySelectorAll("#nbedit-cells .nbedit-cell")];
+    const cells = blocks.map(b => {
+      const type = b.dataset.type;
+      const text = b.querySelector("textarea").value;
+      if (type === "code") {
+        return { cell_type: "code", metadata: {}, execution_count: null, outputs: [], source: text };
+      }
+      return { cell_type: "markdown", metadata: {}, source: text };
+    });
+    // zachovaj hlavičku notebooku, vymeň len bunky
+    nbObj.cells = cells;
+    if (!nbObj.nbformat) nbObj.nbformat = 4;
+    if (!nbObj.nbformat_minor) nbObj.nbformat_minor = 5;
+    if (!nbObj.metadata) nbObj.metadata = {};
+
+    const saveBtn = document.getElementById("nbedit-save");
+    saveBtn.disabled = true;
+    hint.className = "nbedit-hint";
+    hint.textContent = tr("exadmin.saving", "Ukladám…");
+    try {
+      const r = await fetch(`/api/admin/exercises/${nbExId}/raw`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: JSON.stringify(nbObj, null, 1) }),
+      });
+      const d = await r.json();
+      if (!r.ok) {
+        hint.className = "nbedit-hint nbedit-hint--err";
+        hint.textContent = d.error || tr("exadmin.saveErr", "Uloženie zlyhalo.");
+        return;
+      }
+      if (d.exercise) { items = items.map(x => x.id === nbExId ? d.exercise : x); render(); }
+      hint.className = "nbedit-hint nbedit-hint--ok";
+      hint.textContent = tr("exadmin.saved2", "Uložené ✓");
+    } catch (e) {
+      hint.className = "nbedit-hint nbedit-hint--err";
+      hint.textContent = tr("exadmin.saveErr", "Uloženie zlyhalo.");
+    } finally { saveBtn.disabled = false; }
+  }
+
+  // prekreslenie pri zmene jazyka
+  function hookLangChange() {
+    if (typeof I18N === "undefined" || typeof I18N.setLang !== "function") return;
+    if (I18N.__exAdminHooked) return;
+    const orig = I18N.setLang.bind(I18N);
+    I18N.setLang = function (l) { orig(l); render(); };
+    I18N.__exAdminHooked = true;
+  }
+
+  hookLangChange();
   load();
 })();

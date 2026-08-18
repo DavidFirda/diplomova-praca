@@ -1,7 +1,6 @@
 /* ============================================================
-   Cvičenia (zoznam + pracovná plocha s notebookom + admin).
-   Používa dizajn tokeny z 01-tokens.css - ladí so zvyškom appky
-   a automaticky reaguje na svetlú/tmavú tému.
+   Cvičenia (zoznam + pracovná plocha + admin + editor notebooku).
+   Používa dizajn tokeny z 01-tokens.css.
    ============================================================ */
 
 /* ---------- Zoznam cvičení ---------- */
@@ -13,10 +12,10 @@
   border-radius: var(--radius-lg);
   padding: 20px 22px;
   display: grid;
-  grid-template-columns: 46px 1fr auto;
+  grid-template-columns: 46px 1fr 220px;   /* pevná šírka pravého stĺpca => rovnaké v každom stave/jazyku */
   gap: 16px;
-  align-items: center;
-  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  align-items: stretch;
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
 .ex-row:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
 .ex-row--locked { opacity: 0.62; }
@@ -42,37 +41,35 @@
   color: var(--text-muted); font-size: 0.74rem; font-weight: 600;
 }
 
+/* Pravý stĺpec - pevná štruktúra: badge slot / progres / akcie.
+   Vyhradené výšky => karty sú zarovnané bez ohľadu na stav a jazyk. */
 .ex-row__side {
-  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
-  flex-shrink: 0; min-width: 150px;
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 0;
 }
+.ex-row__badge-slot { min-height: 28px; display: flex; justify-content: flex-end; align-items: flex-start; }
 
-/* ---------- Progress bar (v štýle z obrázka) ---------- */
-.ex-progress { width: 100%; min-width: 150px; }
-.ex-progress__top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 5px;
-}
+/* Progress bar */
+.ex-progress { width: 100%; }
+.ex-progress__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
 .ex-progress__pct { color: var(--primary); font-weight: 800; font-size: 0.8rem; }
 .ex-row--done .ex-progress__pct { color: var(--success); }
 .ex-progress__label { color: var(--text-faint); font-size: 0.72rem; }
+.ex-progress__label--note { display: block; margin-top: 6px; text-align: left; line-height: 1.3; min-height: 2em; }
 .ex-progress__track {
   height: 9px; border-radius: var(--radius-full);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--border); overflow: hidden;
 }
 .ex-progress__fill {
   height: 100%; border-radius: var(--radius-full);
   background: linear-gradient(90deg, var(--primary), var(--accent));
-  width: 0%;
-  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 0%; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ex-row--done .ex-progress__fill { background: var(--success); }
 
-/* ---------- Stav / badge ---------- */
+/* Badge - rovnaká veľkosť vo všetkých stavoch */
 .ex-badge {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 5px 12px; border-radius: var(--radius-full);
   font-size: 0.76rem; font-weight: 700; white-space: nowrap;
 }
@@ -80,15 +77,25 @@
 .ex-badge--progress { background: var(--primary-soft); color: var(--primary); }
 .ex-badge--locked { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
 
-.ex-row__actions { display: flex; gap: 8px; }
-.ex-row__actions .btn { width: auto; min-height: 40px; padding: 8px 16px; font-size: 0.84rem; white-space: nowrap; }
-
-.ex-empty {
-  text-align: center; color: var(--text-muted);
-  padding: 40px 20px; font-size: 0.92rem;
+/* Akcie - dve rovnako veľké tlačidlá (rovnaké v SK aj EN); prázdny slot drží výšku */
+.ex-row__actions {
+  margin-top: auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  min-height: 40px;
+}
+.ex-row__actions:empty { display: block; }
+.ex-row__actions .btn {
+  width: 100%; min-height: 40px; padding: 8px 10px;
+  font-size: 0.84rem; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; text-align: center;
 }
 
-/* ---------- Pracovná plocha cvičenia (notebook + chat) ---------- */
+.ex-empty { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 0.92rem; }
+
+/* ============================================================
+   Pracovná plocha cvičenia: kód vľavo (skroluje stránkou),
+   chat vpravo (statický, cez celú výšku, interne skrolovateľný)
+   ============================================================ */
 .ex-workspace {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -96,8 +103,17 @@
   align-items: start;
 }
 .ex-nb-col { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+#ex-cells { display: flex; flex-direction: column; gap: 6px; }
 
-/* hlavička cvičenia s progress barom a tlačidlom Dokončil som */
+/* pravý panel drží pri skrolovaní - "sticky" cez celú výšku obrazovky */
+.ex-workspace .side-panel {
+  position: sticky;
+  top: 24px;
+  height: calc(100vh - 48px);
+}
+.ex-workspace .chat-panel { height: 100%; }   /* prebije fixných 520px z app-shell */
+
+/* hlavička cvičenia */
 .ex-head {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -114,26 +130,18 @@
 
 /* markdown bunka */
 .nb-md {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px; color: var(--text);
 }
 .nb-md h1, .nb-md h2, .nb-md h3 { margin-top: 0.4em; }
-.nb-md h1 { font-size: 1.4rem; }
-.nb-md h2 { font-size: 1.2rem; }
-.nb-md h3 { font-size: 1.05rem; }
+.nb-md h1 { font-size: 1.4rem; } .nb-md h2 { font-size: 1.2rem; } .nb-md h3 { font-size: 1.05rem; }
 .nb-md p { color: var(--text-muted); }
 .nb-md code {
   font-family: var(--font-mono); font-size: 0.86em;
   background: var(--surface-2); border: 1px solid var(--border);
   padding: 1px 5px; border-radius: 5px; color: var(--text);
 }
-.nb-md pre {
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto;
-}
+.nb-md pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto; }
 .nb-md pre code { background: none; border: none; padding: 0; }
 .nb-md table { border-collapse: collapse; margin: 10px 0; width: 100%; }
 .nb-md th, .nb-md td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; font-size: 0.88rem; }
@@ -142,93 +150,113 @@
 .nb-md a { color: var(--primary); }
 
 /* code bunka */
-.nb-code {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
+.nb-code { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .nb-code--done { border-color: color-mix(in srgb, var(--success) 45%, var(--border)); }
 .nb-code__toolbar {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2);
 }
-.nb-code__run {
-  width: auto; min-height: 34px; padding: 6px 14px; font-size: 0.8rem;
-  gap: 6px;
-}
+.nb-code__run { width: auto; min-height: 34px; padding: 6px 14px; font-size: 0.8rem; gap: 6px; }
 .nb-code__run svg { width: 14px; height: 14px; }
 .nb-code__status { font-size: 0.76rem; font-weight: 700; margin-left: auto; }
 .nb-code__status--ok { color: var(--success); }
 .nb-code__status--err { color: var(--danger); }
 .nb-code__status--idle { color: var(--text-faint); }
-
-/* CodeMirror v bunke - jemné odsadenie a font */
-.nb-code .CodeMirror {
-  height: auto; font-family: var(--font-mono); font-size: 0.88rem;
-  background: var(--surface); color: var(--text);
-}
+.nb-code .CodeMirror { height: auto; font-family: var(--font-mono); font-size: 0.88rem; background: var(--surface); color: var(--text); }
 .nb-code .CodeMirror-scroll { min-height: 44px; }
-
 .nb-code__output {
-  border-top: 1px solid var(--border);
-  background: var(--surface-2);
-  padding: 10px 14px;
-  font-family: var(--font-mono); font-size: 0.84rem;
-  white-space: pre-wrap; word-break: break-word; overflow-x: auto;
-  color: var(--text);
+  border-top: 1px solid var(--border); background: var(--surface-2);
+  padding: 10px 14px; font-family: var(--font-mono); font-size: 0.84rem;
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto; color: var(--text);
 }
 .nb-code__output:empty { display: none; }
 .nb-code__output--err { color: var(--danger); }
+
+/* vlastná (scratch) bunka + vsuvky medzi bunkami */
+.nb-code--custom { border-style: dashed; }
+.nb-code__status--custom { color: var(--text-muted); }
+.nb-code__remove {
+  width: auto; min-height: 30px; padding: 4px 10px; margin: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text-muted); cursor: pointer; font-weight: 700; box-shadow: none; line-height: 1;
+}
+.nb-code__remove:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); transform: none; }
+
+/* tenká vsuvka "＋" medzi bunkami - nenápadná, zvýrazní sa pri hoveri */
+.ex-insert {
+  display: flex; align-items: center; justify-content: center;
+  height: 14px; position: relative;
+}
+.ex-insert::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; background: var(--border);
+  opacity: 0; transition: opacity var(--transition);
+}
+.ex-insert:hover::before { opacity: 1; }
+.ex-insert__btn {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 0; width: auto; margin: 0; padding: 3px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-full);
+  color: var(--text-faint); cursor: pointer; box-shadow: none;
+  font-size: 0.75rem; font-weight: 700;
+  opacity: 0; transition: opacity var(--transition), color var(--transition), border-color var(--transition), background var(--transition);
+}
+.ex-insert:hover .ex-insert__btn,
+.ex-insert__btn:focus-visible { opacity: 1; }
+.ex-insert__btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); transform: none; }
+.ex-insert__plus { font-size: 0.95rem; line-height: 1; }
+/* na dotykových zariadeniach (bez hoveru) nech sú vsuvky vždy viditeľné */
+@media (hover: none) {
+  .ex-insert__btn { opacity: 0.75; }
+  .ex-insert::before { opacity: 1; }
+}
+
+.ex-addcell-note-bar { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 6px 0; }
+.ex-addcell-note { color: var(--text-faint); font-size: 0.8rem; }
 
 /* zamknutá / chybová obrazovka */
 .ex-locked-card { text-align: center; padding: 44px 24px; }
 .ex-locked-card .ex-locked-ic {
   width: 56px; height: 56px; border-radius: 16px;
   background: var(--surface-2); border: 1px solid var(--border);
-  display: grid; place-items: center; margin: 0 auto 16px;
-  color: var(--text-muted);
+  display: grid; place-items: center; margin: 0 auto 16px; color: var(--text-muted);
 }
 .ex-locked-card .ex-locked-ic svg { width: 26px; height: 26px; stroke: currentColor; fill: none; }
 
-/* ---------- Admin: správa cvičení ---------- */
-.exadmin-upload {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px;
-  margin-bottom: 8px;
-}
+/* ============================================================
+   Admin: správa cvičení (responzívne)
+   ============================================================ */
+.exadmin-upload { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 8px; }
 .exadmin-upload .full { grid-column: 1 / -1; }
 .exadmin-upload input, .exadmin-upload textarea { margin-bottom: 0; }
 
 .exadmin-table { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+
 .exadmin-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  display: grid;
-  grid-template-columns: 40px 1fr auto;
-  gap: 14px; align-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; gap: 14px; align-items: flex-start;
 }
 .exadmin-item__ord {
-  width: 40px; height: 40px; border-radius: 10px;
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
   background: var(--surface-2); border: 1px solid var(--border);
   display: grid; place-items: center; font-weight: 800; color: var(--text-muted);
 }
-.exadmin-item__body { min-width: 0; }
-.exadmin-item__title { color: var(--text); font-weight: 700; font-size: 0.95rem; }
-.exadmin-item__meta { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
-.exadmin-item__flags { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.exadmin-item__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.exadmin-item__title { color: var(--text); font-weight: 700; font-size: 0.95rem; word-break: break-word; }
+.exadmin-item__meta { color: var(--text-muted); font-size: 0.78rem; word-break: break-word; }
+.exadmin-item__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 2px; }
+.exadmin-item__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.exadmin-item__actions .btn { width: auto; min-height: 36px; padding: 7px 14px; font-size: 0.8rem; white-space: nowrap; }
 
 /* prepínač (toggle) */
 .ex-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; user-select: none; }
 .ex-toggle input { display: none; }
 .ex-toggle__track {
-  width: 40px; height: 22px; border-radius: 999px;
-  background: var(--surface-2); border: 1px solid var(--border);
-  position: relative; transition: background var(--transition), border-color var(--transition);
-  flex-shrink: 0;
+  width: 40px; height: 22px; border-radius: 999px; flex-shrink: 0;
+  background: var(--surface-2); border: 1px solid var(--border); position: relative;
+  transition: background var(--transition), border-color var(--transition);
 }
 .ex-toggle__track::after {
   content: ""; position: absolute; top: 2px; left: 2px;
@@ -238,23 +266,147 @@
 .ex-toggle input:checked + .ex-toggle__track { background: var(--primary-soft); border-color: var(--primary); }
 .ex-toggle input:checked + .ex-toggle__track::after { transform: translateX(18px); background: var(--primary); }
 
-.exadmin-item__actions { display: flex; gap: 6px; }
-.exadmin-item__actions .btn, .exadmin-item__actions button {
-  width: auto; min-height: 34px; padding: 6px 12px; font-size: 0.78rem;
+/* ============================================================
+   Editor notebooku (admin) - fullscreen modál
+   ============================================================ */
+.nbedit-modal {
+  position: fixed; inset: 0; z-index: 400; display: none;
+  align-items: flex-start; justify-content: center;
+  padding: 24px 16px; overflow: hidden;
 }
+.nbedit-modal[style*="flex"] { display: flex; }
+.nbedit-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+.nbedit-panel {
+  position: relative; z-index: 1;
+  width: min(920px, 100%); max-height: 100%;   /* nikdy nepresiahne obrazovku */
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+  overflow: hidden; min-height: 0;
+}
+.nbedit-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; flex-shrink: 0;
+}
+.nbedit-title { margin: 0; font-size: 1.05rem; flex: 1; min-width: 0; word-break: break-word; }
+.nbedit-title span { color: var(--text-muted); font-weight: 600; font-size: 0.9rem; }
+.nbedit-header__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nbedit-hint { padding: 8px 20px 0; font-size: 0.85rem; min-height: 1.2em; flex-shrink: 0; }
+.nbedit-hint--ok { color: var(--success); } .nbedit-hint--err { color: var(--danger); }
+
+/* KĽÚČOVÉ: min-height:0 => telo sa zmenší a skroluje namiesto rozťahovania */
+.nbedit-body {
+  flex: 1 1 auto; min-height: 0;
+  padding: 16px 20px 24px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+  scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
+}
+.nbedit-body::-webkit-scrollbar { width: 9px; }
+.nbedit-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+.nbedit-cell { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); flex-shrink: 0; }
+.nbedit-cell__bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.nbedit-cell__tag { font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-full); }
+.nbedit-cell__tag--markdown { background: var(--primary-soft); color: var(--primary); }
+.nbedit-cell__tag--code { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); }
+.nbedit-cell__ops { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.nbedit-op {
+  width: auto; min-height: 28px; padding: 3px 8px; font-size: 0.74rem; font-weight: 700;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+  color: var(--text-muted); cursor: pointer; box-shadow: none;
+}
+.nbedit-op:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border-strong); transform: none; }
+.nbedit-op--del:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.nbedit-cell__src {
+  width: 100%; border: none; background: var(--surface); color: var(--text);
+  padding: 12px 14px; resize: vertical; min-height: 70px; margin: 0;
+  font-family: inherit; font-size: 0.9rem; line-height: 1.5;
+}
+.nbedit-cell__src--code { font-family: var(--font-mono); font-size: 0.86rem; background: var(--surface-2); }
+.nbedit-cell__src:focus { outline: none; box-shadow: inset 0 0 0 2px var(--primary-soft); }
+
+/* ============================================================
+   Admin: cvičenia používateľa (progres + odpovede)
+   ============================================================ */
+.ux-student { display: flex; align-items: center; gap: 14px; }
+.ux-student__avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff; font-weight: 800; font-size: 1.2rem;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.ux-student__name { color: var(--text); font-weight: 700; font-size: 1.05rem; }
+.ux-student__sub { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; word-break: break-word; }
+.ux-muted { color: var(--text-muted); }
+
+.ux-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.ux-ex {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 18px;
+}
+.ux-ex__top { display: flex; align-items: center; gap: 14px; }
+.ux-ex__num {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  background: var(--primary-soft); color: var(--primary);
+  display: grid; place-items: center; font-weight: 800;
+}
+.ux-ex__main { flex: 1; min-width: 0; }
+.ux-ex__title { color: var(--text); font-weight: 700; font-size: 0.98rem; margin-bottom: 8px; word-break: break-word; }
+.ux-ex__badge { flex-shrink: 0; }
+
+.ux-ex__answers { margin-top: 12px; }
+.ux-ex__answers > summary {
+  cursor: pointer; color: var(--primary); font-weight: 600; font-size: 0.86rem;
+  list-style: none; padding: 6px 0; user-select: none;
+}
+.ux-ex__answers > summary::-webkit-details-marker { display: none; }
+.ux-ex__answers > summary::before { content: "▸ "; }
+.ux-ex__answers[open] > summary::before { content: "▾ "; }
+
+.ux-cells { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.ux-cell {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; background: var(--surface-2);
+  border-left: 3px solid var(--border-strong);
+}
+.ux-cell--ok { border-left-color: var(--success); }
+.ux-cell--err { border-left-color: var(--danger); }
+.ux-cell--none { border-left-color: var(--border-strong); opacity: 0.85; }
+.ux-cell__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.ux-cell__idx { font-weight: 700; font-size: 0.84rem; color: var(--text); }
+.ux-cell__state { font-size: 0.78rem; font-weight: 700; }
+.ux-cell--ok .ux-cell__state { color: var(--success); }
+.ux-cell--err .ux-cell__state { color: var(--danger); }
+.ux-cell--none .ux-cell__state { color: var(--text-muted); }
+.ux-cell__prompt > summary {
+  cursor: pointer; color: var(--text-muted); font-size: 0.8rem;
+  padding: 2px 0 6px; user-select: none;
+}
+.ux-cell__answer-label { font-size: 0.76rem; font-weight: 700; color: var(--text-muted); margin: 6px 0 4px; }
+.ux-code {
+  margin: 0; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto; color: var(--text);
+}
+.ux-code--muted { color: var(--text-muted); background: transparent; }
 
 /* ---------- Responzivita ---------- */
 @media (max-width: 1000px) {
   .ex-workspace { grid-template-columns: 1fr; }
-  .ex-workspace .chat-panel { height: 420px; }
+  .ex-workspace .side-panel { position: static; height: auto; }
+  .ex-workspace .chat-panel { height: 460px; }
 }
 @media (max-width: 720px) {
   .ex-row { grid-template-columns: 40px 1fr; }
-  .ex-row__side { grid-column: 1 / -1; align-items: stretch; min-width: 0; }
-  .ex-row__actions { justify-content: stretch; }
-  .ex-row__actions .btn { flex: 1; }
+  .ex-row__side { grid-column: 1 / -1; }
+  .ex-row__badge-slot { justify-content: flex-start; }
+  .ex-row__actions { grid-template-columns: 1fr 1fr; }
   .exadmin-upload { grid-template-columns: 1fr; }
-  .exadmin-item { grid-template-columns: 36px 1fr; }
-  .exadmin-item__flags, .exadmin-item__actions { grid-column: 1 / -1; }
+  .exadmin-item__actions { margin-left: 0; }
   .ex-head__bar-row { flex-direction: column; align-items: stretch; }
+  .ex-head__done-btn { width: 100%; }
+  .ux-ex__top { flex-wrap: wrap; }
+  .ux-ex__badge { order: 3; }
+  .nbedit-panel { margin: 0; max-height: 100%; border-radius: 0; width: 100%; }
 }
