@@ -2,8 +2,8 @@
    AdaptPy - admin: správa cvičení.
    - responzívne karty
    - prepínače Publikované / Sprístupnené, poradie, mazanie, rescan
-   - EDITOR NOTEBOOKU: úprava markdown aj code buniek, pridať/zmazať/
-     presunúť bunku, uložiť späť do .ipynb
+   - EDITOR NOTEBOOKU (markdown + code bunky)
+   - úprava metadát vrátane ČASOVÉHO LIMITU na bunku (run_timeout)
    ============================================================ */
 (function () {
   const listEl = document.getElementById("ex-admin-list");
@@ -24,13 +24,14 @@
   // ---------- zoznam ----------
   function itemRow(ex) {
     const stats = ex.stats || { completed: 0, in_progress: 0 };
+    const limit = ex.run_timeout ? ` · ${ex.run_timeout}s` : "";
     return `
       <div class="exadmin-item" data-id="${ex.id}">
         <div class="exadmin-item__ord">${ex.order_index}</div>
         <div class="exadmin-item__main">
           <div class="exadmin-item__title">${esc(ex.title_sk || ex.slug)}</div>
           <div class="exadmin-item__meta">
-            ${esc(ex.filename)} · ${ex.code_cells} ${tr("exadmin.cells", "buniek")}
+            ${esc(ex.filename)} · ${ex.code_cells} ${tr("exadmin.cells", "buniek")}${limit}
             · ✓ ${stats.completed} ${tr("exadmin.completedBy", "dokončili")}
           </div>
           <div class="exadmin-item__controls">
@@ -118,6 +119,14 @@
     uploadMsg.className = isErr ? "error-message" : "info-message";
     uploadMsg.textContent = text;
   }
+  // pole „Časový limit“ vo formulári nahrávania (ak ho HTML ešte nemá, vloží sa samo)
+  if (uploadBtn && !document.getElementById("ex-timeout")) {
+    const grp = document.createElement("div");
+    grp.className = "form-group ex-upload-timeout";
+    grp.innerHTML = `<label for="ex-timeout" data-i18n="exadmin.timeout">${tr("exadmin.timeout", "Časový limit na bunku (s) – prázdne = predvolené")}</label>
+      <input type="number" id="ex-timeout" min="1" max="60" placeholder="napr. 10" />`;
+    uploadBtn.parentNode.insertBefore(grp, uploadBtn);
+  }
   if (uploadBtn) uploadBtn.addEventListener("click", async () => {
     const fileInput = document.getElementById("ex-file");
     if (!fileInput.files.length) { showMsg(tr("exadmin.pickFile", "Vyber súbor .ipynb."), true); return; }
@@ -127,13 +136,15 @@
     fd.append("title_en", document.getElementById("ex-title-en").value);
     fd.append("description_sk", document.getElementById("ex-desc-sk").value);
     fd.append("order_index", document.getElementById("ex-order").value);
+    const toEl = document.getElementById("ex-timeout");
+    if (toEl) fd.append("run_timeout", toEl.value);
     uploadBtn.disabled = true;
     try {
       const r = await fetch("/api/admin/exercises", { method: "POST", credentials: "include", body: fd });
       const d = await r.json();
       if (!r.ok) { showMsg(d.error || tr("exadmin.uploadErr", "Nahratie zlyhalo."), true); return; }
       showMsg(tr("exadmin.uploaded", "Cvičenie nahraté. Nezabudni ho publikovať a sprístupniť."), false);
-      ["ex-file", "ex-title-sk", "ex-title-en", "ex-desc-sk", "ex-order"].forEach(i => { const el = document.getElementById(i); if (el) el.value = ""; });
+      ["ex-file", "ex-title-sk", "ex-title-en", "ex-desc-sk", "ex-order", "ex-timeout"].forEach(i => { const el = document.getElementById(i); if (el) el.value = ""; });
       load();
     } catch (e) {
       showMsg(tr("exadmin.uploadErr", "Nahratie zlyhalo."), true);
@@ -151,7 +162,7 @@
     } catch (e) {} finally { rescanBtn.disabled = false; }
   });
 
-  // ---------- edit metadát (existujúci modál v HTML) ----------
+  // ---------- edit metadát ----------
   const modal = document.getElementById("ex-edit-modal");
   const modalBody = document.getElementById("ex-edit-body");
   window.exadminCloseEdit = () => { modal.style.display = "none"; };
@@ -170,6 +181,8 @@
       <textarea id="edit-desc-en">${esc(ex.description_en)}</textarea>
       <label>${tr("exadmin.order", "Poradie")}</label>
       <input type="number" id="edit-order" value="${ex.order_index}" />
+      <label>${tr("exadmin.timeout", "Časový limit na bunku (s) – prázdne = predvolené")}</label>
+      <input type="number" id="edit-timeout" min="1" max="60" value="${ex.run_timeout != null ? ex.run_timeout : ""}" />
       <label>${tr("exadmin.topics", "Témy / časti (každá na nový riadok)")}</label>
       <textarea id="edit-topics">${esc((ex.topics || []).join("\n"))}</textarea>
       <button class="btn" id="edit-save">${tr("exadmin.save", "Uložiť")}</button>
@@ -182,6 +195,7 @@
         description_sk: document.getElementById("edit-desc-sk").value,
         description_en: document.getElementById("edit-desc-en").value,
         order_index: document.getElementById("edit-order").value,
+        run_timeout: document.getElementById("edit-timeout").value,
         topics: document.getElementById("edit-topics").value.split("\n").map(s => s.trim()).filter(Boolean),
       });
       modal.style.display = "none";
@@ -191,7 +205,7 @@
   // ============================================================
   //  EDITOR NOTEBOOKU (markdown + code bunky)
   // ============================================================
-  let nbObj = null;      // načítaný notebook (JSON)
+  let nbObj = null;
   let nbExId = null;
 
   function ensureNbModal() {
@@ -239,13 +253,16 @@
     ta.style.height = Math.min(600, Math.max(70, ta.scrollHeight + 2)) + "px";
   }
 
-  function cellBlock(type, text) {
+  function cellBlock(type, text, timeout) {
     const block = document.createElement("div");
     block.className = "nbedit-cell";
     block.dataset.type = type;
     block.innerHTML = `
       <div class="nbedit-cell__bar">
         <span class="nbedit-cell__tag nbedit-cell__tag--${type}">${type === "code" ? tr("exadmin.codeCell", "Kód") : tr("exadmin.textCell", "Text")}</span>
+        ${type === "code" ? `<label class="nbedit-limit">${tr("exadmin.cellLimit", "limit (s)")}
+          <input type="number" class="nbedit-limit__input" min="1" max="60" placeholder="—" value="${timeout ? Number(timeout) : ""}" />
+        </label>` : ""}
         <div class="nbedit-cell__ops">
           <button class="nbedit-op" data-op="up" title="Hore">↑</button>
           <button class="nbedit-op" data-op="down" title="Dole">↓</button>
@@ -267,7 +284,8 @@
         else if (op === "down") { const next = block.nextElementSibling; if (next) block.parentNode.insertBefore(next, block); }
         else if (op === "type") {
           const newType = block.dataset.type === "code" ? "markdown" : "code";
-          const replacement = cellBlock(newType, ta.value);
+          const limEl = block.querySelector(".nbedit-limit__input");
+          const replacement = cellBlock(newType, ta.value, limEl ? limEl.value : "");
           block.replaceWith(replacement);
           requestAnimationFrame(() => autoGrow(replacement.querySelector("textarea")));
         }
@@ -305,8 +323,8 @@
       host.innerHTML = "";
       nbObj.cells.forEach(c => {
         const type = c.cell_type === "code" ? "code" : "markdown";
-        const block = cellBlock(type, cellSourceToText(c));
-        host.appendChild(block);
+        const to = type === "code" && c.metadata && c.metadata.adaptpy ? c.metadata.adaptpy.timeout : "";
+        host.appendChild(cellBlock(type, cellSourceToText(c), to));
       });
       requestAnimationFrame(() => host.querySelectorAll("textarea").forEach(autoGrow));
     } catch (e) {
@@ -322,11 +340,13 @@
       const type = b.dataset.type;
       const text = b.querySelector("textarea").value;
       if (type === "code") {
-        return { cell_type: "code", metadata: {}, execution_count: null, outputs: [], source: text };
+        const limEl = b.querySelector(".nbedit-limit__input");
+        const lim = limEl ? parseInt(limEl.value, 10) : NaN;
+        const meta = (lim > 0) ? { adaptpy: { timeout: Math.min(lim, 60) } } : {};
+        return { cell_type: "code", metadata: meta, execution_count: null, outputs: [], source: text };
       }
       return { cell_type: "markdown", metadata: {}, source: text };
     });
-    // zachovaj hlavičku notebooku, vymeň len bunky
     nbObj.cells = cells;
     if (!nbObj.nbformat) nbObj.nbformat = 4;
     if (!nbObj.nbformat_minor) nbObj.nbformat_minor = 5;
@@ -358,7 +378,6 @@
     } finally { saveBtn.disabled = false; }
   }
 
-  // prekreslenie pri zmene jazyka
   function hookLangChange() {
     if (typeof I18N === "undefined" || typeof I18N.setLang !== "function") return;
     if (I18N.__exAdminHooked) return;

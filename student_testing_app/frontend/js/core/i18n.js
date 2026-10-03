@@ -330,6 +330,11 @@ const TRANSLATIONS = {
     "ex.scratchHint": "Vlastné bunky na experimentovanie – nezapočítavajú sa do progresu. Pridať ich môžeš kdekoľvek cez „＋“.",
     "ex.scratchCell": "vlastná bunka",
     "ex.removeCell": "Odstrániť bunku",
+    "ex.limit": "Limit na bunku",
+    "ex.timedOut": "zastavené (limit)",
+    "ex.timeout": "Kód bol zastavený, lebo prekročil časový limit.",
+    "exadmin.timeout": "Časový limit na bunku (s) – prázdne = predvolené",
+    "exadmin.cellLimit": "limit (s)",
 
     "exadmin.title": "Správa cvičení",
     "exadmin.subtitle": "Nahrávaj, upravuj, publikuj a sprístupňuj cvičenia. Zmeny sa hneď prejavia študentom.",
@@ -698,6 +703,11 @@ const TRANSLATIONS = {
     "ex.scratchHint": "Scratch cells for experimenting – they don't count toward progress. Add them anywhere via “＋”.",
     "ex.scratchCell": "scratch cell",
     "ex.removeCell": "Remove cell",
+    "ex.limit": "Per-cell limit",
+    "ex.timedOut": "stopped (limit)",
+    "ex.timeout": "Code was stopped because it exceeded the time limit.",
+    "exadmin.timeout": "Per-cell time limit (s) – empty = default",
+    "exadmin.cellLimit": "limit (s)",
 
     "exadmin.title": "Manage exercises",
     "exadmin.subtitle": "Upload, edit, publish and make exercises available. Changes apply instantly.",

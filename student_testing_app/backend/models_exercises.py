@@ -1,14 +1,9 @@
 # ============================================================
 # AdaptPy - modely pre CVIČENIA (Jupyter notebooky) a progres.
 #
-# Tento súbor NIJAKO nemení tvoj models.py - iba doňho pridáva
-# ďalšie tabuľky cez ten istý `db` (SQLAlchemy). Stačí, aby sa
-# tento modul niekde naimportoval PRED `db.create_all()` v app.py,
-# a tabuľky sa vytvoria automaticky.
-#
-# POZN.: stĺpec `answers_json` pribudol dodatočne - ak už tabuľka
-# `exercise_progress` existuje, doplní ho migrácia v
-# services/exercise_migrate.py (spúšťa sa pri štarte).
+# Importuje sa PRED db.create_all() v app.py -> tabuľky sa vytvoria.
+# Dodatočné stĺpce (answers_json, run_timeout) na už existujúcich
+# tabuľkách doplní services/exercise_migrate.py pri štarte.
 # ============================================================
 from datetime import datetime, timezone
 from models import db
@@ -33,6 +28,9 @@ class Exercise(db.Model):
     published = db.Column(db.Boolean, default=False)
     accessible = db.Column(db.Boolean, default=False)
 
+    # časový limit na spustenie bunky (s). None/0 = použi default runnera
+    run_timeout = db.Column(db.Integer, nullable=True)
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
         db.DateTime,
@@ -52,12 +50,10 @@ class ExerciseProgress(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
     exercise_id = db.Column(db.Integer, db.ForeignKey("exercises.id"), nullable=False)
 
-    # indexy code-buniek spustených bez chyby - JSON pole čísel
     done_cells_json = db.Column(db.Text, default="[]")
-    # ODPOVEDE študenta: JSON objekt { "code_index": "kód, ktorý napísal" }
     answers_json = db.Column(db.Text, default="{}")
 
-    percent = db.Column(db.Integer, default=0)  # 0..100
+    percent = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default="not_started")
 
     completed_at = db.Column(db.DateTime, nullable=True)

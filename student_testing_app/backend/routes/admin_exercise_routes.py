@@ -62,6 +62,7 @@ def _serialize(ex, with_stats=False):
         "description_sk": ex.description_sk, "description_en": ex.description_en,
         "topics": topics, "code_cells": ex.code_cells,
         "published": ex.published, "accessible": ex.accessible,
+        "run_timeout": ex.run_timeout,
     }
     if with_stats:
         completed = ExerciseProgress.query.filter_by(exercise_id=ex.id, status="completed").count()
@@ -114,10 +115,10 @@ def user_exercises(uid):
                     ans = answers.get(str(ci))
                     cells.append({
                         "code_index": ci,
-                        "prompt": _cell_source(c),          # pôvodný predpis
-                        "answer": ans,                       # odpoveď študenta (alebo None)
+                        "prompt": _cell_source(c),
+                        "answer": ans,
                         "answered": ans is not None,
-                        "ran_ok": ci in done,                # bežalo bez chyby?
+                        "ran_ok": ci in done,
                     })
                     ci += 1
         except Exception:
@@ -179,8 +180,16 @@ def upload_exercise():
     except ValueError:
         order = notebook_scan._order_from_filename(filename)
 
+    rt = request.form.get("run_timeout")
+    try:
+        rt = int(rt) if rt not in (None, "") else None
+        if rt is not None and rt <= 0:
+            rt = None
+    except ValueError:
+        rt = None
+
     ex = Exercise(
-        slug=slug, filename=filename, order_index=order,
+        slug=slug, filename=filename, order_index=order, run_timeout=rt,
         title_sk=(request.form.get("title_sk") or title),
         title_en=(request.form.get("title_en") or title),
         description_sk=request.form.get("description_sk") or "",
@@ -194,7 +203,7 @@ def upload_exercise():
     return jsonify({"exercise": _serialize(ex, with_stats=True)}), 201
 
 
-# ---------- úprava metadát / prepínačov ----------
+# ---------- úprava metadát / prepínačov / timeoutu ----------
 @admin_exercise_bp.route("/<int:ex_id>", methods=["PATCH"])
 @admin_required
 def patch_exercise(ex_id):
@@ -219,6 +228,13 @@ def patch_exercise(ex_id):
         ex.accessible = bool(data["accessible"])
         if ex.accessible and not ex.published:
             ex.published = True
+    if "run_timeout" in data:
+        v = data["run_timeout"]
+        try:
+            iv = int(v) if v not in (None, "", 0, "0") else None
+            ex.run_timeout = iv if (iv is None or iv > 0) else None
+        except (TypeError, ValueError):
+            ex.run_timeout = None
 
     db.session.commit()
     return jsonify({"exercise": _serialize(ex, with_stats=True)})

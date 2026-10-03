@@ -3,19 +3,22 @@ services:
     build: .
     ports:
       - "5000:5000"
-    # Lokálna DB je zakomentovaná nižšie - appka teraz beží proti Neonu
-    # (DATABASE_URL v .env ukazuje priamo na Neon), takže backend nečaká
-    # na žiadnu lokálnu "db" službu.
     env_file:
       - .env
     # REDIS_URL prepojí backend s Redis službou nižšie (zdieľaný rate limiter
-    # naprieč workermi). Ak ho zmažeš/necháš prázdny, limiter beží in-memory.
+    # naprieč workermi).
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - RUNNER_URL=http://runner:6000
     depends_on:
       redis:
         condition: service_healthy
+      runner:
+        condition: service_started
     restart: on-failure
+    networks:
+      - default
+      - runnernet
     volumes:
       - ./backend:/app/backend
       - ./frontend:/app/frontend
@@ -29,8 +32,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: on-failure
-    # Port sa mapuje von len ak by si chcel Redis skúmať zvonka; pre chod
-    # aplikácie netreba (backend siaha na "redis" cez internú sieť).
+    # Port sa mapuje von len ak by si chcel Redis skúmať zvonka;
     # ports:
     #   - "6379:6379"
     healthcheck:
@@ -38,6 +40,31 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+
+  # --- Runner (izolovaný sandbox na spúšťanie kódu študentov) ---
+  runner:
+    build: ./runner
+    environment:
+      - RUN_TIMEOUT=10          # wall-clock limit na bunku (s) - zastaví nekonečnú slučku
+      - CPU_SECONDS=8           # CPU limit na bunku
+      - MAX_CONCURRENCY=2       # koľko behov naraz na jeden worker
+      - EXERCISES_DIR=/exercises
+    volumes:
+      - ./exercises:/exercises:ro     # dáta cvičení (iris.csv, ...) LEN na čítanie
+    networks:
+      - runnernet
+    mem_limit: 700m             # cgroup limit pamäte (backstop proti OOM)
+    memswap_limit: 700m
+    pids_limit: 128             # proti fork-bombám
+    cpus: 1.0
+    read_only: true             # rootfs len na čítanie
+    tmpfs:
+      - /tmp:size=128m          # jediné zapisovateľné miesto (dočasné súbory, mpl cache)
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: on-failure
 
 
 #  db:
@@ -58,6 +85,10 @@ services:
 #      interval: 2s
 #      timeout: 5s
 #      retries: 20
+
+networks:
+  runnernet:
+    internal: true
 
 #volumes:
 #  pgdata:

@@ -13,3 +13,4 @@ requests==2.34.2
 beautifulsoup4==4.15.0
 redis==5.2.1
 gunicorn==23.0.0
+psycopg[binary]==3.2.3
