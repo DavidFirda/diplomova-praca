@@ -1,4 +1,5 @@
 import re
+import os
 import time
 import hashlib
 import secrets
@@ -53,6 +54,14 @@ def _student_public(student: Student) -> dict:
 ### Registrácia ###
 @auth_bp.route("/register", methods=["POST"])
 def register():
+
+    # Registrácia len na pozvánku 
+    if os.getenv("REGISTRATION_MODE", "invite").strip().lower() != "open":
+        return jsonify({
+            "error": "Registrácia je možná len na pozvánku od administrátora.",
+            "error_key": "auth.inviteOnly",
+        }), 403
+
     data = request.get_json(silent=True) or {}
     name = (data.get("name") or "").strip()
     surname = (data.get("surname") or "").strip()

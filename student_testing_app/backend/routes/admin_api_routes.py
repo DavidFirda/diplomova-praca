@@ -6,6 +6,7 @@ import json
 from functools import wraps
 from flask import Blueprint, request, jsonify, session
 
+from models_exercises import ExerciseProgress
 from models import (
     db, Student, StudentAnswer, TestSummary,
     FeedbackQuestion, FeedbackResponse, StudentFeedback,
@@ -89,14 +90,28 @@ def delete_user(user_id):
     student = Student.query.get(user_id)
     if not student:
         return jsonify({"error": "Používateľ neexistuje."}), 404
-    # Zmaž všetky súvisiace dáta
-    StudentAnswer.query.filter_by(student_id=user_id).delete()
-    TestSummary.query.filter_by(student_id=user_id).delete()
-    FeedbackResponse.query.filter_by(student_id=user_id).delete()
-    StudentFeedback.query.filter_by(student_id=user_id).delete()
-    db.session.delete(student)
-    db.session.commit()
+    try:
+        StudentAnswer.query.filter_by(student_id=user_id).delete()
+        TestSummary.query.filter_by(student_id=user_id).delete()
+        FeedbackResponse.query.filter_by(student_id=user_id).delete()
+        StudentFeedback.query.filter_by(student_id=user_id).delete()
+        ExerciseProgress.query.filter_by(student_id=user_id).delete()     
+ 
+        try:
+            from models_invites import Invitation
+            Invitation.query.filter(
+                (Invitation.student_id == user_id) | (Invitation.email == student.email)
+            ).delete(synchronize_session=False)
+        except Exception:
+            pass
+ 
+        db.session.delete(student)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()        
+        return jsonify({"error": f"Používateľa sa nepodarilo vymazať: {e.__class__.__name__}"}), 500
     return jsonify({"message": "Používateľ a jeho dáta boli vymazané."})
+ 
 
 
 # ---------- Detail testov používateľa ----------

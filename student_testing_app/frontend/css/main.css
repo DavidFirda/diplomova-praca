@@ -8,3 +8,4 @@
 @import url("parts/07-admin.css"); /* Admin panel */
 @import url("parts/08-auth.css"); /* Auth split-screen + postavičky (login/register/forgot/reset) */
 @import url("parts/09-exercises.css"); /* Cvičenia (zoznam + notebook plocha + admin) */
+@import url("parts/10-invites.css");

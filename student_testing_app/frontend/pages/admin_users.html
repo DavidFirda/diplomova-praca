@@ -25,6 +25,21 @@
         <div class="app-topbar__actions" id="topbar-controls"></div>
       </div>
 
+      <!-- Pozvánky (obsah dopĺňa js/admin/admin_invites.js, štýly css/parts/10-invites.css) -->
+      <div class="card inv-card" id="admin-invites-card">
+        <h2 class="inv-card__title" data-i18n="inv.title">Pozvánky</h2>
+        <div class="inv-stats">
+          <span class="inv-chip"><span data-i18n="inv.total">Spolu</span>: <b id="inv-stat-total">0</b></span>
+          <span class="inv-chip"><span data-i18n="inv.pending">Čaká na registráciu</span>: <b id="inv-stat-pending">0</b></span>
+          <span class="inv-chip"><span data-i18n="inv.registered">Zaregistrovaný</span>: <b id="inv-stat-registered">0</b></span>
+          <span class="inv-chip"><span data-i18n="inv.expired">Vypršalo</span>: <b id="inv-stat-expired">0</b></span>
+          <button type="button" class="btn btn--sm inv-add-btn" id="inv-add" data-i18n="inv.addBtn">+ Pozvať používateľov</button>
+        </div>
+        <p class="inv-mode" id="inv-mode"></p>
+        <div id="inv-table-wrap"></div>
+        <p class="admin-hint" id="inv-hint"></p>
+      </div>
+
       <div class="card" id="admin-users-card">
         <div class="admin-loading" data-i18n="adminU.loading">Načítavam používateľov…</div>
       </div>
@@ -43,11 +58,44 @@
     </div>
   </div>
 
+  <!-- Modál: pozvanie používateľov -->
+  <div class="admin-modal" id="inv-modal" style="display:none;">
+    <div class="admin-modal__backdrop" id="inv-backdrop"></div>
+    <div class="admin-modal__panel">
+      <div class="admin-modal__header">
+        <h2 data-i18n="inv.add">Pozvať používateľov</h2>
+        <button type="button" class="icon-btn" id="inv-close" aria-label="Zavrieť">✕</button>
+      </div>
+      <div class="admin-modal__body inv-form">
+        <label for="inv-emails" data-i18n="inv.emails">E-maily (jeden na riadok alebo oddelené čiarkou)</label>
+        <textarea id="inv-emails" spellcheck="false" placeholder="jan.novak@student.sk&#10;eva@student.sk, Eva, Malá"></textarea>
+        <div class="inv-note" data-i18n="inv.csvHint">Voliteľne: email, meno, priezvisko – predvyplní registračný formulár. CSV môžeš vložiť priamo.</div>
+        <div class="inv-row">
+          <div>
+            <label for="inv-group" data-i18n="inv.group">Skupina</label>
+            <input type="text" id="inv-group" placeholder="napr. Cvičenie A" />
+          </div>
+          <div>
+            <label for="inv-days" data-i18n="inv.days">Platnosť odkazu (dni)</label>
+            <input type="number" id="inv-days" min="1" max="60" value="7" />
+          </div>
+        </div>
+        <label class="inv-check"><input type="checkbox" id="inv-mail" checked /> <span data-i18n="inv.sendMail">Poslať pozvánku e-mailom</span></label>
+        <div class="inv-buttons">
+          <button type="button" class="btn" id="inv-submit" data-i18n="inv.create">Vytvoriť pozvánky</button>
+          <button type="button" class="btn btn--secondary" id="inv-cancel" data-i18n="inv.close">Zavrieť</button>
+        </div>
+        <div id="inv-result"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="/config.js"></script>
   <script src="/js/core/session-guard.js"></script>
   <script src="/js/core/i18n.js"></script>
   <script src="/js/core/sidebar.js"></script>
   <script src="/js/core/topbar-controls.js"></script>
   <script src="/js/admin/admin_users.js"></script>
+  <script src="/js/admin/admin_invites.js"></script>
 </body>
 </html>

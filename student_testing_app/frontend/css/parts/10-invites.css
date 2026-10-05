@@ -1,0 +1,45 @@
+/* ============================================================
+   AdaptPy - Pozvánky používateľov (admin: stránka Používatelia, modál)
+   ============================================================ */
+
+/* ---- karta ---- */
+.inv-card { margin-bottom: 18px; }
+.inv-card__title { margin: 0 0 10px; font-size: 1.1rem; }
+.inv-mode { font-size: .82rem; color: var(--text-muted); margin: 10px 0 12px; }
+
+/* ---- štatistiky + tlačidlo v jednom riadku ---- */
+.inv-stats { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.inv-chip {
+  font-size: .78rem; font-weight: 700; padding: 4px 11px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+}
+/* globálny <button> má width:100 %, preto width:auto */
+.inv-add-btn {
+  width: auto !important; min-height: 0 !important; flex: 0 0 auto;
+  margin: 0 0 0 4px; padding: 5px 14px !important;
+  font-size: .78rem !important; line-height: 1.4; border-radius: 999px;
+}
+
+/* ---- stav pozvánky ---- */
+.inv-badge { font-size: .74rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.inv-badge--pending    { background: var(--primary-soft); color: var(--primary); }
+.inv-badge--registered { background: var(--success-soft, #e6f7ee); color: var(--success, #1a7f4b); }
+.inv-badge--expired    { background: var(--danger-soft, #fdecec); color: var(--danger, #c62828); }
+
+/* ---- modál: pridanie ---- */
+.inv-form label { display: block; font-weight: 700; font-size: .85rem; margin: 12px 0 4px; }
+.inv-form textarea { width: 100%; min-height: 140px; font-family: var(--font-mono, monospace); font-size: .85rem; resize: vertical; }
+.inv-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.inv-row > div { flex: 1 1 150px; }
+.inv-check { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-top: 14px; }
+.inv-check input { width: auto; margin: 0; }
+.inv-note { font-size: .8rem; color: var(--text-muted); margin-top: 8px; }
+.inv-buttons { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+.inv-buttons .btn { width: auto; }
+
+/* ---- výsledok vytvorenia ---- */
+.inv-res { margin-top: 14px; max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+.inv-res table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.inv-res td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.inv-link { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono, monospace); font-size: .74rem; color: var(--text-muted); }
+.inv-copyall { margin-top: 10px; }

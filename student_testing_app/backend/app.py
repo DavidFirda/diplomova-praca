@@ -13,6 +13,7 @@ from routes.admin_api_routes import admin_api_bp
 from routes.exercise_routes import exercise_bp
 from routes.admin_exercise_routes import admin_exercise_bp
 from models import db
+from routes.invite_routes import invite_public_bp, invite_admin_bp
 import models_exercises
 from dotenv import load_dotenv
 
@@ -75,6 +76,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 # V produkcii (https) nastav SESSION_COOKIE_SECURE=true v .env, aby sa cookie
 # posielala len cez HTTPS. Lokálne (http://localhost) musí ostať false.
 app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+
+app.register_blueprint(invite_public_bp, url_prefix="/api/invites")
+app.register_blueprint(invite_admin_bp, url_prefix="/api/admin/invitations")
 
 CORS(app, supports_credentials=True)
 
@@ -141,7 +145,6 @@ with app.app_context():
         print(f"[seed] dotazník otázky - preskočené/chyba: {e}")
 
     # Automatické vytvorenie admin účtu z .env premenných.
-    # Prihlasovacie údaje NIE SÚ v kóde - definuj ich v .env:
     #   ADMIN_LOGIN, ADMIN_PASSWORD, ADMIN_EMAIL, ADMIN_NAME, ADMIN_SURNAME
     try:
         from models import Student
@@ -273,9 +276,5 @@ def not_found(e):
     return send_from_directory(PAGES_FOLDER, "index.html")
 
 if __name__ == "__main__":
-    # Produkčne beží aplikácia cez gunicorn (pozri Dockerfile), nie cez app.run().
-    # Tento blok slúži len na lokálny vývoj. Debug je štandardne VYPNUTÝ -
-    # zapnúť sa dá len explicitne cez FLASK_DEBUG=true v .env (nikdy nie v produkcii,
-    # lebo debug režim sprístupní interaktívnu konzolu na serveri).
     debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     app.run(host="0.0.0.0", port=5000, debug=debug_mode)
