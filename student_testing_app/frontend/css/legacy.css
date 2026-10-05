@@ -1,4 +1,3 @@
-
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -21,7 +20,7 @@ h1 {
     font-size: 2.0em;
     color: #1c3f60;
     text-align: center;
-  }
+}
 
 input {
     width: 98%;
@@ -51,40 +50,40 @@ button:hover {
     margin-top: 20px;
     display: block;
     text-align: center;
-  }
+}
 
 
 p {
-      line-height: 1.2;
-      font-size: 1.1em;
-      color: #333;
+    line-height: 1.2;
+    font-size: 1.1em;
+    color: #333;
 }
 
 .section-title {
-      margin-top: 40px;
-      font-size: 1.3em;
-      font-weight: bold;
-      color: #222;
+    margin-top: 40px;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #222;
 }
 
 .btn-container {
-      text-align: center;
+    text-align: center;
 }
 
 ul {
-      padding-left: 20px;
+    padding-left: 20px;
 }
 
 .btn {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 12px 24px;
-      background-color: #1c3f60;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-      transition: background-color 0.3s ease;
+    display: inline-block;
+    margin-top: 30px;
+    padding: 12px 24px;
+    background-color: #1c3f60;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
 }
 
 
@@ -128,7 +127,7 @@ ul {
 }
 
 textarea#student_code {
-    display: none; 
+    display: none;
 }
 
 .tooltip {
@@ -181,9 +180,9 @@ textarea#student_code {
     background: conic-gradient(#4aaf4d var(--value), #e0e0e0 0);
     --value: 0deg;
     margin: 20px auto;
-  }
-  
-  .progress-circle span {
+}
+
+.progress-circle span {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -192,9 +191,10 @@ textarea#student_code {
     align-items: center;
     font-weight: bold;
     font-size: 1.4em;
-  }
+}
 
-  select, textarea {
+select,
+textarea {
     width: 100%;
     padding: 10px;
     margin: 0px 0 0px 0;
@@ -204,35 +204,35 @@ textarea#student_code {
     font-size: 15px;
     background-color: #fff;
     box-sizing: border-box;
-  }
-  
-  label {
+}
+
+label {
     display: block;
     margin-top: 1px;
     margin-bottom: 0px;
     font-weight: bold;
     color: #1c3f60;
-  }
-  
-  textarea {
+}
+
+textarea {
     resize: vertical;
     min-height: 80px;
     max-height: 250px;
     line-height: 1.4;
-  }
-  
-  form {
+}
+
+form {
     margin-top: 30px;
-  }
-  
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button {
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
-  }
+}
 
-  .feedback-chart {
+.feedback-chart {
     width: 100%;
     max-height: 200px;
     margin-bottom: 10px;
-  }
+}
