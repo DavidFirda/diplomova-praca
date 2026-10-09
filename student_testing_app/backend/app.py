@@ -33,6 +33,7 @@ PAGE_ROUTES = {
     "hlavnytest": "hlavnytest.html",
     "analyza": "analyza.html",
     "feedback": "feedback.html",
+    "feedback-form": "feedback_form.html",
     "feedback-visualization": "feedback_visualization.html",
     "algorithm-comparison": "algorithm_comparison.html",
     "admin-users": "admin_users.html",

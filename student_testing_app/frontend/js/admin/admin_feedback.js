@@ -162,8 +162,125 @@
     }
   });
 
+  // ---------- Zverejnenie dotazníka ----------
+  const pubBtn = document.getElementById("publish-btn");
+  const pubStatus = document.getElementById("publish-status");
+  const pubHint = document.getElementById("publish-hint");
+  let published = false;
+
+  // Texty riadi data-i18n (I18N.apply() ich prepisuje pri zmene jazyka aj po načítaní sidebaru),
+  // preto sa mení samotný kľúč, nie text.
+  function renderPublish() {
+    pubStatus.setAttribute("data-i18n", published ? "adminF.statusPublished" : "adminF.statusHidden");
+    pubBtn.setAttribute("data-i18n", published ? "adminF.unpublish" : "adminF.publish");
+    pubBtn.className = published ? "btn btn--secondary" : "btn";
+    pubBtn.disabled = false;
+    if (typeof I18N !== "undefined") I18N.apply();
+  }
+
+  async function loadPublish() {
+    try {
+      const r = await fetch("/api/admin/questionnaire", { credentials: "include" });
+      if (r.ok) { published = !!(await r.json()).published; renderPublish(); }
+    } catch (e) {}
+  }
+
+  pubBtn.addEventListener("click", async () => {
+    pubBtn.disabled = true;
+    pubHint.textContent = "";
+    try {
+      const r = await fetch("/api/admin/questionnaire", {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published: !published }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) {
+        published = !!d.published;
+        pubHint.textContent = published
+          ? tr("adminF.nowPublished", "Dotazník je zverejnený.")
+          : tr("adminF.nowHidden", "Dotazník je skrytý.");
+        pubHint.className = "admin-hint admin-hint--ok";
+      } else {
+        pubHint.textContent = d.error || tr("adminF.error", "Chyba.");
+        pubHint.className = "admin-hint admin-hint--err";
+      }
+    } catch (e) {
+      pubHint.textContent = tr("adminF.error", "Chyba.");
+      pubHint.className = "admin-hint admin-hint--err";
+    }
+    renderPublish();
+  });
+
+  // ---------- Správy z feedback formulára ----------
+  const msgCard = document.getElementById("admin-msg-card");
+  const CAT_LABEL = {
+    bug: () => tr("ff.catBug", "Nahlásiť chybu"),
+    idea: () => tr("ff.catIdea", "Nápad na zlepšenie"),
+    praise: () => tr("ff.catPraise", "Pochvala"),
+    other: () => tr("ff.catOther", "Iné"),
+  };
+
+  // Správy píšu používatelia -> NIKDY nevkladať ako HTML (XSS), len cez textContent.
+  function renderMessages(messages) {
+    msgCard.textContent = "";
+    if (!messages.length) {
+      const p = document.createElement("p");
+      p.className = "admin-muted";
+      p.textContent = tr("adminF.noMessages", "Zatiaľ žiadne správy.");
+      msgCard.appendChild(p);
+      return;
+    }
+    messages.forEach((m) => {
+      const row = document.createElement("div");
+      row.className = "admin-q";
+
+      const main = document.createElement("div");
+      main.className = "admin-q__main";
+      const label = document.createElement("div");
+      label.className = "admin-q__label";
+      label.style.whiteSpace = "pre-wrap";
+      label.textContent = m.message;
+      const meta = document.createElement("div");
+      meta.className = "admin-q__meta";
+      const badge = document.createElement("span");
+      badge.className = "admin-q__badge";
+      badge.textContent = (CAT_LABEL[m.category] || CAT_LABEL.other)();
+      const who = document.createElement("span");
+      who.className = "admin-muted";
+      const when = m.created_at ? new Date(m.created_at + (m.created_at.endsWith("Z") ? "" : "Z")).toLocaleString() : "";
+      who.textContent = `${m.student.name || ""} (${m.student.login}) · ${when}`;
+      meta.append(badge, who);
+      main.append(label, meta);
+
+      const actions = document.createElement("div");
+      actions.className = "admin-q__actions";
+      const del = document.createElement("button");
+      del.className = "btn btn--danger-outline btn--sm";
+      del.textContent = tr("adminF.delete", "Vymazať");
+      del.addEventListener("click", async () => {
+        if (!confirm(tr("adminF.confirmDelMsg", "Vymazať túto správu?"))) return;
+        const r = await fetch(`/api/admin/feedback/messages/${m.id}`, { method: "DELETE", credentials: "include" });
+        if (r.ok) loadMessages();
+      });
+      actions.appendChild(del);
+
+      row.append(main, actions);
+      msgCard.appendChild(row);
+    });
+  }
+
+  async function loadMessages() {
+    try {
+      const r = await fetch("/api/admin/feedback/messages", { credentials: "include" });
+      if (r.ok) renderMessages((await r.json()).messages || []);
+    } catch (e) {}
+  }
+
   (async function init() {
     if (!(await guardAdmin())) return;
+    loadPublish();
     loadQuestions();
+    loadMessages();
   })();
 })();

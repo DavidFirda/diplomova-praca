@@ -10,6 +10,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import case, func
 
 from models import db, Student, StudentAnswer, FeedbackResponse
+from services.settings import questionnaire_published
 from services.mail_utils import send_email
 from services.test_flow import pretest_state
 from services.rate_limiter import rate_limited as _rate_limited, retry_after as _retry_after
@@ -241,6 +242,7 @@ def dashboard():
             "accuracy": accuracy,
         },
         "feedback_done": feedback_done,
+        "questionnaire_published": questionnaire_published(),
     }), 200
 
 

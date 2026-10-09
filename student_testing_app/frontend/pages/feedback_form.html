@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Spätná väzba</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="feedback-form"></div>
+
+    <main class="app-main app-main--centered">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="ff.title">Spätná väzba</h1>
+          <p data-i18n="ff.subtitle">Napíš nám, čo sa ti páči, čo nefunguje alebo čo by sme mali zlepšiť.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <div class="centered-card" style="max-width:640px;">
+        <div class="card">
+          <form id="feedback-form" class="form-grid">
+            <div class="form-field">
+              <label for="ff-category" data-i18n="ff.category">Typ správy</label>
+              <select id="ff-category" name="category">
+                <option value="idea" data-i18n="ff.catIdea">Nápad na zlepšenie</option>
+                <option value="bug" data-i18n="ff.catBug">Nahlásiť chybu</option>
+                <option value="praise" data-i18n="ff.catPraise">Pochvala</option>
+                <option value="other" data-i18n="ff.catOther">Iné</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="ff-message" data-i18n="ff.message">Tvoja správa</label>
+              <textarea id="ff-message" name="message" rows="7" maxlength="2000" required></textarea>
+              <small class="admin-muted"><span id="ff-count">0</span> / 2000</small>
+            </div>
+            <button type="submit" id="ff-submit" data-i18n="ff.send">Odoslať</button>
+            <p class="admin-hint" id="ff-hint"></p>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/core/session-guard.js"></script>
+  <script src="/js/core/i18n.js"></script>
+  <script src="/js/core/sidebar.js"></script>
+  <script src="/js/core/topbar-controls.js"></script>
+  <script src="/js/pages/feedback_form.js"></script>
+  <script src="/js/auth/script.js"></script>
+  <script> checkAccessCode(); </script>
+</body>
+</html>

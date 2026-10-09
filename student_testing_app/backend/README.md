@@ -56,6 +56,8 @@ backend/
 | `StudentFeedback` | Vyplnený dotazník študenta |
 | `FeedbackQuestion` | Otázka dotazníka (spravovateľná adminom) |
 | `FeedbackResponse` | Odpoveď na otázku dotazníka |
+| `AppSetting` | Nastavenia aplikácie (kľúč-hodnota), napr. `questionnaire_published` |
+| `FeedbackMessage` | Správa z feedback formulára (dostupný vždy) |
 
 ---
 

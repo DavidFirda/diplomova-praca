@@ -47,8 +47,10 @@
   set("stat-accuracy", (stats.total_answers > 0) ? stats.accuracy + " %" : "–");
   set("stat-answers", stats.total_answers || 0);
 
-  // Dotazník
-  if (data.feedback_done) {
+  // Dotazník - zobrazí sa len ak ho admin zverejnil (feedback formulár je vždy)
+  const rowQ = document.getElementById("row-questionnaire");
+  if (rowQ) rowQ.style.display = data.questionnaire_published ? "" : "none";
+  if (data.questionnaire_published && data.feedback_done) {
     const fb = document.getElementById("feedback-badge");
     if (fb) fb.style.display = "inline-flex";
     const fbBtn = document.getElementById("feedback-btn");

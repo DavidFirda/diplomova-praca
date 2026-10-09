@@ -73,20 +73,34 @@
               </div>
             </div>
 
-            <!-- Dotazník -->
-            <div class="task-row">
+            <!-- Dotazník (zobrazí sa len ak ho admin zverejnil) -->
+            <div class="task-row" id="row-questionnaire" style="display:none;">
               <div class="task-row__icon">
-                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
               </div>
               <div class="task-row__body">
                 <div class="task-row__title" data-i18n="dash.feedback.title">Dotazník</div>
-                <div class="task-row__desc" data-i18n="dash.feedback.desc">Podeľ sa o spätnú väzbu a pomôž nám aplikáciu zlepšiť.</div>
+                <div class="task-row__desc" data-i18n="dash.feedback.desc">Vyplň krátky dotazník a pomôž nám aplikáciu zlepšiť.</div>
               </div>
               <div class="task-row__badge" id="feedback-badge" style="display:none;">
                 ✓ <span data-i18n="dash.feedback.done">Dotazník vyplnený</span>
               </div>
               <div class="task-row__action">
                 <a class="btn btn--secondary" id="feedback-btn" href="/feedback" data-i18n="dash.feedback.open">Vyplniť dotazník</a>
+              </div>
+            </div>
+
+            <!-- Feedback formulár (dostupný vždy) -->
+            <div class="task-row" id="row-feedback-form">
+              <div class="task-row__icon">
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="task-row__body">
+                <div class="task-row__title" data-i18n="dash.ff.title">Spätná väzba</div>
+                <div class="task-row__desc" data-i18n="dash.ff.desc">Napíš nám nápad, chybu alebo pochvalu. Formulár je dostupný kedykoľvek.</div>
+              </div>
+              <div class="task-row__action">
+                <a class="btn btn--secondary" href="/feedback-form" data-i18n="dash.ff.open">Napísať spätnú väzbu</a>
               </div>
             </div>
           </div>

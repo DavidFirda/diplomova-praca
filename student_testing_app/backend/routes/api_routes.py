@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required
@@ -6,12 +7,13 @@ from sqlalchemy import case, func
 
 from models import (
     db, Question, StudentAnswer, TestSummary, TestProgress,
-    FeedbackQuestion, FeedbackResponse,
+    FeedbackQuestion, FeedbackResponse, FeedbackMessage,
 )
 from services.capture_output import (
     RunnerUnavailable, capture_output, compare_outputs, expected_output,
 )
 from services.extract_starter_code import extract_starter_code
+from services.settings import questionnaire_published
 from services.test_flow import (
     MAIN_TEST_TOTAL, QuestionFlow,
     answered_question_ids, build_selector, get_question, get_retries_used, get_turn,
@@ -303,11 +305,39 @@ def test_analysis():
 
 
 # ============================================================
-# DOTAZNÍK
+# DOTAZNÍK (zverejňuje ho admin) a FEEDBACK FORMULÁR (dostupný vždy)
 # ============================================================
+FEEDBACK_CATEGORIES = ("bug", "idea", "praise", "other")
+FEEDBACK_MESSAGE_MAX = 2000
+FEEDBACK_MESSAGE_MIN = 3
+FEEDBACK_HOURLY_LIMIT = 10          # ochrana pred zahltením
+
+
+def _questionnaire_closed_response():
+    return jsonify({
+        "error": "Dotazník momentálne nie je zverejnený.",
+        "error_key": "fb.notPublished",
+        "published": False,
+    }), 403
+
+
+@api_bp.route("/feedback/status", methods=["GET"])
+@login_required
+def feedback_status():
+    """Stav dotazníka pre UI (sidebar, dashboard, stránka dotazníka)."""
+    done = FeedbackResponse.query.filter_by(student_id=current_user.id).first() is not None
+    return jsonify({
+        "questionnaire_published": questionnaire_published(),
+        "questionnaire_done": done,
+    })
+
+
 @api_bp.route("/feedback/questions", methods=["GET"])
+@login_required
 def feedback_questions():
-    """Verejné: aktívne otázky dotazníka pre používateľa (z DB)."""
+    """Aktívne otázky dotazníka (len ak ho admin zverejnil)."""
+    if not questionnaire_published():
+        return _questionnaire_closed_response()
     qs = FeedbackQuestion.query.filter_by(active=True).order_by(
         FeedbackQuestion.position, FeedbackQuestion.id
     ).all()
@@ -331,15 +361,23 @@ def feedback_questions():
 @api_bp.route("/feedback", methods=["POST"])
 @login_required
 def feedback():
+    if not questionnaire_published():
+        return _questionnaire_closed_response()
     student_id = current_user.id
     answers = (request.get_json(silent=True) or {}).get("answers") or {}
-    # každá odpoveď je jeden FeedbackResponse (upsert podľa qkey)
+    if not isinstance(answers, dict):
+        return jsonify({"error": "Neplatné odpovede."}), 400
+
+    # ukladajú sa len odpovede na existujúce aktívne otázky (klient nevie vkladať cudzie kľúče)
+    valid_keys = {q.qkey for q in FeedbackQuestion.query.filter_by(active=True)}
+    existing = {r.qkey: r for r in FeedbackResponse.query.filter_by(student_id=student_id)}
     updated = False
     for qkey, value in answers.items():
+        if qkey not in valid_keys:
+            continue
         value = str(value) if value is not None else None
-        existing = FeedbackResponse.query.filter_by(student_id=student_id, qkey=qkey).first()
-        if existing:
-            existing.value = value
+        if qkey in existing:
+            existing[qkey].value = value
             updated = True
         else:
             db.session.add(FeedbackResponse(student_id=student_id, qkey=qkey, value=value))
@@ -352,6 +390,8 @@ def feedback():
 @api_bp.route("/feedback/get", methods=["POST"])
 @login_required
 def get_feedback():
+    if not questionnaire_published():
+        return _questionnaire_closed_response()
     responses = FeedbackResponse.query.filter_by(student_id=current_user.id).all()
     if not responses:
         return jsonify({"submitted": False, "feedback": {}})
@@ -363,3 +403,31 @@ def get_feedback():
 def check_feedback_submitted():
     existing = FeedbackResponse.query.filter_by(student_id=current_user.id).first()
     return jsonify({"submitted": existing is not None})
+
+
+@api_bp.route("/feedback/message", methods=["POST"])
+@login_required
+def send_feedback_message():
+    """Feedback formulár - dostupný vždy, nezávisle od zverejnenia dotazníka."""
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+    category = data.get("category") or "other"
+    if category not in FEEDBACK_CATEGORIES:
+        category = "other"
+    if len(message) < FEEDBACK_MESSAGE_MIN:
+        return jsonify({"error": "Napíš aspoň pár slov.", "error_key": "ff.tooShort"}), 400
+    if len(message) > FEEDBACK_MESSAGE_MAX:
+        return jsonify({"error": f"Správa môže mať najviac {FEEDBACK_MESSAGE_MAX} znakov.",
+                        "error_key": "ff.tooLong"}), 400
+
+    since = datetime.now(timezone.utc) - timedelta(hours=1)
+    recent = FeedbackMessage.query.filter(
+        FeedbackMessage.student_id == current_user.id, FeedbackMessage.created_at >= since
+    ).count()
+    if recent >= FEEDBACK_HOURLY_LIMIT:
+        return jsonify({"error": "Príliš veľa správ za hodinu. Skús to neskôr.",
+                        "error_key": "ff.rateLimited"}), 429
+
+    db.session.add(FeedbackMessage(student_id=current_user.id, category=category, message=message))
+    db.session.commit()
+    return jsonify({"message": "Ďakujeme za spätnú väzbu!"}), 201

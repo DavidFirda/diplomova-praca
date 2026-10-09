@@ -9,10 +9,11 @@ from flask_login import current_user
 from extensions import admin_required
 from models import (
     db, Student, StudentAnswer, TestSummary, TestProgress, AnswerAttempt,
-    FeedbackQuestion, FeedbackResponse, StudentFeedback,
+    FeedbackQuestion, FeedbackResponse, StudentFeedback, FeedbackMessage,
 )
 from models_exercises import ExerciseProgress
 from models_invites import Invitation
+from services.settings import questionnaire_published, set_questionnaire_published
 from services.test_flow import clear_attempts, clear_main_progress
 
 admin_api_bp = Blueprint("admin_api", __name__)
@@ -73,7 +74,7 @@ def delete_user(user_id):
         return jsonify({"error": "Používateľ neexistuje."}), 404
     try:
         for model in (AnswerAttempt, TestProgress, StudentAnswer, TestSummary,
-                      FeedbackResponse, StudentFeedback, ExerciseProgress):
+                      FeedbackResponse, StudentFeedback, FeedbackMessage, ExerciseProgress):
             model.query.filter_by(student_id=user_id).delete()
         Invitation.query.filter(
             (Invitation.student_id == user_id) | (Invitation.email == student.email)
@@ -258,3 +259,53 @@ def delete_feedback_question(qid):
     db.session.delete(q)
     db.session.commit()
     return jsonify({"message": "Otázka a jej odpovede vymazané."})
+
+
+# ============================================================
+# ZVEREJNENIE DOTAZNÍKA
+# ============================================================
+@admin_api_bp.route("/questionnaire", methods=["GET"])
+@admin_required
+def get_questionnaire_state():
+    return jsonify({"published": questionnaire_published()})
+
+
+@admin_api_bp.route("/questionnaire", methods=["PUT"])
+@admin_required
+def set_questionnaire_state():
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data.get("published"), bool):
+        return jsonify({"error": "Pole 'published' musí byť true/false."}), 400
+    set_questionnaire_published(data["published"])
+    msg = "Dotazník je zverejnený." if data["published"] else "Dotazník je skrytý."
+    return jsonify({"message": msg, "published": data["published"]})
+
+
+# ============================================================
+# SPRÁVY Z FEEDBACK FORMULÁRA
+# ============================================================
+@admin_api_bp.route("/feedback/messages", methods=["GET"])
+@admin_required
+def list_feedback_messages():
+    rows = (db.session.query(FeedbackMessage, Student)
+            .join(Student, Student.id == FeedbackMessage.student_id)
+            .order_by(FeedbackMessage.created_at.desc(), FeedbackMessage.id.desc())
+            .limit(500).all())
+    return jsonify({"messages": [{
+        "id": m.id,
+        "category": m.category,
+        "message": m.message,
+        "created_at": m.created_at.isoformat() if m.created_at else None,
+        "student": {"id": s.id, "login": s.login, "name": f"{s.name} {s.surname}".strip()},
+    } for m, s in rows]})
+
+
+@admin_api_bp.route("/feedback/messages/<int:message_id>", methods=["DELETE"])
+@admin_required
+def delete_feedback_message(message_id):
+    m = db.session.get(FeedbackMessage, message_id)
+    if not m:
+        return jsonify({"error": "Správa neexistuje."}), 404
+    db.session.delete(m)
+    db.session.commit()
+    return jsonify({"message": "Správa vymazaná."})

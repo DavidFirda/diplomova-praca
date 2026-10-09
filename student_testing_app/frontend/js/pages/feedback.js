@@ -1,4 +1,5 @@
 /* AdaptPy - Dotazník (dynamický z DB).
+   - Dostupný len ak ho admin zverejnil (inak server vráti 403 a zobrazí sa info).
    - Otázky sa načítajú z /api/feedback/questions (spravuje admin).
    - Admin NEMÔŽE vyplniť dotazník (len ho spravuje).
    - Existujúce odpovede sa predvyplnia, dajú sa upraviť.
@@ -36,6 +37,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   let questions = [];
   try {
     const r = await fetch("/api/feedback/questions", { credentials: "include" });
+    if (r.status === 401) { window.location.href = "/login"; return; }
+    if (r.status === 403) {
+      // Admin dotazník ešte nezverejnil (alebo ho skryl)
+      const card = form.closest(".card") || form.parentNode;
+      card.innerHTML = `
+        <div class="fb-thanks">
+          <div class="fb-thanks__title">${tr("fb.notPublishedTitle","Dotazník zatiaľ nie je dostupný")}</div>
+          <div class="fb-thanks__text">${tr("fb.notPublishedText","Dotazník sa sprístupní, keď ho administrátor zverejní. Medzitým nám môžeš napísať cez formulár spätnej väzby.")}</div>
+          <a class="btn" href="/feedback-form">${tr("fb.toFeedbackForm","Napísať spätnú väzbu")}</a>
+        </div>`;
+      return;
+    }
     const d = await r.json();
     questions = d.questions || [];
   } catch (e) {}

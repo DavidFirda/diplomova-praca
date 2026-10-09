@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AdaptPy – Správa dotazníka</title>
+  <title>AdaptPy – Dotazník a spätná väzba (správa)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
@@ -16,10 +16,27 @@
     <main class="app-main">
       <div class="app-topbar">
         <div class="app-topbar__greeting">
-          <h1 data-i18n="adminF.title">Správa dotazníka</h1>
+          <h1 data-i18n="adminF.title">Dotazník a spätná väzba</h1>
           <p data-i18n="adminF.subtitle">Pridávaj, upravuj a maž otázky. Zmeny sa hneď prejavia používateľom.</p>
         </div>
         <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <!-- Zverejnenie dotazníka -->
+      <div class="card" id="publish-card" style="margin-bottom:16px;">
+        <div class="admin-q">
+          <div class="admin-q__main">
+            <div class="admin-q__label" data-i18n="adminF.publishTitle">Zverejnenie dotazníka</div>
+            <div class="admin-muted" data-i18n="adminF.publishDesc">Kým dotazník nezverejníš, študenti ho nevidia (ani v menu, ani na dashboarde). Feedback formulár je dostupný vždy.</div>
+            <div class="admin-q__meta" style="margin-top:8px;">
+              <span class="admin-q__badge" id="publish-status">…</span>
+            </div>
+          </div>
+          <div class="admin-q__actions">
+            <button class="btn" id="publish-btn" disabled data-i18n="adminF.publish">Zverejniť dotazník</button>
+          </div>
+        </div>
+        <p class="admin-hint" id="publish-hint"></p>
       </div>
 
       <div class="admin-fb-actions">
@@ -28,6 +45,12 @@
 
       <div class="card" id="admin-fb-card">
         <div class="admin-loading" data-i18n="adminF.loading">Načítavam otázky…</div>
+      </div>
+
+      <!-- Správy z feedback formulára -->
+      <h2 style="margin:28px 0 12px;" data-i18n="adminF.messagesTitle">Správy z feedback formulára</h2>
+      <div class="card" id="admin-msg-card">
+        <div class="admin-loading" data-i18n="adminF.loading">Načítavam…</div>
       </div>
     </main>
   </div>

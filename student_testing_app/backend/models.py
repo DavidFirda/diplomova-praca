@@ -174,3 +174,26 @@ class FeedbackResponse(db.Model):
     qkey = db.Column(db.String(60), nullable=False)
     value = db.Column(db.Text, nullable=True)
     __table_args__ = (db.UniqueConstraint("student_id", "qkey", name="uq_student_qkey"),)
+
+
+# ===== Nastavenia aplikácie (kľúč-hodnota) =====
+# Napr. "questionnaire_published" = "true"/"false" - či je dotazník zverejnený.
+class AppSetting(db.Model):
+    __tablename__ = "app_settings"
+    key = db.Column(db.String(60), primary_key=True)
+    value = db.Column(db.Text, nullable=False, default="")
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+# ===== Voľná spätná väzba (feedback formulár - je dostupný vždy) =====
+class FeedbackMessage(db.Model):
+    __tablename__ = "feedback_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False, index=True)
+    category = db.Column(db.String(20), nullable=False, default="other")  # bug | idea | praise | other
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

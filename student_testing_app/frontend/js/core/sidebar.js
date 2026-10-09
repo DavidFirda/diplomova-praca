@@ -11,7 +11,8 @@
     tests: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>',
     stats: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 2 4-6"/></svg>',
     profile: '<svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
-    feedback: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    feedback: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>',
+    feedbackForm: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     logout: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
     course: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
     adminUsers: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
@@ -27,7 +28,10 @@
     { key: "tests", href: "/hlavnytest", i18n: "sb.tests", label: "Testy" },
     { key: "exercises", href: "/cvicenia", i18n: "sb.exercises", label: "Cvičenia" },
     { key: "stats", href: "/analyza", i18n: "sb.stats", label: "Štatistika" },
-    { key: "feedback", href: "/feedback", i18n: "sb.feedback", label: "Dotazník" },
+    // Dotazník sa zobrazí len ak ho admin zverejnil (questionnaireOnly)
+    { key: "feedback", href: "/feedback", i18n: "sb.feedback", label: "Dotazník", questionnaireOnly: true },
+    // Feedback formulár je dostupný vždy
+    { key: "feedbackForm", href: "/feedback-form", i18n: "sb.feedbackForm", label: "Spätná väzba" },
   ];
 
   async function logout() {
@@ -53,13 +57,16 @@
     return false;
   }
 
-  function render(student, pretestDone, isAdmin) {
+  function render(student, pretestDone, isAdmin, questionnairePublished) {
     const mount = document.getElementById("sidebar-mount");
     if (!mount) return;
     const active = mount.getAttribute("data-active") || "dashboard";
 
     // Ak je predtest hotový, odstráň ho z navigácie (už sa nedá opakovať)
-    const navItems = pretestDone ? NAV.filter(i => i.key !== "pretest") : NAV;
+    // Dotazník je v navigácii len ak ho admin zverejnil
+    const navItems = NAV.filter(i =>
+      !(pretestDone && i.key === "pretest") &&
+      !(i.questionnaireOnly && !questionnairePublished));
 
     const links = navItems.map(item => `
       <a class="sidebar__link ${item.key === active ? "active" : ""}" href="${item.href}">
@@ -74,7 +81,7 @@
       const adminNav = [
         { key: "adminUsers", href: "/admin-users", i18n: "sb.adminUsers", label: "Používatelia", active: "admin-users" },
         { key: "adminExercises", href: "/admin-exercises", i18n: "sb.adminExercises", label: "Cvičenia (správa)", active: "admin-exercises" },
-        { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník (správa)", active: "admin-feedback" },
+        { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník a spätná väzba (správa)", active: "admin-feedback" },
       ];
       const adminLinks = adminNav.map(item => `
         <a class="sidebar__link ${item.active === active ? "active" : ""}" href="${item.href}">
@@ -163,19 +170,20 @@
     }
     // Jedno zdieľané volanie /api/auth/dashboard (deduplikované) namiesto
     // 3 samostatných (/me, /dashboard, /admin/me) - výrazne rýchlejšie.
-    let student = null, pretestDone = false, isAdmin = false;
+    let student = null, pretestDone = false, isAdmin = false, questionnairePublished = false;
     if (window.adaptpyGetDashboard) {
       const dash = await window.adaptpyGetDashboard();
       if (dash && !dash._unauth) {
         student = dash.student || null;
         pretestDone = !!(dash.pretest && dash.pretest.done);
         isAdmin = !!dash.is_admin;
+        questionnairePublished = !!dash.questionnaire_published;
       }
     } else {
       // fallback (ak by guard nebol načítaný)
       [student, pretestDone, isAdmin] = await Promise.all([fetchStudent(), fetchPretestDone(), fetchIsAdmin()]);
     }
-    render(student, pretestDone, isAdmin);
+    render(student, pretestDone, isAdmin, questionnairePublished);
   }
 
   if (document.readyState === "loading") {

@@ -82,7 +82,7 @@ def seed_admin():
     if not login or not password:
         return print("[seed] ADMIN_LOGIN/ADMIN_PASSWORD nie sú v .env - admin účet preskočený")
 
-    email = os.getenv("ADMIN_EMAIL", "admin@adaptpy.local")
+    email = os.getenv("ADMIN_EMAIL", "adaptpy.tuke@gmail.com")
     # login aj e-mail sú unikátne -> hľadáme podľa oboch, inak by vznikla kolízia
     admin = Student.query.filter((Student.login == login) | (Student.email == email)).first()
     if admin is None:
