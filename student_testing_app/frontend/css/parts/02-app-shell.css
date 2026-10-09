@@ -309,21 +309,38 @@
   width: 100%;
   max-width: 520px;
 }
+/* Vycentrované stránky na desktope: nadpis je na stredu a prepínače (SK/EN, téma)
+   v pravom stĺpci GRIDU - nie sú položené cez nadpis (predtým position:absolute,
+   čo pri užšom okne prekrylo text). Ak je obsah príliš úzky na 3 stĺpce
+   (container query podľa šírky .app-main, nie okna), prepínače sa dajú nad nadpis. */
+.app-main--centered { container-type: inline-size; container-name: centered-main; }
+
 @media (min-width: 761px) {
-  .app-main--centered {
-    align-items: center;
-    position: relative;
-  }
-  .app-main--centered .app-topbar__actions {
-    position: absolute;
-    top: 24px; right: 32px;
-  }
+  .app-main--centered { align-items: center; }
   .app-main--centered .app-topbar {
     width: 100%;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 184px minmax(0, 1fr) 184px;   /* bočné stĺpce = šírka prepínačov */
+    align-items: start;
+    column-gap: 16px;
   }
   .app-main--centered .app-topbar__greeting {
+    grid-column: 2; grid-row: 1;
     text-align: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .app-main--centered .app-topbar__actions {
+    grid-column: 3; grid-row: 1;
+    justify-self: end;
+    position: static;
+  }
+}
+
+@container centered-main (max-width: 700px) {
+  @media (min-width: 761px) {
+    .app-main--centered .app-topbar { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+    .app-main--centered .app-topbar__actions { order: -1; align-self: flex-end; }
   }
 }
 

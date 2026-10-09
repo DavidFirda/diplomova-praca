@@ -13,8 +13,6 @@ HTTP request (napr. /forgot-password) odpovedal okamžite a nezávisel od
 rýchlosti SMTP servera. To zároveň znemožňuje útočníkovi merať čas odpovede
 a odhadovať, či daný email v systéme existuje.
 
-Všetky citlivé údaje (heslo/App Password) sa čítajú z prostredia (.env),
-NIKDY nie sú v kóde ani v gite.
 """
 import os
 import ssl
@@ -43,7 +41,8 @@ def _dev_print(to_email: str, subject: str, text_body: str) -> None:
     )
 
 
-def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | None) -> bool:
+def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | None,
+               reply_to: str | None = None) -> bool:
     """Samotné odoslanie cez SMTP. Beží na pozadí. Nikdy nevyhadzuje výnimku."""
     mail_server = os.getenv("MAIL_SERVER")
     mail_port = int(os.getenv("MAIL_PORT", "587"))
@@ -61,6 +60,8 @@ def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | Non
         msg["Subject"] = subject
         msg["From"] = from_header
         msg["To"] = to_email
+        if reply_to:
+            msg["Reply-To"] = reply_to
         msg.attach(MIMEText(text_body, "plain", "utf-8"))
         if html_body:
             msg.attach(MIMEText(html_body, "html", "utf-8"))
@@ -83,7 +84,7 @@ def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | Non
                 server.sendmail(mail_sender, [to_email], msg.as_string())
 
         logger.info("Email odoslaný na %s", to_email)
-        print(f"[mail] ✓ Email ÚSPEŠNE odoslaný na {to_email}", flush=True)
+        print(f"[mail] Email ÚSPEŠNE odoslaný na {to_email}", flush=True)
         return True
 
     except smtplib.SMTPAuthenticationError:
@@ -100,11 +101,12 @@ def _send_smtp(to_email: str, subject: str, text_body: str, html_body: str | Non
         return False
     except Exception as e:
         logger.exception("Odoslanie emailu zlyhalo (to=%s)", to_email)
-        print(f"[mail] ✗ Odoslanie emailu ZLYHALO (to={to_email}): {e}", flush=True)
+        print(f"[mail] Odoslanie emailu ZLYHALO (to={to_email}): {e}", flush=True)
         return False
 
 
-def send_email(to_email: str, subject: str, text_body: str, html_body: str | None = None) -> None:
+def send_email(to_email: str, subject: str, text_body: str, html_body: str | None = None,
+               reply_to: str | None = None) -> None:
     """
     Zaradí email na odoslanie. Vracia okamžite (fire-and-forget).
 
@@ -128,7 +130,7 @@ def send_email(to_email: str, subject: str, text_body: str, html_body: str | Non
     )
     thread = threading.Thread(
         target=_send_smtp,
-        args=(to_email, subject, text_body, html_body),
+        args=(to_email, subject, text_body, html_body, reply_to),
         daemon=True,
     )
     thread.start()

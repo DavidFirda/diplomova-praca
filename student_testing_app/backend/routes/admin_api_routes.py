@@ -294,6 +294,7 @@ def list_feedback_messages():
     return jsonify({"messages": [{
         "id": m.id,
         "category": m.category,
+        "rating": m.rating,
         "message": m.message,
         "created_at": m.created_at.isoformat() if m.created_at else None,
         "student": {"id": s.id, "login": s.login, "name": f"{s.name} {s.surname}".strip()},

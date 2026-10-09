@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       card.innerHTML = `
         <div class="fb-thanks">
           <div class="fb-thanks__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
-          <div class="fb-thanks__title">${tr("fb.thanksTitle","Dotazník vyplnený 🎉")}</div>
+          <div class="fb-thanks__title">${tr("fb.thanksTitle","Dotazník vyplnený")}</div>
           <div class="fb-thanks__text">${tr("fb.thanksText","Ďakujeme za tvoje postrehy! Každá odpoveď nám pomáha spraviť AdaptPy o kúsok lepším. Tvoj hlas formuje budúcnosť učenia.")}</div>
           <a class="btn" href="/dashboard">${tr("fb.backHome","Späť na prehľad")}</a>
         </div>`;

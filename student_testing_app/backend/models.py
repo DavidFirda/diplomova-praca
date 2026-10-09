@@ -195,5 +195,6 @@ class FeedbackMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False, index=True)
     category = db.Column(db.String(20), nullable=False, default="other")  # bug | idea | praise | other
+    rating = db.Column(db.SmallInteger, nullable=True)                    # 1-5 hviezdičky (nepovinné)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

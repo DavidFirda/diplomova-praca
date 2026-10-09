@@ -1,4 +1,6 @@
+import html
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, current_app, jsonify, request
@@ -13,6 +15,7 @@ from services.capture_output import (
     RunnerUnavailable, capture_output, compare_outputs, expected_output,
 )
 from services.extract_starter_code import extract_starter_code
+from services.mail_utils import send_email
 from services.settings import questionnaire_published
 from services.test_flow import (
     MAIN_TEST_TOTAL, QuestionFlow,
@@ -165,7 +168,7 @@ def evaluate_answer():
     if not code.strip() or (code.strip() == starter_code and not nothing_to_complete):
         return jsonify({
             "correct": False,
-            "message": "🛠️ Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
+            "message": "Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
         })
 
     # Beh kódu môže trvať sekundy -> DB spojenie sa medzitým vráti do poolu
@@ -176,7 +179,7 @@ def evaluate_answer():
         student_out, _ = capture_output(code)
     except RunnerUnavailable as e:
         # nie je to chyba študenta - nič sa nezapisuje, môže to skúsiť znova
-        return jsonify({"correct": False, "message": f"⚠️ {e}"}), 503
+        return jsonify({"correct": False, "message": f"{e}"}), 503
 
     # --- zápis: serializovaný per študent, stav sa overí znova pod zámkom ---
     lock_student(student_id)
@@ -189,7 +192,7 @@ def evaluate_answer():
         _record_final(student_id, turn, question_id, category, code, correct=False)
         return jsonify({
             "correct": False, "final": True, "student_output": student_out,
-            "message": f"❌ Interná chyba v hodnotení otázky: {expected_error}",
+            "message": f"Interná chyba v hodnotení otázky: {expected_error}",
         })
 
     correct = compare_outputs(student_out, expected_out)
@@ -201,7 +204,7 @@ def evaluate_answer():
         db.session.commit()
         return jsonify({
             "correct": False,
-            "message": "🛠️ Výstup nie je správny. Skús to ešte raz opraviť!",
+            "message": "Výstup nie je správny. Skús to ešte raz opraviť!",
             "student_output": student_out,
         })
 
@@ -414,6 +417,11 @@ def send_feedback_message():
     category = data.get("category") or "other"
     if category not in FEEDBACK_CATEGORIES:
         category = "other"
+    rating = data.get("rating")
+    if rating is not None:
+        # bool je podtrieda int, ale True/False nie je platné hodnotenie
+        if isinstance(rating, bool) or not isinstance(rating, int) or not 1 <= rating <= 5:
+            return jsonify({"error": "Hodnotenie musí byť 1 až 5.", "error_key": "ff.badRating"}), 400
     if len(message) < FEEDBACK_MESSAGE_MIN:
         return jsonify({"error": "Napíš aspoň pár slov.", "error_key": "ff.tooShort"}), 400
     if len(message) > FEEDBACK_MESSAGE_MAX:
@@ -428,6 +436,71 @@ def send_feedback_message():
         return jsonify({"error": "Príliš veľa správ za hodinu. Skús to neskôr.",
                         "error_key": "ff.rateLimited"}), 429
 
-    db.session.add(FeedbackMessage(student_id=current_user.id, category=category, message=message))
+    entry = FeedbackMessage(student_id=current_user.id, category=category, rating=rating, message=message)
+    db.session.add(entry)
     db.session.commit()
+    _notify_feedback_by_email(entry, current_user)
     return jsonify({"message": "Ďakujeme za spätnú väzbu!"}), 201
+
+
+# ------------------------------------------------------------
+# E-mailová notifikácia o novej správe z feedback formulára
+# ------------------------------------------------------------
+FEEDBACK_CATEGORY_LABELS = {
+    "bug": "Chyba", "idea": "Nápad na zlepšenie", "praise": "Pochvala", "other": "Iné",
+}
+
+
+def _one_line(text):
+    """Text do hlavičky e-mailu: bez zalomení (ochrana pred vkladaním hlavičiek)."""
+    return " ".join(str(text).split())
+
+
+def _notify_feedback_by_email(entry, student):
+    """
+    Pošle správu na FEEDBACK_NOTIFY_EMAIL (predvolene adaptpy.tuke@gmail.com).
+    Správa je už uložená v DB, takže zlyhanie e-mailu ju nestratí ani nezhodí
+    request (send_email beží na pozadí a výnimky nevyhadzuje).
+    """
+    to_email = os.getenv("FEEDBACK_NOTIFY_EMAIL", "adaptpy.tuke@gmail.com").strip()
+    if not to_email:
+        return
+    try:
+        category = FEEDBACK_CATEGORY_LABELS.get(entry.category, "Iné")
+        full_name = f"{student.name} {student.surname}".strip()
+        when = entry.created_at.strftime("%d.%m.%Y %H:%M UTC") if entry.created_at else ""
+        rating_text = f"{'★' * entry.rating}{'☆' * (5 - entry.rating)} ({entry.rating}/5)" if entry.rating else "bez hodnotenia"
+        subject = _one_line(f"[AdaptPy] Spätná väzba - {category} - {student.login}")
+
+        text = (
+            f"Nová správa z feedback formulára AdaptPy\n"
+            f"{'=' * 44}\n"
+            f"Typ:        {category}\n"
+            f"Hodnotenie: {rating_text}\n"
+            f"Od:         {full_name}\n"
+            f"ID študenta: {student.id}\n"
+            f"Login:      {student.login}\n"
+            f"E-mail:     {student.email}\n"
+            f"Čas:        {when}\n"
+            f"ID správy:  {entry.id}\n\n"
+            f"Správa:\n{entry.message}\n"
+        )
+        e = html.escape
+        html_body = (
+            "<h3>Nová správa z feedback formulára AdaptPy</h3>"
+            "<table cellpadding='4'>"
+            f"<tr><td><b>Typ</b></td><td>{e(category)}</td></tr>"
+            f"<tr><td><b>Hodnotenie</b></td><td>{e(rating_text)}</td></tr>"
+            f"<tr><td><b>Od</b></td><td>{e(full_name)}</td></tr>"
+            f"<tr><td><b>ID študenta</b></td><td>{student.id}</td></tr>"
+            f"<tr><td><b>Login</b></td><td>{e(student.login)}</td></tr>"
+            f"<tr><td><b>E-mail</b></td><td>{e(student.email)}</td></tr>"
+            f"<tr><td><b>Čas</b></td><td>{e(when)}</td></tr>"
+            f"<tr><td><b>ID správy</b></td><td>{entry.id}</td></tr>"
+            "</table>"
+            f"<p><b>Správa:</b></p><blockquote style='white-space:pre-wrap'>{e(entry.message)}</blockquote>"
+        )
+        # Reply-To = e-mail študenta, aby sa dalo odpovedať priamo z Gmailu
+        send_email(to_email, subject, text, html_body, reply_to=_one_line(student.email))
+    except Exception:
+        current_app.logger.exception("Notifikácia o spätnej väzbe sa nepodarila (správa je uložená)")

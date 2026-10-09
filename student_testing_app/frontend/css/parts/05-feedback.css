@@ -14,3 +14,55 @@
 .form-field textarea { resize: vertical; min-height: 90px; font-family: var(--font); }
 .form-grid button[type="submit"] { margin-top: 6px; }
 
+
+/* ============================================================
+   Feedback formulár (hviezdičky + čipy + správa)
+   Farby idú z tokenov => funguje v svetlej aj tmavej téme.
+   ============================================================ */
+.ff { --star-off: var(--border-strong); --star-on: #f0a81c; display: flex; flex-direction: column; gap: 22px; }
+:root[data-theme="dark"] .ff { --star-on: #fbbf24; }
+
+.ff__group { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.ff__label { font-weight: 700; font-size: 0.95rem; color: var(--text); padding: 0; }
+.ff__opt { font-weight: 500; color: var(--text-muted); font-size: 0.8rem; margin-left: 6px; }
+
+/* --- hviezdičky: DOM poradie 5..1 + row-reverse => "vyplň všetky vľavo" cez ~ --- */
+.ff-stars { display: flex; flex-direction: row-reverse; justify-content: center; gap: 6px; }
+.ff-stars input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.ff-stars label {
+  cursor: pointer; line-height: 0; padding: 2px; border-radius: 10px;
+  color: var(--star-off); transition: color .15s, transform .15s;
+}
+.ff-stars label svg { width: clamp(34px, 9vw, 46px); height: clamp(34px, 9vw, 46px); fill: currentColor; display: block; }
+.ff-stars input:checked ~ label,
+.ff-stars label:hover,
+.ff-stars label:hover ~ label { color: var(--star-on); }
+.ff-stars label:hover { transform: scale(1.1); }
+.ff-stars input:focus-visible + label { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ff__rating-text { text-align: center; min-height: 1.3em; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+
+/* --- čipy typu správy --- */
+.ff-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 560px) { .ff-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ff-chips input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.ff-chip {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 8px 10px; box-sizing: border-box;
+  background: var(--surface-2); color: var(--text);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 0.88rem; font-weight: 600; text-align: center; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.ff-chip:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.ff-chip__ic { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.ff-chips input:checked + .ff-chip {
+  background: var(--primary-soft); border-color: var(--primary); color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.ff-chips input:focus-visible + .ff-chip { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* --- správa --- */
+.ff__textarea { width: 100%; min-height: 130px; resize: vertical; box-sizing: border-box; font-family: var(--font); margin: 0; }
+.ff__count { align-self: flex-end; margin-top: -4px; font-size: 0.78rem; color: var(--text-faint); }
+.ff__submit { width: 100%; min-height: 48px; font-size: 1rem; }
+.ff__submit:disabled { opacity: .6; cursor: not-allowed; }

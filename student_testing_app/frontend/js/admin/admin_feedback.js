@@ -250,7 +250,15 @@
       who.className = "admin-muted";
       const when = m.created_at ? new Date(m.created_at + (m.created_at.endsWith("Z") ? "" : "Z")).toLocaleString() : "";
       who.textContent = `${m.student.name || ""} (${m.student.login}) · ${when}`;
-      meta.append(badge, who);
+      meta.append(badge);
+      if (m.rating) {
+        const rt = document.createElement("span");
+        rt.className = "admin-q__badge";
+        rt.textContent = "★".repeat(m.rating) + "☆".repeat(5 - m.rating);
+        rt.title = `${m.rating}/5`;
+        meta.append(rt);
+      }
+      meta.append(who);
       main.append(label, meta);
 
       const actions = document.createElement("div");

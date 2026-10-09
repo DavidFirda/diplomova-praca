@@ -21,9 +21,10 @@
     adminExercises: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/><path d="M8 14h6M8 17h4"/></svg>',
   };
 
+  // Poradie podľa toku používateľa: prehľad -> učenie -> výsledky -> spätná väzba.
+  // Profil v menu NIE je: vedie naň karta s menom úplne hore.
   const NAV = [
     { key: "dashboard", href: "/dashboard", i18n: "sb.dashboard", label: "Dashboard" },
-    { key: "profile", href: "/profile", i18n: "sb.profile", label: "Profil" },
     { key: "pretest", href: "/predtest", i18n: "sb.pretest", label: "Predtest" },
     { key: "tests", href: "/hlavnytest", i18n: "sb.tests", label: "Testy" },
     { key: "exercises", href: "/cvicenia", i18n: "sb.exercises", label: "Cvičenia" },
@@ -81,7 +82,7 @@
       const adminNav = [
         { key: "adminUsers", href: "/admin-users", i18n: "sb.adminUsers", label: "Používatelia", active: "admin-users" },
         { key: "adminExercises", href: "/admin-exercises", i18n: "sb.adminExercises", label: "Cvičenia (správa)", active: "admin-exercises" },
-        { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník a spätná väzba (správa)", active: "admin-feedback" },
+        { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník a feedback", active: "admin-feedback" },
       ];
       const adminLinks = adminNav.map(item => `
         <a class="sidebar__link ${item.active === active ? "active" : ""}" href="${item.href}">
@@ -103,7 +104,7 @@
         : (student.name || student.login || "");
       const initial = ((student.name || student.login || "?")[0] || "?").toUpperCase();
       profileHtml = `
-        <a class="sidebar__profile" href="/profile" title="Profil">
+        <a class="sidebar__profile${active === "profile" ? " active" : ""}" href="/profile" title="Profil"${active === "profile" ? ' aria-current="page"' : ""}>
           <span class="sidebar__profile-avatar">${initial}</span>
           <span class="sidebar__profile-info">
             <span class="sidebar__profile-name">${fullName}</span>
