@@ -1,21 +1,9 @@
-let studentId = null;
-let categories = null;
+// Hlavný test - progres sa ukladá na serveri. Server drží session testu,
+// počet zodpovedaných otázok aj otázku, ktorá bola zobrazená, ale ešte nie je
+// zodpovedaná (po návrate sa zobrazí tá istá). Klient nič z toho neurčuje.
 let codeMirrorEditor = null;
-let currentCount = 0;
-let totalQuestions = 30;
-let usedQuestionIds = [];
 
 window.onload = async () => {
-    studentId = localStorage.getItem("student_id");
-    categories = JSON.parse(localStorage.getItem("test_categories")) || ["Data Structures", "Syntax", "Sorting", "Scientific Computing"];
-    localStorage.removeItem("main_test_session")
-
-    if (!studentId) {
-        alert("Najprv sa prihlás.");
-        window.location.href = "/login";
-        return;
-    }
-
     // Hlavný test je prístupný len po dokončení predtestu.
     // Overíme to cez server (dashboard endpoint) - neobchádzateľné cez URL.
     try {
@@ -47,33 +35,15 @@ window.onload = async () => {
 };
 
 async function fetchNextQuestion() {
-    if (currentCount >= totalQuestions) {
-        alert("✅ Hlavný test hotový!");
-        const sessionId = localStorage.getItem("main_test_session");
-        window.location.href = `/analyza`;
-        return;
-    }
-    const testSession = localStorage.getItem("main_test_session");
-
-    const body = {
-        student_id: studentId,
-        categories,
-        excluded_ids: usedQuestionIds,
-        };
-
-    if (testSession) {
-        body.test_session = testSession;
-    }
-
-    console.log("TEST SESSION FROM STORAGE:", testSession);
-    console.log("Sending body:", body);
-
     const response = await fetch("/api/main_test/start", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: "{}"
     });
 
+    if (response.status === 401) { window.location.href = "/login"; return; }
+    if (response.status === 403) { window.location.href = "/predtest"; return; }
     if (!response.ok) {
         alert("Nepodarilo sa načítať otázku.");
         return;
@@ -81,15 +51,17 @@ async function fetchNextQuestion() {
 
     const question = await response.json();
 
-    if (!localStorage.getItem("main_test_session") && question.test_session) {
+    // session testu si pamätá server; v localStorage ju držíme len pre stránku s analýzou
+    if (question.test_session) {
         localStorage.setItem("main_test_session", question.test_session);
     }
 
-    if (usedQuestionIds.includes(question.id)) {
-        return await fetchNextQuestion();  
+    if (question.finished) {
+        alert("✅ Hlavný test hotový!");
+        window.location.href = `/analyza`;
+        return;
     }
 
-    usedQuestionIds.push(question.id);
     displayQuestion(question);
 }
 
@@ -98,7 +70,7 @@ function displayQuestion(q) {
     document.getElementById("input").innerText = q.input_data;
     document.getElementById("category").innerText = "Kategória: " + q.category;
     document.getElementById("question_id").value = q.id;
-    document.getElementById("question-counter").innerText = `${currentCount + 1}/${totalQuestions}`;
+    document.getElementById("question-counter").innerText = `${q.answered + 1}/${q.total}`;
     codeMirrorEditor.setValue(q.starter_code || "");
 
     document.getElementById("submit-answer").style.display = "inline-block";
@@ -113,19 +85,20 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
     const question_id = document.getElementById("question_id").value;
     const resultBox = document.getElementById("output-box");
     const resultMessage = document.getElementById("result-message");
-    const testSession = localStorage.getItem("main_test_session");
 
     const response = await fetch("/api/test/answer", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            student_id: studentId,
-            question_id,
-            code,
-            test_type: "main",
-            test_session: testSession
-        })
+        body: JSON.stringify({ question_id, code, test_type: "main" })
     });
+
+    if (response.status === 401) { window.location.href = "/login"; return; }
+    if (response.status === 409) {
+        // server je o krok inde (napr. iná karta) - zosúlaď sa s ním
+        await fetchNextQuestion();
+        return;
+    }
 
     const result = await response.json();
     resultBox.innerText = result.student_output || "";
@@ -141,7 +114,8 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
         resultMessage.classList.add("test-result--wrong");
     }
 
-    const isFinal = result.correct || (!result.message && result.correct === false);
+    // "final" = odpoveď je uložená na serveri a otázka je uzavretá
+    const isFinal = result.correct || result.final || (!result.message && result.correct === false);
 
     if (result.show_solution) {
         document.getElementById("solution-box").style.display = "block";
@@ -155,6 +129,5 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
 });
 
 document.getElementById("next-question").addEventListener("click", async () => {
-    currentCount++;
     await fetchNextQuestion();
 });

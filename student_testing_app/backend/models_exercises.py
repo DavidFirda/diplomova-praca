@@ -1,9 +1,7 @@
 # ============================================================
 # AdaptPy - modely pre CVIČENIA (Jupyter notebooky) a progres.
 #
-# Importuje sa PRED db.create_all() v app.py -> tabuľky sa vytvoria.
-# Dodatočné stĺpce (answers_json, run_timeout) na už existujúcich
-# tabuľkách doplní services/exercise_migrate.py pri štarte.
+# Schému spravujú migrácie (backend/migrations).
 # ============================================================
 from datetime import datetime, timezone
 from models import db

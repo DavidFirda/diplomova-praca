@@ -54,6 +54,7 @@ def run():
         "prelude": data.get("prelude", ""),
         "code": data.get("code", ""),
         "workdir": workdir,
+        "separate_stderr": bool(data.get("separate_stderr")),
     }
 
     with _sem:

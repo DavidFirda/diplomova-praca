@@ -15,17 +15,20 @@ RUNNER_URL = os.environ.get("RUNNER_URL", "http://runner:6000")
 HTTP_TIMEOUT = float(os.environ.get("RUN_HTTP_TIMEOUT", "75"))
 
 
-def execute(prelude, code, workdir_rel=None, timeout=None):
+def execute(prelude, code, workdir_rel=None, timeout=None, separate_stderr=False):
     """
     Spustí kód v sandboxe. Vráti dict:
       { ok, output, error, images, timed_out?, timeout? }
     timeout = želaný limit v sekundách (None/0 -> default runnera).
+    separate_stderr = True -> stderr sa NEmieša do `output` (používajú testy, kde
+    sa porovnáva čistý stdout). Pri nedostupnom runneri je v odpovedi runner_down=True.
     """
     body = json.dumps({
         "prelude": prelude or "",
         "code": code or "",
         "workdir": workdir_rel,
         "timeout": timeout,
+        "separate_stderr": bool(separate_stderr),
     }).encode("utf-8")
 
     req = urllib.request.Request(
@@ -40,8 +43,8 @@ def execute(prelude, code, workdir_rel=None, timeout=None):
             data.setdefault("images", [])
             return data
     except urllib.error.URLError:
-        return {"ok": False, "output": "", "images": [],
+        return {"ok": False, "output": "", "images": [], "runner_down": True,
                 "error": "Spúšťač kódu je momentálne nedostupný. Skús to o chvíľu."}
     except Exception:
-        return {"ok": False, "output": "", "images": [],
+        return {"ok": False, "output": "", "images": [], "runner_down": True,
                 "error": "Kód sa nepodarilo spustiť."}

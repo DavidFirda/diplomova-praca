@@ -18,10 +18,12 @@ class QLearningQuestionSelector:
             q_table_file=q_table_file,
             log_file=log_file
         )
-        self.qlearner.load_q_table()
 
     def select(self):
         category = self.qlearner.select_category()
+        # select_category mení stav (streak, počítadlá) - ulož ho, nech ho
+        # vidí aj ďalší request (selektor sa nekešuje v pamäti procesu)
+        self.qlearner.save_q_table()
 
         questions = Question.query.filter(
             Question.category == category,
@@ -40,6 +42,3 @@ class QLearningQuestionSelector:
         )
         self.qlearner.decay_epsilon()
         self.qlearner.save_q_table()
-
-
-    

@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const r = await fetch("/api/feedback/get", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ student_id: studentId }),
+      body: JSON.stringify({}),
     });
     const d = await r.json();
     if (d.submitted) { existing = d.feedback || {}; alreadySubmitted = true; }
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const r = await fetch("/api/feedback", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id: studentId, answers }),
+        body: JSON.stringify({ answers }),
       });
       await r.json();
       const card = form.closest(".card") || form.parentNode;

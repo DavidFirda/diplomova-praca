@@ -1,6 +1,5 @@
 # ============================================================
-# AdaptPy - načítanie cvičení z priečinku pri štarte aplikácie.
-# (+ na začiatku spustí migráciu schémy - doplní nové stĺpce)
+# AdaptPy - načítanie cvičení z priečinku (volá sa z `flask bootstrap`).
 # ============================================================
 import json
 import os
@@ -9,7 +8,6 @@ import re
 from models import db
 from models_exercises import Exercise
 from services.exercise_store import get_exercises_dir, is_notebook
-from services.exercise_migrate import ensure_exercise_schema
 
 
 def _read_notebook(path):
@@ -64,9 +62,7 @@ def _slug_from_filename(filename):
 
 
 def sync_exercises():
-    """Migrácia schémy + zosynchronizovanie priečinka s cvičeniami do DB."""
-    ensure_exercise_schema()
-
+    """Zosynchronizuje priečinok s cvičeniami do DB."""
     directory = get_exercises_dir()
     files = sorted(f for f in os.listdir(directory) if is_notebook(f))
     seen_slugs = set()

@@ -3,44 +3,25 @@
 # Autentifikácia cez SESSION + rola "admin" (nie token z URL).
 # ============================================================
 import json
-from functools import wraps
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
+from flask_login import current_user
 
-from models_exercises import ExerciseProgress
+from extensions import admin_required
 from models import (
-    db, Student, StudentAnswer, TestSummary,
+    db, Student, StudentAnswer, TestSummary, TestProgress, AnswerAttempt,
     FeedbackQuestion, FeedbackResponse, StudentFeedback,
 )
+from models_exercises import ExerciseProgress
+from models_invites import Invitation
+from services.test_flow import clear_attempts, clear_main_progress
 
 admin_api_bp = Blueprint("admin_api", __name__)
-
-
-def _current_student():
-    sid = session.get("student_id")
-    if not sid:
-        return None
-    return Student.query.get(sid)
-
-
-def admin_required(fn):
-    """Dekorátor: povolí prístup len prihlásenému adminovi."""
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        student = _current_student()
-        if not student:
-            return jsonify({"error": "Nie si prihlásený."}), 401
-        if (getattr(student, "role", "user") or "user") != "admin":
-            return jsonify({"error": "Prístup len pre administrátora."}), 403
-        return fn(*args, **kwargs)
-    return wrapper
 
 
 # ---------- Kontrola, či je aktuálny používateľ admin ----------
 @admin_api_bp.route("/me", methods=["GET"])
 def admin_me():
-    student = _current_student()
-    is_admin = bool(student and (getattr(student, "role", "user") or "user") == "admin")
-    return jsonify({"is_admin": is_admin})
+    return jsonify({"is_admin": bool(current_user.is_authenticated and current_user.is_admin)})
 
 
 # ============================================================
@@ -91,20 +72,13 @@ def delete_user(user_id):
     if not student:
         return jsonify({"error": "Používateľ neexistuje."}), 404
     try:
-        StudentAnswer.query.filter_by(student_id=user_id).delete()
-        TestSummary.query.filter_by(student_id=user_id).delete()
-        FeedbackResponse.query.filter_by(student_id=user_id).delete()
-        StudentFeedback.query.filter_by(student_id=user_id).delete()
-        ExerciseProgress.query.filter_by(student_id=user_id).delete()     
- 
-        try:
-            from models_invites import Invitation
-            Invitation.query.filter(
-                (Invitation.student_id == user_id) | (Invitation.email == student.email)
-            ).delete(synchronize_session=False)
-        except Exception:
-            pass
- 
+        for model in (AnswerAttempt, TestProgress, StudentAnswer, TestSummary,
+                      FeedbackResponse, StudentFeedback, ExerciseProgress):
+            model.query.filter_by(student_id=user_id).delete()
+        Invitation.query.filter(
+            (Invitation.student_id == user_id) | (Invitation.email == student.email)
+        ).delete(synchronize_session=False)
+
         db.session.delete(student)
         db.session.commit()
     except Exception as e:
@@ -185,6 +159,7 @@ def delete_answer(answer_id):
 def delete_pretest(user_id):
     StudentAnswer.query.filter_by(student_id=user_id, test_type="predtest").delete()
     TestSummary.query.filter_by(student_id=user_id, test_type="predtest").delete()
+    clear_attempts(user_id, "predtest")
     db.session.commit()
     return jsonify({"message": "Predtest vymazaný."})
 
@@ -195,6 +170,8 @@ def delete_pretest(user_id):
 def delete_main_test(user_id, test_session):
     StudentAnswer.query.filter_by(student_id=user_id, test_type="main", test_session=test_session).delete()
     TestSummary.query.filter_by(student_id=user_id, test_type="main", test_session=test_session).delete()
+    clear_attempts(user_id, "main", test_session)
+    clear_main_progress(user_id, test_session)
     db.session.commit()
     return jsonify({"message": "Test vymazaný."})
 

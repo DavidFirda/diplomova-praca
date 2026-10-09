@@ -87,6 +87,7 @@ def main():
     prelude = payload.get("prelude") or ""
     code = payload.get("code") or ""
     workdir = payload.get("workdir")
+    separate_stderr = bool(payload.get("separate_stderr"))
 
     if workdir and os.path.isdir(workdir):
         try:
@@ -113,10 +114,12 @@ def main():
         close_all_figures()
 
     buf = io.StringIO()
+    # testy porovnávajú čistý stdout -> stderr (varovania) sa nemieša do výstupu
+    err_buf = io.StringIO() if separate_stderr else buf
     ok = True
     err = None
     try:
-        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(err_buf):
             exec(compile(code, "<bunka>", "exec"), ns)
     except SystemExit:
         ok = True

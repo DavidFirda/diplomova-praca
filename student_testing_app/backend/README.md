@@ -12,19 +12,23 @@ spúšťanie a vyhodnocovanie kódu študenta, adaptívny výber úloh (algoritm
 
 ```
 backend/
-├── app.py                  # vstupný bod: konfigurácia, routing stránok,
-│                           #   registrácia blueprintov, migrácie + seed pri štarte
-├── config.py               # konfiguračné konštanty
+├── app.py                  # továreň aplikácie create_app(): konfigurácia, rozšírenia,
+│                           #   blueprinty, routing stránok
+├── extensions.py           # Flask-Migrate, Flask-Login (current_user), admin_required
+├── bootstrap.py            # `flask bootstrap`: otázky, dotazník, admin účet, cvičenia
 ├── models.py               # databázové modely (SQLAlchemy)
+├── migrations/             # verzionované migrácie DB (Alembic / Flask-Migrate)
 │
 ├── routes/                 # API endpointy (Flask blueprinty)
 │   ├── auth_routes.py      # registrácia, login, logout, reset hesla, dashboard
-│   ├── api_routes.py       # test, predtest, odpovede, dotazník (verejné API)
+│   ├── api_routes.py       # predtest, hlavný test, odpovede, dotazník
 │   ├── admin_routes.py     # servisné admin operácie (cez ADMIN_TOKEN)
 │   └── admin_api_routes.py # admin panel API (cez session + rola "admin")
 │
 ├── services/               # pomocné služby
-│   ├── capture_output.py   # spúšťa kód študenta (exec) a porovnáva výstup
+│   ├── test_flow.py        # logika testov: kto je na rade, progres, stavový automat otázky
+│   ├── capture_output.py   # spúšťa kód v sandboxe (runner) a porovnáva výstup
+│   ├── code_runner.py      # HTTP klient pre izolovaný kontajner `runner`
 │   ├── extract_starter_code.py
 │   └── mail_utils.py       # odosielanie emailov (reset hesla)
 │
@@ -33,7 +37,8 @@ backend/
     ├── q_learning.py       # Q-learning
     ├── q_selector.py       #   + selektor
     ├── pomdp.py            # POMDP
-    └── pomdp_selector.py   #   + selektor
+    ├── pomdp_selector.py   #   + selektor
+    └── storage.py          # atomický zápis stavu selektorov do JSON
 ```
 
 ---
@@ -46,6 +51,8 @@ backend/
 | `Question` | Programátorská úloha (zadanie, kategória, očakávaný výstup) |
 | `StudentAnswer` | Odpoveď študenta na úlohu |
 | `TestSummary` | Súhrn absolvovaného testu |
+| `TestProgress` | Rozpracovaný/dokončený hlavný test a otázka, na ktorej študent skončil |
+| `AnswerAttempt` | Počet použitých opráv na otázku (perzistentne, nie v pamäti procesu) |
 | `StudentFeedback` | Vyplnený dotazník študenta |
 | `FeedbackQuestion` | Otázka dotazníka (spravovateľná adminom) |
 | `FeedbackResponse` | Odpoveď na otázku dotazníka |
@@ -65,30 +72,65 @@ Zoznam namapovaných stránok (URL → HTML) je v `app.py` v `PAGE_ROUTES`.
 
 ---
 
-## Čo sa deje pri štarte (`app.py`)
+## Schéma DB a štart (`entrypoint.sh`)
 
-1. Načíta `.env` (`load_dotenv`).
-2. Vytvorí/aktualizuje databázové tabuľky (jednoduché migrácie — napr. pridanie
-   stĺpca `role`, ak chýba).
-3. Naplní tabuľku otázok dotazníka, ak je prázdna.
-4. Vytvorí **admin účet** podľa `ADMIN_LOGIN` / `ADMIN_PASSWORD` z `.env`
-   (ak niektorá premenná chýba, admin sa nevytvorí).
+Schému spravuje **Flask-Migrate (Alembic)**, nie `db.create_all()`. Pri štarte
+kontajnera (`entrypoint.sh`) bežia **raz**, ešte pred workermi:
+
+1. `flask db upgrade` — aplikuje migrácie z `migrations/versions/`. Prvá
+   (`0001_baseline`) je idempotentná: na prázdnej DB vytvorí tabuľky, na DB
+   z predošlých verzií len doplní chýbajúce stĺpce a dáta nechá.
+2. `flask bootstrap` — naplní otázky (z `final_dataset.csv`), otázky dotazníka,
+   admin účet (`ADMIN_LOGIN` / `ADMIN_PASSWORD`) a cvičenia. Idempotentné.
+3. `gunicorn` — workery už nič nemenia v schéme ani nenapĺňajú DB.
+
+Zmena modelu = nová migrácia (v priečinku `backend/`):
+
+```bash
+flask --app app db migrate -m "popis zmeny"   # vygeneruje súbor v migrations/versions
+flask --app app db upgrade                    # aplikuje ho
+```
+
+Vygenerovaný súbor vždy skontroluj (Alembic nepozná premenovania stĺpcov).
+
+---
+
+## Prihlásenie (Flask-Login)
+
+Prihlásený študent je `current_user`; chránené endpointy majú `@login_required`
+(401 s JSON chybou) alebo `@admin_required` z `extensions.py` (401/403).
+`student_id` sa **nikdy** neberie z tela požiadavky. Session je server-side
+v DB (Flask-Session), cookie nesie len podpísané ID.
+
+---
+
+## Predtest a hlavný test (`services/test_flow.py`)
+
+- **Predtest** má pevný zoznam 12 otázok na serveri. Progres sa odvodzuje zo
+  `StudentAnswer`: `GET /api/pretest/state` vráti prvú nezodpovedanú otázku, takže
+  po návrate pokračuje tam, kde študent skončil. Predtest je hotový až po všetkých
+  otázkach (odomkne hlavný test).
+- **Hlavný test** (30 otázok) má progres v `test_progress` (session `main-N` +
+  rozpracovaná otázka). Stratégia výberu sa určuje podľa ID študenta:
+  `id % 3` = 1 Random, 2 Q-learning, 0 POMDP.
+- **Odpoveď** (`POST /api/test/answer`): server overí, že ide o otázku, ktorá je
+  na rade, spustí kód v sandboxe a výsledok vyhodnotí stavovým automatom
+  `QuestionFlow` (knižnica `transitions`): `open → retry → closed` — jedna oprava
+  po nesprávnej odpovedi, potom je výsledok konečný.
+- **Súbežnosť:** zápisy jedného študenta sú serializované riadkovým zámkom
+  (`lock_student`), rôzni študenti sa neblokujú. Počas behu kódu sa DB spojenie
+  uvoľňuje do poolu. Stav selektorov (Q-learning, POMDP) je v súboroch pod
+  `data/` a zapisuje sa atomicky.
 
 ---
 
 ## Spúšťanie kódu študenta (`services/capture_output.py`)
 
-Kód študenta sa spúšťa cez `exec()` a jeho výstup sa porovnáva s očakávaným.
-
-> ⚠️ **Bezpečnostná poznámka.** Aktuálne sa kód spúšťa bez izolácie a časového
-> limitu. V nasadení mimo dôveryhodného prostredia je vhodné doplniť:
-> - **timeout** (napr. samostatný proces s časovým limitom), aby nekonečný
->   cyklus nezablokoval server,
-> - **obmedzené `__builtins__`** (whitelist bezpečných funkcií, bez `open`,
->   `__import__`, `eval`, `exec`),
-> - prípadne spúšťanie v izolovanom prostredí (sandbox / samostatný kontajner).
->
-> Pre kontrolované testovanie v rámci diplomovej práce je to vedomý kompromis.
+Kód študenta aj referenčné riešenie sa spúšťajú v izolovanom kontajneri
+`runner` (časový limit, limity CPU/pamäte, bez siete) — **nie** v procese
+backendu. Výstup sa porovnáva s očakávaným bez `eval` (`ast.literal_eval`,
+čísla s toleranciou 0,01). Ak je `runner` nedostupný, odpoveď sa nezapíše
+(HTTP 503) a študent to môže skúsiť znova.
 
 ---
 
@@ -110,13 +152,6 @@ cez premennú `REDIS_URL`.
 
 ## Závislosti
 
-Zoznam v `requirements.txt`. Kľúčové: Flask, Flask-SQLAlchemy, Flask-CORS,
-python-dotenv, psycopg2 (Postgres), Flask-Mail.
-
----
-
-## Poznámka k spusteniu
-
-V `Dockerfile` sa aplikácia spúšťa cez `python backend/app.py`. Pre produkčné
-nasadenie s viacerými workermi je pripravený (zakomentovaný) príkaz s
-**gunicorn** — odporúčaný pre reálnu prevádzku.
+Zoznam v `requirements.txt`. Kľúčové: Flask, Flask-SQLAlchemy, Flask-Migrate,
+Flask-Login, Flask-Session, Flask-CORS, transitions, python-dotenv, psycopg2
+(Postgres), gunicorn.

@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
+from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
-# Študent
-class Student(db.Model):
+# Študent (UserMixin = integrácia s Flask-Login: current_user, login_user, ...)
+class Student(UserMixin, db.Model):
     __tablename__ = "students"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -25,6 +26,10 @@ class Student(db.Model):
 
     answers = db.relationship("StudentAnswer", backref="student", lazy=True)
     summaries = db.relationship("TestSummary", backref="student", lazy=True)
+
+    @property
+    def is_admin(self) -> bool:
+        return (self.role or "user") == "admin"
 
     def set_password(self, raw_password: str) -> None:
         # scrypt (werkzeug default) - pomalá, memory-hard funkcia odolná voči brute-force útokom
@@ -76,6 +81,49 @@ class TestSummary(db.Model):
             return 0.0
         return round(self.correct_answers / self.total_answers, 2)
     
+# Progres hlavného testu: jedna session = jeden rozpracovaný/dokončený test.
+# Uchováva otázku, ktorá bola študentovi zobrazená, ale ešte na ňu neodpovedal,
+# aby sa mu po návrate zobrazila tá istá (a nevybrala sa nová).
+# (Progres predtestu sa odvodzuje priamo zo StudentAnswer - pevný zoznam otázok.)
+class TestProgress(db.Model):
+    __tablename__ = "test_progress"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    test_type = db.Column(db.String, nullable=False, default="main")
+    test_session = db.Column(db.String, nullable=False)
+    current_question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=True)
+    total_questions = db.Column(db.Integer, nullable=False, default=30)
+    status = db.Column(db.String(20), nullable=False, default="in_progress")  # in_progress | done
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    __table_args__ = (
+        db.UniqueConstraint("student_id", "test_type", "test_session", name="uq_progress_student_type_session"),
+        # poistka na úrovni DB: študent má najviac jeden rozpracovaný test daného typu
+        db.Index(
+            "uq_progress_one_active", "student_id", "test_type", unique=True,
+            postgresql_where=db.text("status = 'in_progress'"),
+            sqlite_where=db.text("status = 'in_progress'"),
+        ),
+    )
+
+# Počet použitých opráv na otázku (perzistentné - prežije reštart/viac workerov).
+# test_session je pre predtest prázdny reťazec (nie NULL, kvôli unikátnosti).
+class AnswerAttempt(db.Model):
+    __tablename__ = "answer_attempts"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    test_type = db.Column(db.String, nullable=False)
+    test_session = db.Column(db.String, nullable=False, default="")
+    question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    __table_args__ = (
+        db.UniqueConstraint("student_id", "test_type", "test_session", "question_id", name="uq_attempt_key"),
+    )
+
 # Dotazník
 class StudentFeedback(db.Model):
     __tablename__ = "student_feedback"

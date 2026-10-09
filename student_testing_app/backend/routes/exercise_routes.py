@@ -11,7 +11,8 @@
 import json
 from datetime import datetime, timezone
 
-from flask import Blueprint, request, jsonify, session, send_file
+from flask import Blueprint, request, jsonify, send_file
+from flask_login import current_user, login_required
 
 from models import db, Student
 from models_exercises import Exercise, ExerciseProgress
@@ -19,13 +20,6 @@ from services.exercise_store import exercise_path, asset_path, source_dir_rel_fo
 from services.code_runner import execute as run_code
 
 exercise_bp = Blueprint("exercise", __name__)
-
-
-def _current_student():
-    sid = session.get("student_id")
-    if not sid:
-        return None
-    return Student.query.get(sid)
 
 
 def _get_progress(student_id, exercise_id):
@@ -117,10 +111,9 @@ def _prev_completed(student_id, exercise):
 # ---------- zoznam cvičení ----------
 @exercise_bp.route("", methods=["GET"])
 @exercise_bp.route("/", methods=["GET"])
+@login_required
 def list_exercises():
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
 
     exercises = (
         Exercise.query.filter_by(published=True)
@@ -152,10 +145,9 @@ def list_exercises():
 
 # ---------- detail + bunky + uložené odpovede ----------
 @exercise_bp.route("/<int:ex_id>", methods=["GET"])
+@login_required
 def get_exercise(ex_id):
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published:
         return jsonify({"error": "Cvičenie neexistuje."}), 404
@@ -207,10 +199,9 @@ def get_exercise(ex_id):
 
 # ---------- sprievodný súbor (obrázok/dataset) ----------
 @exercise_bp.route("/<int:ex_id>/asset/<path:relpath>", methods=["GET"])
+@login_required
 def get_asset(ex_id, relpath):
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published or not ex.accessible:
         return jsonify({"error": "Nedostupné."}), 403
@@ -222,10 +213,9 @@ def get_asset(ex_id, relpath):
 
 # ---------- spustenie bunky (v sandboxe) ----------
 @exercise_bp.route("/<int:ex_id>/run", methods=["POST"])
+@login_required
 def run_exercise_cell(ex_id):
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published or not ex.accessible:
         return jsonify({"error": "Cvičenie nie je dostupné."}), 403
@@ -281,10 +271,9 @@ def run_exercise_cell(ex_id):
 
 # ---------- priebežné uloženie odpovede ----------
 @exercise_bp.route("/<int:ex_id>/save", methods=["POST"])
+@login_required
 def save_answer(ex_id):
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published or not ex.accessible:
         return jsonify({"error": "Cvičenie nie je dostupné."}), 403
@@ -306,18 +295,16 @@ def save_answer(ex_id):
 
 # ---------- reset (už netreba živý namespace) ----------
 @exercise_bp.route("/<int:ex_id>/reset", methods=["POST"])
+@login_required
 def reset_exercise(ex_id):
-    if not _current_student():
-        return jsonify({"error": "Nie si prihlásený."}), 401
     return jsonify({"ok": True})
 
 
 # ---------- "Dokončil som" ----------
 @exercise_bp.route("/<int:ex_id>/complete", methods=["POST"])
+@login_required
 def complete_exercise(ex_id):
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published:
         return jsonify({"error": "Cvičenie neexistuje."}), 404
@@ -333,10 +320,9 @@ def complete_exercise(ex_id):
 
 # ---------- stiahnutie .ipynb ----------
 @exercise_bp.route("/<int:ex_id>/download", methods=["GET"])
+@login_required
 def download_exercise(ex_id):
-    student = _current_student()
-    if not student:
-        return jsonify({"error": "Nie si prihlásený."}), 401
+    student = current_user
     ex = Exercise.query.get(ex_id)
     if not ex or not ex.published or not ex.accessible:
         return jsonify({"error": "Cvičenie nie je dostupné."}), 403

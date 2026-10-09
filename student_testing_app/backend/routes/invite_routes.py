@@ -14,10 +14,11 @@ import os
 import re
 import secrets
 from datetime import timedelta
-from functools import wraps
 
 from flask import Blueprint, request, jsonify, session
+from flask_login import current_user
 
+from extensions import admin_required
 from models import db, Student
 from models_invites import Invitation, utcnow
 from routes.auth_routes import (
@@ -34,42 +35,11 @@ DEFAULT_TTL_DAYS = 7
 MAX_TTL_DAYS = 60
 MAX_BULK = 300
 
-_table_ready = False
-
-
-def ensure_invite_table():
-    """Vytvorí tabuľku invitations, ak ešte neexistuje (raz za proces)."""
-    global _table_ready
-    if _table_ready:
-        return
-    try:
-        Invitation.__table__.create(bind=db.engine, checkfirst=True)
-    except Exception:
-        db.session.rollback()   # pri súbehu workerov môže tabuľku vytvoriť iný proces
-    _table_ready = True
 
 
 def registration_mode():
     """'invite' (predvolené) = registrácia len na pozvánku; 'open' = voľná registrácia."""
     return "open" if os.getenv("REGISTRATION_MODE", "invite").strip().lower() == "open" else "invite"
-
-
-def _current_student():
-    sid = session.get("student_id")
-    return Student.query.get(sid) if sid else None
-
-
-def admin_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        ensure_invite_table()
-        student = _current_student()
-        if not student:
-            return jsonify({"error": "Nie si prihlásený."}), 401
-        if (getattr(student, "role", "user") or "user") != "admin":
-            return jsonify({"error": "Prístup len pre administrátora."}), 403
-        return fn(*args, **kwargs)
-    return wrapper
 
 
 def _base_url():
@@ -199,7 +169,7 @@ def create_invites():
     ttl = max(1, min(ttl, MAX_TTL_DAYS))
     group = (body.get("group") or "").strip()[:100] or None
     do_mail = bool(body.get("send_email", True))
-    admin = _current_student()
+    admin = current_user
 
     results = []
     for e in entries:
@@ -302,7 +272,6 @@ def _reason(inv):
 
 @invite_public_bp.route("/check", methods=["GET"])
 def check_invite():
-    ensure_invite_table()
     key = f"invcheck:{_client_ip()}"
     if _rate_limited(key, max_attempts=30, window_seconds=300):
         return jsonify({"valid": False, "reason": "rate"}), 429
@@ -315,7 +284,6 @@ def check_invite():
 
 @invite_public_bp.route("/register", methods=["POST"])
 def register_with_invite():
-    ensure_invite_table()
     data = request.get_json(silent=True) or {}
 
     key = f"invreg:{_client_ip()}"

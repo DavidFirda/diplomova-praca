@@ -6,9 +6,12 @@ import secrets
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, request, jsonify, session, current_app
+from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import case, func
 
-from models import db, Student
+from models import db, Student, StudentAnswer, FeedbackResponse
 from services.mail_utils import send_email
+from services.test_flow import pretest_state
 from services.rate_limiter import rate_limited as _rate_limited, retry_after as _retry_after
 
 auth_bp = Blueprint("auth", __name__)
@@ -47,7 +50,7 @@ def _student_public(student: Student) -> dict:
         "surname": student.surname,
         "login": student.login,
         "email": student.email,
-        "role": getattr(student, "role", "user") or "user",
+        "role": student.role or "user",
     }
 
 
@@ -95,7 +98,6 @@ def register():
 
     # Po registrácii NEPRIHLASUJEME - používateľ sa musí prihlásiť sám.
     session.clear()
-
     return jsonify({"message": "Registrácia úspešná!", "error_key": "auth.registerSuccess", "student": _student_public(student)}), 201
 
 
@@ -127,11 +129,8 @@ def login():
     if not student or not student.check_password(password):
         return jsonify({"error": "Nesprávny login/email alebo heslo.", "error_key": "auth.wrongCredentials"}), 401
 
-    session.clear()
-    session["student_id"] = student.id
-    # session.permanent = False => cookie zanikne pri zatvorení prehliadača,
-    # takže po zavretí karty/okna sa musí používateľ znova prihlásiť.
-    session.permanent = False
+    session.clear()                       # nové prihlásenie = čistá session
+    login_user(student, remember=False)   # cookie zanikne po zatvorení prehliadača
 
     return jsonify({"message": "Prihlásenie úspešné.", "error_key": "auth.loginSuccess", "student": _student_public(student)}), 200
 
@@ -139,33 +138,23 @@ def login():
 ### Odhlásenie ###
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
+    logout_user()
     session.clear()
     return jsonify({"message": "Odhlásené.", "error_key": "auth.loggedOut"}), 200
 
 
 ### Info o aktuálne prihlásenom študentovi (podľa session cookie) ###
 @auth_bp.route("/me", methods=["GET"])
+@login_required
 def me():
-    student_id = session.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-    student = Student.query.get(student_id)
-    if not student:
-        session.clear()
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-    return jsonify({"student": _student_public(student)}), 200
+    return jsonify({"student": _student_public(current_user)}), 200
 
 
 ### Úprava profilu (meno/priezvisko/email/login) - prázdne pole = nemení sa ###
 @auth_bp.route("/profile", methods=["PATCH", "PUT"])
+@login_required
 def update_profile():
-    student_id = session.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-    student = Student.query.get(student_id)
-    if not student:
-        session.clear()
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
+    student = current_user._get_current_object()
 
     data = request.get_json(silent=True) or {}
 
@@ -204,51 +193,46 @@ def update_profile():
 
 ### Prehľad pre dashboard prihláseného študenta ###
 @auth_bp.route("/dashboard", methods=["GET"])
+@login_required
 def dashboard():
-    from models import StudentAnswer, TestSummary, StudentFeedback
+    student = current_user._get_current_object()
+    student_id = student.id
 
-    student_id = session.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-    student = Student.query.get(student_id)
-    if not student:
-        session.clear()
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-
-    # Predtest: považujeme za dokončený, ak existuje aspoň jedna odpoveď typu "predtest"
-    pretest_answers = StudentAnswer.query.filter_by(
-        student_id=student_id, test_type="predtest"
-    ).count()
-    pretest_done = pretest_answers > 0
+    # Predtest je dokončený, až keď sú zodpovedané VŠETKY jeho otázky
+    # (rozpracovaný predtest pokračuje od nezodpovedanej otázky).
+    pt_state = pretest_state(student_id)
+    pretest_answers = pt_state["answered"]
+    pretest_done = pt_state["done"]
 
     # Hlavné testy: zoskupené podľa test_session (každá session = jeden absolvovaný test)
-    main_answers = StudentAnswer.query.filter_by(
-        student_id=student_id, test_type="main"
-    ).all()
-    main_sessions = sorted({a.test_session for a in main_answers if a.test_session})
-    main_tests_count = len(main_sessions)
+    main_sessions = sorted(
+        row[0] for row in db.session.query(StudentAnswer.test_session)
+        .filter(StudentAnswer.student_id == student_id,
+                StudentAnswer.test_type == "main",
+                StudentAnswer.test_session.isnot(None))
+        .distinct()
+    )
 
-    # Celková štatistika (všetky odpovede)
-    all_answers = StudentAnswer.query.filter_by(student_id=student_id).all()
-    total = len(all_answers)
-    correct = sum(1 for a in all_answers if a.is_correct)
+    # Celková štatistika (všetky odpovede) - agregácia v DB, dashboard sa volá pri každej stránke
+    total, correct = db.session.query(
+        func.count(StudentAnswer.id),
+        func.coalesce(func.sum(case((StudentAnswer.is_correct.is_(True), 1), else_=0)), 0),
+    ).filter(StudentAnswer.student_id == student_id).one()
     accuracy = round(correct / total * 100, 1) if total > 0 else 0.0
 
     # Dotazník spätnej väzby (nový dynamický systém: FeedbackResponse)
-    from models import FeedbackResponse
     feedback_done = FeedbackResponse.query.filter_by(student_id=student_id).count() > 0
-
-    is_admin = (getattr(student, "role", "user") or "user") == "admin"
 
     return jsonify({
         "student": _student_public(student),
-        "is_admin": is_admin,
+        "is_admin": student.is_admin,
         "pretest": {
             "done": pretest_done,
             "answers": pretest_answers,
+            "total": pt_state["total"],
         },
         "main_tests": {
-            "count": main_tests_count,
+            "count": len(main_sessions),
             "sessions": main_sessions,
         },
         "stats": {
@@ -262,16 +246,9 @@ def dashboard():
 
 ### Štatistiky - výsledky predtestu podľa kategórií ###
 @auth_bp.route("/stats", methods=["GET"])
+@login_required
 def stats():
-    student_id = session.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-    student = Student.query.get(student_id)
-    if not student:
-        session.clear()
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
-
-    from models import StudentAnswer
+    student_id = current_user.id
 
     def by_category(test_type):
         answers = StudentAnswer.query.filter_by(
@@ -306,7 +283,7 @@ def stats():
 
     return jsonify({
         "pretest": {
-            "done": pretest_total > 0,
+            "done": pretest_state(student_id)["done"],
             "total": pretest_total,
             "correct": pretest_correct,
             "accuracy": pretest_acc,
@@ -316,18 +293,16 @@ def stats():
             "categories": main_cats,
         },
     }), 200
-@auth_bp.route("/change-password", methods=["POST"])
-def change_password():
-    student_id = session.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Nie si prihlásený.", "error_key": "auth.notLoggedIn"}), 401
 
+@auth_bp.route("/change-password", methods=["POST"])
+@login_required
+def change_password():
     data = request.get_json(silent=True) or {}
     current_password = data.get("current_password") or ""
     new_password = data.get("new_password") or ""
 
-    student = Student.query.get(student_id)
-    if not student or not student.check_password(current_password):
+    student = current_user._get_current_object()
+    if not student.check_password(current_password):
         return jsonify({"error": "Aktuálne heslo nie je správne.", "error_key": "auth.wrongCurrentPassword"}), 401
 
     pw_error = _validate_password_strength(new_password)

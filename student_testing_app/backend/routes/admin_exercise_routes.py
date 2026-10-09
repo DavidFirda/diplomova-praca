@@ -3,33 +3,16 @@
 # ============================================================
 import json
 import os
-from functools import wraps
 
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 
-from models import db, Student
+from extensions import admin_required
+from models import db
 from models_exercises import Exercise, ExerciseProgress
 from services.exercise_store import get_exercises_dir, exercise_path, is_notebook
 from services import notebook_scan
 
 admin_exercise_bp = Blueprint("admin_exercise", __name__)
-
-
-def _current_student():
-    sid = session.get("student_id")
-    return Student.query.get(sid) if sid else None
-
-
-def admin_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        student = _current_student()
-        if not student:
-            return jsonify({"error": "Nie si prihlásený."}), 401
-        if (getattr(student, "role", "user") or "user") != "admin":
-            return jsonify({"error": "Prístup len pre administrátora."}), 403
-        return fn(*args, **kwargs)
-    return wrapper
 
 
 def _count_code_cells(nb):

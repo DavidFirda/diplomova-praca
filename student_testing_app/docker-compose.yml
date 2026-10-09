@@ -24,7 +24,6 @@ services:
       - ./frontend:/app/frontend
       - ./exercises:/app/exercises
       - ./final_dataset.csv:/app/final_dataset.csv
-      - ./load_questions.py:/app/load_questions.py
       - ${Q_LEARNING_MOUNT}
       - ${POMDP_MOUNT}
 

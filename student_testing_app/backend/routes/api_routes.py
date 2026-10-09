@@ -1,384 +1,310 @@
 import json
-from flask import Blueprint, request, jsonify, session, Response, send_file
-from services.capture_output import capture_output, compare_outputs
-from services.extract_starter_code import extract_starter_code
-from models import db, Student, Question, StudentAnswer, TestSummary, StudentFeedback, FeedbackQuestion, FeedbackResponse
-from algorithms.random_selector import RandomQuestionSelector
-from algorithms.q_selector import QLearningQuestionSelector
-from algorithms.pomdp_selector import POMDPQuestionSelector
-from collections import Counter, defaultdict
-from io import BytesIO
-import pandas as pd
 
-selector_cache = {}
-student_attempts = defaultdict(int)
+from flask import Blueprint, current_app, jsonify, request
+from flask_login import current_user, login_required
+from sqlalchemy import case, func
+
+from models import (
+    db, Question, StudentAnswer, TestSummary, TestProgress,
+    FeedbackQuestion, FeedbackResponse,
+)
+from services.capture_output import (
+    RunnerUnavailable, capture_output, compare_outputs, expected_output,
+)
+from services.extract_starter_code import extract_starter_code
+from services.test_flow import (
+    MAIN_TEST_TOTAL, QuestionFlow,
+    answered_question_ids, build_selector, get_question, get_retries_used, get_turn,
+    lock_student, pretest_state, question_payload, set_retries_used,
+    start_main_progress, active_main_progress, update_selector,
+)
+
 api_bp = Blueprint('api', __name__)
 
-### Kontrola API stavu ###
+# Identita študenta je VŽDY z prihláseného používateľa (current_user, Flask-Login),
+# nikdy z tela požiadavky - inak by si klient mohol podstrčiť cudzie student_id.
+
+
 @api_bp.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "API is running!"}), 200
 
-# Registrácia a prihlásenie študentov teraz rieši auth_routes.py (auth_bp,
-# prefix /api/auth) - obsahuje heslá, email a reset hesla. Pôvodné /register
-# a /login tu boli zámerne odstránené, aby nezostal nezabezpečený obchádzací
-# spôsob vytvorenia účtu bez hesla.
 
-@api_bp.route("/test/start", methods=["POST"])
-def start_test():
-    data = request.get_json()
-    student_id = data.get("student_id")
-    question_ids = data.get("question_ids") 
-
-    if not student_id or not question_ids:
-        return jsonify({"error": "Missing student_id or id"}), 400
-
-    selected_questions = Question.query.filter(Question.id.in_(question_ids)).all()
-
-    session["test_questions"] = [q.id for q in selected_questions]
-    session["student_id"] = student_id
-
-    session["attempts"] = {}
-    session.modified = True
-
-    return jsonify([{
-        "id": q.id,
-        "instruction": q.instruction,
-        "input_data": q.input_data,
-        "category": q.category,
-        "starter_code": extract_starter_code(q.output)
-    } for q in selected_questions])
-
-@api_bp.route("/main_test/start", methods=["POST"])
-def start_main_test():
-    data = request.get_json()
-    student_id = data.get("student_id")
-    categories = data.get("categories", [])
-    excluded_ids = data.get("excluded_ids", [])
-    test_session = data.get("test_session") 
-
-    print(f"[DEBUG] incoming test_session: {test_session}", flush=True)
-    
-    if not student_id or not categories:
-        return jsonify({"error": "Chýbajúce údaje"}), 400
-
-    if not test_session:
-        previous_sessions = (
-            db.session.query(StudentAnswer.test_session)
-            .filter_by(student_id=student_id, test_type="main")
-            .distinct()
-            .count()
-        )
-        test_session = f"main-{previous_sessions + 1}"
-
-    cache_key = (student_id, test_session)
-    sid = int(student_id)
-    if sid % 3 == 1:  # 1,4,7,...
-        selector = RandomQuestionSelector(categories)
-    elif sid % 3 == 2:  # 2,5,8,...
-        if cache_key not in selector_cache:
-            selector_cache[cache_key] = QLearningQuestionSelector(
-                student_id=sid,
-                categories=categories,
-                test_session=test_session,
-                excluded_ids=excluded_ids
-            )
-        selector = selector_cache[cache_key]
-    else:  # 3,6,9,...
-        selector = POMDPQuestionSelector(
-            student_id=sid,
-            categories=categories,
-            test_session=test_session,
-            excluded_ids=excluded_ids
-        )
-
-    selected_question = selector.select()
-
-    if not selected_question:
-        return jsonify({"error": "Žiadne ďalšie otázky"}), 404
-
-    starter_code = extract_starter_code(selected_question.output)
+# ============================================================
+# PREDTEST - progres sa ukladá priebežne (odvodzuje sa zo StudentAnswer)
+# ============================================================
+@api_bp.route("/pretest/state", methods=["GET"])
+@login_required
+def pretest_current():
+    """
+    Stav predtestu + otázka, na ktorej študent skončil (prvá nezodpovedaná
+    v pevnom poradí). Po návrate sa tak zobrazí presne tá istá otázka;
+    späť na predchádzajúce sa vrátiť nedá.
+    """
+    student_id = current_user.id
+    state = pretest_state(student_id)
+    question, retries_used = None, 0
+    if not state["done"]:
+        q = get_question(state["next_question_id"])
+        if q:
+            question = question_payload(q)
+            retries_used = get_retries_used(student_id, "predtest", None, q.id)
 
     return jsonify({
-        "id": selected_question.id,
-        "instruction": selected_question.instruction,
-        "input_data": selected_question.input_data,
-        "category": selected_question.category,
-        "starter_code": starter_code,
-        "test_session": test_session 
+        "done": state["done"],
+        "answered": state["answered"],
+        "total": state["total"],
+        "attempts_used": retries_used,
+        "question": question,
     })
 
+
+# ============================================================
+# HLAVNÝ TEST - progres v tabuľke test_progress
+# ============================================================
+@api_bp.route("/main_test/start", methods=["POST"])
+@login_required
+def start_main_test():
+    """
+    Vráti otázku hlavného testu:
+      - rozpracovaný test pokračuje tou istou nezodpovedanou otázkou,
+      - inak sa vyberie nová otázka (stratégia podľa ID študenta),
+      - po 30 zodpovedaných vráti {"finished": true}.
+    Kategórie, už použité otázky a session určuje server (nie klient).
+    """
+    student_id = current_user.id
+    if not pretest_state(student_id)["done"]:
+        return jsonify({
+            "error": "Najprv musíš dokončiť predtest.",
+            "error_key": "test.pretestRequired",
+        }), 403
+
+    lock_student(student_id)
+    prog = active_main_progress(student_id) or start_main_progress(student_id)
+    answered = answered_question_ids(student_id, "main", prog.test_session)
+    meta = {
+        "test_session": prog.test_session,
+        "answered": len(answered),
+        "total": prog.total_questions or MAIN_TEST_TOTAL,
+    }
+
+    if len(answered) >= meta["total"]:
+        prog.status = "done"
+        prog.current_question_id = None
+        db.session.commit()
+        return jsonify({"finished": True, **meta})
+
+    # pokračovanie: otázka, ktorá už bola zobrazená, ale ešte nie je zodpovedaná
+    question = get_question(prog.current_question_id) if prog.current_question_id else None
+    if question is None or question.id in answered:
+        question = build_selector(student_id, prog.test_session, excluded_ids=answered).select()
+        if question is None:
+            db.session.rollback()
+            return jsonify({"error": "Žiadne ďalšie otázky"}), 404
+        prog.current_question_id = question.id
+
+    payload = question_payload(question, **meta)
+    db.session.commit()
+    return jsonify(payload)
+
+
+# ============================================================
+# VYHODNOTENIE ODPOVEDE (predtest aj hlavný test)
+# ============================================================
+def _check_turn(student_id, test_type, question_id):
+    """(turn, chybová odpoveď | None): je táto otázka práve na rade?"""
+    turn = get_turn(student_id, test_type)
+    status = turn.status_of(question_id)
+    if status == "answered":
+        row = (StudentAnswer.query
+               .filter_by(student_id=student_id, question_id=question_id, test_type=test_type)
+               .filter(StudentAnswer.test_session == turn.test_session)
+               .order_by(StudentAnswer.id.desc()).first())
+        # odpoveď už je uložená (dvojklik, obnovenie, druhá karta) - nezapisuj znova
+        body = {"correct": bool(row and row.is_correct), "final": True, "already_answered": True}
+        if row and not row.is_correct:
+            body.update(show_solution=True, solution_code=get_question(question_id).output)
+        return turn, jsonify(body)
+    if status == "not_current":
+        return turn, (jsonify({
+            "error": "Táto otázka teraz nie je na rade.",
+            "expected_question_id": turn.expected_question_id,
+        }), 409)
+    return turn, None
+
+
 @api_bp.route("/test/answer", methods=["POST"])
+@login_required
 def evaluate_answer():
-    data = request.get_json()
-    student_id = data.get("student_id")
-    question_id = data.get("question_id")
-    code = data.get("code")
+    student_id = current_user.id
+    data = request.get_json(silent=True) or {}
     test_type = data.get("test_type", "main")
-    test_session = data.get("test_session")
+    code = data.get("code") or ""
+    try:
+        question_id = int(data.get("question_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Missing question ID"}), 400
+    if test_type not in ("predtest", "main"):
+        return jsonify({"error": "Neplatný typ testu"}), 400
 
-    if not student_id or not question_id:
-        return jsonify({"error": "Missing student or question ID"}), 400
+    question = get_question(question_id)
+    if question is None:
+        return jsonify({"error": "Otázka neexistuje"}), 404
+    category, solution_code = question.category, question.output
 
-    question = Question.query.get(question_id)
-    category = question.category
-    starter_code = extract_starter_code(question.output)
+    _, error = _check_turn(student_id, test_type, question_id)
+    if error:
+        return error
 
-    if not code or not code.strip() or code.strip() == starter_code.strip():
+    # Úloha, v ktorej je zadanie rovnaké ako riešenie (napr. len `print(...)`), nemá čo
+    # dopĺňať - nezmenený kód je platná odpoveď (inak by na nej študent uviazol).
+    starter_code = extract_starter_code(solution_code).strip()
+    nothing_to_complete = starter_code == solution_code.strip()
+    if not code.strip() or (code.strip() == starter_code and not nothing_to_complete):
         return jsonify({
             "correct": False,
             "message": "🛠️ Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
         })
 
-    attempt_key = (student_id, test_session, question_id)
-    attempts = student_attempts[attempt_key]
+    # Beh kódu môže trvať sekundy -> DB spojenie sa medzitým vráti do poolu
+    # (inak by pri veľa študentoch naraz došli spojenia).
+    db.session.rollback()
+    try:
+        expected_out, expected_error = expected_output(question_id, solution_code)
+        student_out, _ = capture_output(code)
+    except RunnerUnavailable as e:
+        # nie je to chyba študenta - nič sa nezapisuje, môže to skúsiť znova
+        return jsonify({"correct": False, "message": f"⚠️ {e}"}), 503
 
-    student_output, student_error = capture_output(code)
-    expected_output, expected_error = capture_output(question.output)
+    # --- zápis: serializovaný per študent, stav sa overí znova pod zámkom ---
+    lock_student(student_id)
+    turn, error = _check_turn(student_id, test_type, question_id)
+    if error:
+        return error
 
     if expected_error:
-        if int(student_id) % 3 == 2 and question.category and test_type == "main":
-            cache_key = (student_id, test_session)
-            if cache_key not in selector_cache:
-                selector_cache[cache_key] = QLearningQuestionSelector(
-                    student_id=student_id,
-                    categories=["Sorting", "Syntax", "Data Structures", "Scientific Computing"],
-                    test_session=test_session
-                )
-            selector = selector_cache[cache_key]
-            selector.update_after_answer(
-                question_id=question.id,
-                category=question.category,
-                correct=False
-            )
-        elif int(student_id) % 3 == 0 and question.category and test_type == "main":
-            cache_key = (student_id, test_session)
-            if cache_key not in selector_cache:
-                selector_cache[cache_key] = POMDPQuestionSelector(
-                    student_id=student_id,
-                    categories=["Sorting", "Syntax", "Data Structures", "Scientific Computing"],
-                    test_session=test_session,
-                    excluded_ids=[]
-                )
-            selector = selector_cache[cache_key]
-            selector.update_after_answer(
-                question_id=question.id,
-                category=question.category,
-                correct=False
-            )
-
-        update_summary(student_id, test_type, test_session, category, is_correct=False)
-
-        student_answer = StudentAnswer(
-            student_id=student_id,
-            question_id=question_id,
-            answer_code=code,
-            category=category,
-            is_correct=True,
-            test_type=test_type,
-            test_session=test_session
-        )
-        db.session.add(student_answer)
-        db.session.commit()
-
+        # chyba referenčného riešenia nie je chyba študenta: otázka sa uzavrie bez opravy
+        _record_final(student_id, turn, question_id, category, code, correct=False)
         return jsonify({
-            "correct": False,
+            "correct": False, "final": True, "student_output": student_out,
             "message": f"❌ Interná chyba v hodnotení otázky: {expected_error}",
-            "student_output": student_output
         })
 
-    correct = compare_outputs(student_output, expected_output)
+    correct = compare_outputs(student_out, expected_out)
+    flow = QuestionFlow(get_retries_used(student_id, test_type, turn.test_session, question_id))
+    flow.correct() if correct else flow.wrong()
 
-    if correct:
-        if int(student_id) % 3 == 2 and question.category and test_type == "main":
-            cache_key = (student_id, test_session)
-            if cache_key not in selector_cache:
-                selector_cache[cache_key] = QLearningQuestionSelector(
-                    student_id=student_id,
-                    categories=["Sorting", "Syntax", "Data Structures", "Scientific Computing"],
-                    test_session=test_session
-                )
-            selector = selector_cache[cache_key]
-            selector.update_after_answer(
-                question_id=question.id,
-                category=question.category,
-                correct=correct
-            )
-        elif int(student_id) % 3 == 0 and question.category and test_type == "main":
-            cache_key = (student_id, test_session)
-            if cache_key not in selector_cache:
-                selector_cache[cache_key] = POMDPQuestionSelector(
-                    student_id=student_id,
-                    categories=["Sorting", "Syntax", "Data Structures", "Scientific Computing"],
-                    test_session=test_session,
-                    excluded_ids=[]
-                )
-            selector = selector_cache[cache_key]
-            selector.update_after_answer(
-                question_id=question.id,
-                category=question.category,
-                correct=correct
-            )
-
-        update_summary(student_id, test_type, test_session, category, is_correct=True)
-
-        student_answer = StudentAnswer(
-            student_id=student_id,
-            question_id=question_id,
-            answer_code=code,
-            category=category,
-            is_correct=True,
-            test_type=test_type,
-            test_session=test_session
-        )
-        db.session.add(student_answer)
+    if flow.state == "retry":
+        set_retries_used(student_id, test_type, turn.test_session, question_id, flow.retries_used)
         db.session.commit()
-        return jsonify({
-            "correct": True,     
-            "student_output": student_output
-        })
-
-    if attempts < 1:
-        student_attempts[attempt_key] += 1
         return jsonify({
             "correct": False,
             "message": "🛠️ Výstup nie je správny. Skús to ešte raz opraviť!",
-            "student_output": student_output
+            "student_output": student_out,
         })
-    
-    if int(student_id) % 3 == 2 and question.category and test_type == "main":
-        cache_key = (student_id, test_session)
-        if cache_key not in selector_cache:
-            selector_cache[cache_key] = QLearningQuestionSelector(
-                student_id=student_id,
-                categories=["Sorting", "Syntax", "Data Structures", "Scientific Computing"],
-                test_session=test_session
-            )
-        selector = selector_cache[cache_key]
-        selector.update_after_answer(
-            question_id=question.id,
-            category=question.category,
-            correct=correct
-        )
-    elif int(student_id) % 3 == 0 and question.category and test_type == "main":
-        cache_key = (student_id, test_session)
-        if cache_key not in selector_cache:
-            selector_cache[cache_key] = POMDPQuestionSelector(
-                student_id=student_id,
-                categories=["Sorting", "Syntax", "Data Structures", "Scientific Computing"],
-                test_session=test_session,
-                excluded_ids=[]
-            )
-        selector = selector_cache[cache_key]
-        selector.update_after_answer(
-            question_id=question.id,
-            category=question.category,
-            correct=correct
-        )
-    
-    update_summary(student_id, test_type, test_session, category, is_correct=False)
 
-    student_answer = StudentAnswer(
-        student_id=student_id,
-        question_id=question_id,
-        answer_code=code,
-        category=category,
-        is_correct=False,
-        test_type=test_type,
-        test_session=test_session
-    )
-    db.session.add(student_answer)
+    _record_final(student_id, turn, question_id, category, code, correct)
+    response = {"correct": correct, "final": True, "student_output": student_out}
+    if not correct:
+        response.update(show_solution=True, solution_code=solution_code)
+    return jsonify(response)
+
+
+def _record_final(student_id, turn, question_id, category, code, correct):
+    """
+    Jediné miesto, kde sa zapíše výsledok otázky: StudentAnswer + súhrn
+    (a posun progresu hlavného testu) a výsledok sa odovzdá selektoru.
+    Volá sa pod zámkom študenta; všetko sa zapíše jedným commitom.
+    """
+    update_summary(student_id, turn.test_type, turn.test_session, category, correct)
+    db.session.add(StudentAnswer(
+        student_id=student_id, question_id=question_id, answer_code=code,
+        category=category, is_correct=correct,
+        test_type=turn.test_type, test_session=turn.test_session,
+    ))
+    if turn.progress is not None:
+        turn.progress.current_question_id = None
+
+    if turn.test_type == "main":
+        # zlyhanie selektora (súbor, ...) nesmie stratiť odpoveď študenta
+        try:
+            update_selector(student_id, turn.test_session, question_id, category, correct)
+        except Exception:
+            current_app.logger.exception("Aktualizácia selektora zlyhala")
     db.session.commit()
 
-    return jsonify({
-        "correct": False,
-        "student_output": student_output,
-        "show_solution": True,
-        "solution_code": question.output
-    })
 
 def update_summary(student_id, test_type, test_session, category, is_correct):
     if test_type == "predtest":
         return
 
     summary = TestSummary.query.filter_by(
-        student_id=student_id,
-        test_type=test_type,
-        test_session=test_session,
-        category=category
+        student_id=student_id, test_type=test_type,
+        test_session=test_session, category=category,
     ).first()
-
     if not summary:
         summary = TestSummary(
-            student_id=student_id,
-            test_type=test_type,
-            test_session=test_session,
-            category=category,
-            total_answers=0,
-            correct_answers=0,
-            incorrect_answers=0
+            student_id=student_id, test_type=test_type, test_session=test_session,
+            category=category, total_answers=0, correct_answers=0, incorrect_answers=0,
         )
         db.session.add(summary)
 
-    summary.total_answers = summary.total_answers or 0
-    summary.correct_answers = summary.correct_answers or 0
-    summary.incorrect_answers = summary.incorrect_answers or 0
-
-    summary.total_answers += 1
+    summary.total_answers = (summary.total_answers or 0) + 1
     if is_correct:
-        summary.correct_answers += 1
+        summary.correct_answers = (summary.correct_answers or 0) + 1
     else:
-        summary.incorrect_answers += 1
+        summary.incorrect_answers = (summary.incorrect_answers or 0) + 1
+
 
 @api_bp.route("/test/analysis", methods=["POST"])
+@login_required
 def test_analysis():
-    data = request.get_json()
-    student_id = data.get("student_id")
+    student_id = current_user.id
+    data = request.get_json(silent=True) or {}
     test_session = data.get("test_session")
+    if not test_session:
+        # bez zadanej session: posledný test študenta
+        last = (TestProgress.query
+                .filter_by(student_id=student_id, test_type="main")
+                .order_by(TestProgress.id.desc()).first())
+        test_session = last.test_session if last else None
+    if not test_session:
+        return jsonify({"error": "Missing test_session"}), 400
 
-    if not student_id or not test_session:
-        return jsonify({"error": "Missing student_id or test_session"}), 400
-
-    # Získaj odpovede študenta pre túto session
-    answers = StudentAnswer.query.filter_by(
-        student_id=student_id,
-        test_type="main",
-        test_session=test_session
-    ).all()
-
-    if not answers:
+    total_questions, correct_answers = db.session.query(
+        func.count(StudentAnswer.id),
+        func.coalesce(func.sum(case((StudentAnswer.is_correct.is_(True), 1), else_=0)), 0),
+    ).filter(
+        StudentAnswer.student_id == student_id,
+        StudentAnswer.test_type == "main",
+        StudentAnswer.test_session == test_session,
+    ).one()
+    if not total_questions:
         return jsonify({"error": "No answers found"}), 404
 
-    total_questions = len(answers)
-    correct_answers = sum(1 for a in answers if a.is_correct)
-    student_accuracy = round((correct_answers / total_questions) * 100, 1)
+    student_accuracy = round(correct_answers / total_questions * 100, 1)
 
-    # Porovnaj s ostatnými študentmi
-    student_scores = []
-    students = db.session.query(StudentAnswer.student_id).filter_by(test_type="main").distinct().all()
-    for sid_row in students:
-        sid = sid_row[0]
-        all_answers = StudentAnswer.query.filter_by(student_id=sid, test_type="main").all()
-        if not all_answers:
-            continue
-        correct = sum(1 for a in all_answers if a.is_correct)
-        total = len(all_answers)
-        if total == 0:
-            continue
-        accuracy = correct / total
-        student_scores.append((sid, accuracy))
-
-    # Percentil: Koľko študentov má horší výsledok
-    num_below = sum(1 for sid, acc in student_scores if acc < (student_accuracy / 100))
-    percentile = round((num_below / len(student_scores)) * 100, 1) if student_scores else 0.0
+    # Percentil: aký podiel študentov má horší celkový výsledok v hlavných testoch
+    # (jedna agregačná query namiesto prechádzania všetkých odpovedí všetkých študentov).
+    accuracies = [
+        float(row[0]) for row in db.session.query(
+            func.avg(case((StudentAnswer.is_correct.is_(True), 1.0), else_=0.0))
+        ).filter(StudentAnswer.test_type == "main").group_by(StudentAnswer.student_id)
+    ]
+    below = sum(1 for acc in accuracies if acc < student_accuracy / 100)
+    percentile = round(below / len(accuracies) * 100, 1) if accuracies else 0.0
 
     return jsonify({
-        "correct_answers": correct_answers,
+        "correct_answers": int(correct_answers),
         "total_questions": total_questions,
         "student_accuracy": student_accuracy,
-        "percentile_rank": percentile
+        "percentile_rank": percentile,
     })
 
+
+# ============================================================
+# DOTAZNÍK
+# ============================================================
 @api_bp.route("/feedback/questions", methods=["GET"])
 def feedback_questions():
     """Verejné: aktívne otázky dotazníka pre používateľa (z DB)."""
@@ -403,22 +329,20 @@ def feedback_questions():
 
 
 @api_bp.route("/feedback", methods=["POST"])
+@login_required
 def feedback():
-    data = request.get_json() or {}
-    student_id = data.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Chýba student_id"}), 400
-
-    answers = data.get("answers") or {}
-    # ulož každú odpoveď ako FeedbackResponse (upsert podľa qkey)
+    student_id = current_user.id
+    answers = (request.get_json(silent=True) or {}).get("answers") or {}
+    # každá odpoveď je jeden FeedbackResponse (upsert podľa qkey)
     updated = False
     for qkey, value in answers.items():
+        value = str(value) if value is not None else None
         existing = FeedbackResponse.query.filter_by(student_id=student_id, qkey=qkey).first()
         if existing:
-            existing.value = str(value) if value is not None else None
+            existing.value = value
             updated = True
         else:
-            db.session.add(FeedbackResponse(student_id=student_id, qkey=qkey, value=str(value) if value is not None else None))
+            db.session.add(FeedbackResponse(student_id=student_id, qkey=qkey, value=value))
     db.session.commit()
 
     msg = "Odpovede boli aktualizované. Ďakujeme!" if updated else "Ďakujeme za vyplnenie dotazníka!"
@@ -426,25 +350,16 @@ def feedback():
 
 
 @api_bp.route("/feedback/get", methods=["POST"])
+@login_required
 def get_feedback():
-    data = request.get_json() or {}
-    student_id = data.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Chýba student_id"}), 400
-
-    responses = FeedbackResponse.query.filter_by(student_id=student_id).all()
+    responses = FeedbackResponse.query.filter_by(student_id=current_user.id).all()
     if not responses:
         return jsonify({"submitted": False, "feedback": {}})
-
-    fb = {r.qkey: r.value for r in responses}
-    return jsonify({"submitted": True, "feedback": fb})
+    return jsonify({"submitted": True, "feedback": {r.qkey: r.value for r in responses}})
 
 
 @api_bp.route("/feedback/check", methods=["POST"])
+@login_required
 def check_feedback_submitted():
-    data = request.get_json() or {}
-    student_id = data.get("student_id")
-    if not student_id:
-        return jsonify({"error": "Chýba student_id"}), 400
-    existing = FeedbackResponse.query.filter_by(student_id=student_id).first()
-    return jsonify({"submitted": bool(existing)})
+    existing = FeedbackResponse.query.filter_by(student_id=current_user.id).first()
+    return jsonify({"submitted": existing is not None})

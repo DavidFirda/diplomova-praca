@@ -1,6 +1,6 @@
 /* AdaptPy - Štatistiky: výsledky posledného testu + predtest po kategóriách */
 document.addEventListener("DOMContentLoaded", async () => {
-  const studentId = localStorage.getItem("student_id");
+  // bez session server vyberie posledný test prihláseného študenta
   const session = localStorage.getItem("main_test_session");
   const loading = document.getElementById("stats-loading");
 
@@ -9,13 +9,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return fallback;
   }
 
-  // --- 1) Výsledky posledného testu (ak existuje session) ---
-  if (studentId && session) {
+  // --- 1) Výsledky posledného testu ---
+  {
     try {
       const res = await fetch("/api/test/analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id: studentId, test_session: session }),
+        body: JSON.stringify({ test_session: session }),
       });
       const data = await res.json();
       if (!data.error) {

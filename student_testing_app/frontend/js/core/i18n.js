@@ -151,6 +151,9 @@ const TRANSLATIONS = {
     "stats.percentile": "Percentil",
     "stats.pretestByCategory": "Výsledky predtestu podľa kategórií",
     "stats.toFeedback": "Na dotazník",
+    "stats.emptyTitle": "Zatiaľ žiadne dáta",
+    "stats.emptyText": "Pre tento účet nemáme žiadne výsledky. Najprv absolvuj predtest alebo test a tvoje štatistiky sa ti zobrazia.",
+    "stats.emptyBtn": "Späť na prehľad",
 
     // dotazník
     "fb.title": "Dotazník",
@@ -574,6 +577,9 @@ const TRANSLATIONS = {
     "stats.percentile": "Percentile",
     "stats.pretestByCategory": "Pre-test results by category",
     "stats.toFeedback": "To feedback",
+    "stats.emptyTitle": "No data yet",
+    "stats.emptyText": "There are no results for this account yet. Complete the pre-test or a test first and your statistics will appear here.",
+    "stats.emptyBtn": "Back to overview",
 
     "fb.title": "Feedback",
     "fb.subtitle": "Help us improve the app. Thanks for your time.",

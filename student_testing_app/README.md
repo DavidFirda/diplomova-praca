@@ -37,10 +37,11 @@ docker compose up --build
 #    http://localhost:5000
 ```
 
-Pri štarte sa automaticky:
-- načítajú otázky (`load_questions.py`),
-- vytvoria/aktualizujú tabuľky a naplní sa dotazník,
-- vytvorí admin účet (podľa `ADMIN_LOGIN` / `ADMIN_PASSWORD` v `.env`).
+Pri štarte (`entrypoint.sh`) sa raz, pred spustením workerov:
+- aplikujú migrácie DB (`flask db upgrade`),
+- načítajú otázky, dotazník a cvičenia a vytvorí sa admin účet podľa
+  `ADMIN_LOGIN` / `ADMIN_PASSWORD` v `.env` (`flask bootstrap`),
+- spustí sa gunicorn (`GUNICORN_WORKERS`, `GUNICORN_THREADS`, predvolene 4 × 2).
 
 > **Databáza:** projekt je momentálne nastavený na cloudovú Postgres (Neon) cez
 > `DATABASE_URL` v `.env`. Lokálna Postgres služba je v `docker-compose.yml`

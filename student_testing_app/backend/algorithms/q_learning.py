@@ -3,6 +3,8 @@ import json
 import csv
 import os
 
+from algorithms.storage import save_json
+
 class QLearning:
     def __init__(self, categories, weak_categories=None, alpha=0.1, gamma=0.9, epsilon=0.3, epsilon_decay=0.989, q_table_file="q_table.json", log_file="question_log.csv"):
         self.categories = list(categories)
@@ -36,10 +38,14 @@ class QLearning:
         data = {
             "q_table": self.q_table,
             "incorrect_streak": self.incorrect_streak,
-            "category_performance": self.category_performance
+            "category_performance": self.category_performance,
+            # epsilon a počítadlá sa ukladajú, aby výber nezávisel od toho, ktorý
+            # worker/proces práve odpovedá (selektor sa vytvára pri každom requeste)
+            "epsilon": self.epsilon,
+            "exploration_count": self.exploration_count,
+            "exploitation_count": self.exploitation_count,
         }
-        with open(self.q_table_file, "w") as f:
-            json.dump(data, f)
+        save_json(self.q_table_file, data)
 
     def reset_q_table(self):
         self.q_table = {category: 0 for category in self.categories}
@@ -52,6 +58,9 @@ class QLearning:
                 self.q_table = data.get("q_table", {c: 0 for c in self.categories})
                 self.incorrect_streak = data.get("incorrect_streak", {c: 0 for c in self.categories})
                 self.category_performance = data.get("category_performance", {})
+                self.epsilon = data.get("epsilon", self.epsilon)
+                self.exploration_count = data.get("exploration_count", self.exploration_count)
+                self.exploitation_count = data.get("exploitation_count", self.exploitation_count)
         except FileNotFoundError:
             self.reset_q_table()
 

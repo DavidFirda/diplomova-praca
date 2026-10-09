@@ -1,6 +1,6 @@
-let questionQueue = [];
-let currentIndex = 0;
-let studentId = null;
+// Predtest - progres sa ukladá na serveri (po každej odpovedi).
+// Otázky aj ich poradie určuje server (/api/pretest/state), takže po návrate
+// sa zobrazí tá istá otázka, na ktorej študent skončil; späť sa vrátiť nedá.
 let codeMirrorEditor;
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -16,54 +16,52 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Načítaj ID študenta z localStorage
-window.onload = async () => {
-    studentId = localStorage.getItem("student_id");
-    if (!studentId) {
-        alert("Najprv sa prihlás.");
+function goToDashboard() {
+    localStorage.setItem("test_categories", JSON.stringify(["Data Structures", "Syntax", "Sorting", "Scientific Computing"]));
+    window.location.href = "/dashboard";
+}
+
+function resetQuestionUi() {
+    document.getElementById("submit-answer").style.display = "inline-block";
+    document.getElementById("submit-answer").disabled = false;
+    document.getElementById("next-question").style.display = "none";
+    document.getElementById("output-box").innerText = "";
+
+    const resultMsg = document.getElementById("result-message");
+    resultMsg.innerText = "";
+    resultMsg.classList.remove("test-result--correct", "test-result--wrong", "test-result--info");
+
+    document.getElementById("solution-box").style.display = "none";
+    document.getElementById("solution-code").innerText = "";
+}
+
+// Načíta stav predtestu zo servera a zobrazí aktuálnu (nezodpovedanú) otázku.
+async function loadState() {
+    const res = await fetch("/api/pretest/state", { credentials: "include" });
+    if (res.status === 401) {
         window.location.href = "/login";
         return;
     }
-
-    const res = await fetch("/admin/students/summary?token="+ token);
-    const data = await res.json();
-    const student = data.find(s => s.id === parseInt(studentId));
-
-    if (student && student.predtest.total_answers > 0) {
-        localStorage.setItem("test_categories", JSON.stringify(["Data Structures", "Syntax", "Sorting", "Scientific Computing"]));
-        window.location.href = "/dashboard";
+    if (!res.ok) {
+        alert("Nepodarilo sa načítať test.");
         return;
     }
 
-    await startTest([1, 4, 11, 7, 47, 50, 2, 5, 20, 2635, 15, 23]);  // pevne definované ID otázok
+    const state = await res.json();
+    if (state.done || !state.question) {
+        goToDashboard();
+        return;
+    }
+
+    resetQuestionUi();
+    showQuestion(state.question, state.answered + 1, state.total);
+}
+
+window.onload = () => {
+    loadState();
 };
 
-async function startTest(questionIds) {
-    const response = await fetch("/api/test/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id: studentId, question_ids: questionIds })
-    });
-
-    if (response.ok) {
-        questionQueue = await response.json();
-        currentIndex = 0;
-        showQuestion();
-    } else {
-        alert("Nepodarilo sa načítať test.");
-    }
-}
-// Zobraz aktuálnu otázku
-function showQuestion() {
-    if (currentIndex >= questionQueue.length) {
-        const selectedCategories = ["Data Structures", "Syntax", "Sorting", "Scientific Computing"];
-        localStorage.setItem("test_categories", JSON.stringify(selectedCategories));
-        window.location.href = "/dashboard";
-        return;
-    }
-
-    const question = questionQueue[currentIndex];
-
+function showQuestion(question, number, total) {
     document.getElementById("instruction").innerText = question.instruction;
     document.getElementById("input").innerText = question.input_data;
     document.getElementById("category").innerHTML = `<strong>Kategória:</strong> ${question.category}`;
@@ -71,9 +69,7 @@ function showQuestion() {
     if (codeMirrorEditor) {
         codeMirrorEditor.setValue(question.starter_code || "");
     }
-    document.getElementById("result-message").innerText = "";
-    document.getElementById("output-box").innerText = "";
-    document.getElementById("question-counter").innerText = `${currentIndex + 1}/${questionQueue.length}`;
+    document.getElementById("question-counter").innerText = `${number}/${total}`;
 }
 
 // Odoslanie odpovede na server
@@ -92,14 +88,20 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
 
     const response = await fetch("/api/test/answer", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            student_id: studentId,
-            question_id,
-            code,
-            test_type: "predtest"
-        })
+        body: JSON.stringify({ question_id, code, test_type: "predtest" })
     });
+
+    if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+    }
+    if (response.status === 409) {
+        // server je o krok inde (napr. iná karta) - zosúlaď sa s ním
+        await loadState();
+        return;
+    }
 
     const result = await response.json();
 
@@ -116,7 +118,8 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
         resultMsg.classList.add("test-result--wrong");
     }
 
-    const isFinal = result.correct || (!result.message && result.correct === false);
+    // "final" = odpoveď je uložená na serveri a otázka je uzavretá
+    const isFinal = result.correct || result.final || (!result.message && result.correct === false);
 
     if (result.show_solution && result.solution_code) {
         solutionCode.innerText = result.solution_code;
@@ -131,18 +134,6 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
     }
 });
 
-document.getElementById("next-question").addEventListener("click", () => {
-    currentIndex++;
-    showQuestion();
-
-    document.getElementById("submit-answer").style.display = "inline-block";
-    document.getElementById("submit-answer").disabled = false;
-    document.getElementById("next-question").style.display = "none";
-    document.getElementById("output-box").innerText = "";
-    document.getElementById("result-message").innerText = "";
-
-    const solutionBox = document.getElementById("solution-box");
-    const solutionCode = document.getElementById("solution-code");
-    solutionBox.style.display = "none";
-    solutionCode.innerText = "";
+document.getElementById("next-question").addEventListener("click", async () => {
+    await loadState();
 });
