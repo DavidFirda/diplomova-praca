@@ -1,9 +1,5 @@
 # ============================================================
 # AdaptPy - jednorazové naplnenie DB po štarte:  flask bootstrap
-#
-# Spúšťa sa RAZ pred štartom workerov (pozri entrypoint.sh), nie pri importe
-# aplikácie - inak by ho paralelne spúšťali všetky gunicorn workery.
-# Všetky kroky sú idempotentné (bezpečné spustiť opakovane).
 # ============================================================
 import json
 import os
@@ -16,7 +12,6 @@ from models import db, Student, Question, FeedbackQuestion
 QUESTIONS_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "final_dataset.csv")
 
 _YES_NO = ["Áno", "Skôr áno", "Skôr nie", "Nie"]
-# (kľúč, text SK, text EN, typ, možnosti)
 _FEEDBACK_SEED = [
     ("gender", "Aké je tvoje pohlavie?", "What is your gender?", "select", ["Muž", "Žena", "Iné", "Nechcem uviesť"]),
     ("age", "Aký je tvoj vek?", "What is your age?", "number", []),
@@ -49,6 +44,7 @@ def seed_questions():
         Question(
             id=int(row["ID"]),
             instruction=row["Instruction"],
+            instruction_sk=row.get("Instruction_SK"),
             input_data=str(row["Input"]),
             output=row["Output"],
             category=row["Category"],
@@ -59,6 +55,25 @@ def seed_questions():
     )
     db.session.commit()
     print(f"[seed] načítaných {len(df)} otázok")
+
+
+def sync_instruction_sk():
+    """Doplnenie slovenského znenia úloh (stĺpec Instruction_SK v CSV)."""
+    if not os.path.exists(QUESTIONS_CSV):
+        return
+    df = pd.read_csv(QUESTIONS_CSV)
+    if "Instruction_SK" not in df.columns:
+        return print("[seed] CSV nemá stĺpec Instruction_SK - preklady zadaní preskočené")
+
+    df = df.astype(object).where(df.notna(), None)
+    sk_by_id = {int(row["ID"]): row["Instruction_SK"] for _, row in df.iterrows() if row["Instruction_SK"]}
+    changed = 0
+    for q in Question.query.filter(Question.id.in_(list(sk_by_id))).all():
+        if q.instruction_sk != sk_by_id[q.id]:
+            q.instruction_sk = sk_by_id[q.id]
+            changed += 1
+    db.session.commit()
+    print(f"[seed] slovenské zadania: {len(sk_by_id)} v CSV, aktualizovaných {changed}")
 
 
 def seed_feedback_questions():
@@ -83,7 +98,6 @@ def seed_admin():
         return print("[seed] ADMIN_LOGIN/ADMIN_PASSWORD nie sú v .env - admin účet preskočený")
 
     email = os.getenv("ADMIN_EMAIL", "adaptpy.tuke@gmail.com")
-    # login aj e-mail sú unikátne -> hľadáme podľa oboch, inak by vznikla kolízia
     admin = Student.query.filter((Student.login == login) | (Student.email == email)).first()
     if admin is None:
         admin = Student(
@@ -105,15 +119,15 @@ def sync_exercises():
     from services.notebook_scan import sync_exercises as scan
     try:
         scan()
-    except Exception as e:      # chýbajúci priečinok s cvičeniami nesmie zhodiť štart
+    except Exception as e:     
         print(f"[cvičenia] sken priečinka preskočený: {e}")
 
 
 def register_cli(app):
     @app.cli.command("bootstrap")
     def bootstrap():
-        """Naplní DB (otázky, dotazník, admin, cvičenia). Spúšťať po `flask db upgrade`."""
         seed_questions()
+        sync_instruction_sk()
         seed_feedback_questions()
         seed_admin()
         sync_exercises()

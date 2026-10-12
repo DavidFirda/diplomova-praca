@@ -1,8 +1,7 @@
 /* ============================================================
    AdaptPy - i18n + prepínač témy
    - Slovník SK/EN, preklad cez atribút data-i18n
-   - Uloženie voľby jazyka a témy do localStorage
-   ============================================================ */
+============================================================ */
 
 const TRANSLATIONS = {
   sk: {
@@ -943,11 +942,37 @@ const TRANSLATIONS = {
   },
 };
 
+const CATEGORY_SK = {
+  "Algorithms and Dynamic Programming": "Algoritmy a dynamické programovanie",
+  "Branching": "Vetvenie",
+  "Data Analysis": "Analýza dát",
+  "Data Structures": "Dátové štruktúry",
+  "File Handling": "Práca so súbormi",
+  "Functions and Advanced Concepts": "Funkcie a pokročilé koncepty",
+  "Loops": "Cykly",
+  "Mathematics": "Matematika",
+  "Object-Oriented Programming": "Objektovo orientované programovanie",
+  "Scientific Computing": "Vedecké výpočty",
+  "Sorting": "Triedenie",
+  "Syntax": "Syntax",
+  "Testing and Debugging": "Testovanie a ladenie",
+};
+
 const I18N = {
   lang: localStorage.getItem("adeptpy_lang") || "sk",
 
   t(key) {
     return (TRANSLATIONS[this.lang] && TRANSLATIONS[this.lang][key]) || key;
+  },
+
+  // znenie úlohy
+  questionText(q) {
+    return (this.lang === "sk" && q && q.instruction_sk) || (q && q.instruction) || "";
+  },
+
+  // názov kategórie
+  category(name) {
+    return (this.lang === "sk" && CATEGORY_SK[name]) || name;
   },
 
   apply() {
@@ -974,6 +999,7 @@ const I18N = {
     this.lang = lang;
     localStorage.setItem("adeptpy_lang", lang);
     this.apply();
+    document.dispatchEvent(new CustomEvent("langchange", { detail: { lang } }));
   },
 };
 

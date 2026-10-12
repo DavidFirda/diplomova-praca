@@ -43,6 +43,7 @@ class Question(db.Model):
     __tablename__ = "questions"
     id = db.Column(db.Integer, primary_key=True)
     instruction = db.Column(db.Text, nullable=False)
+    instruction_sk = db.Column(db.Text)
     input_data = db.Column(db.Text)
     output = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(100), nullable=False)

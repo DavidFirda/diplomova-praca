@@ -1,6 +1,7 @@
 // Predtest - progres sa ukladá na serveri (po každej odpovedi).
 // Otázky aj ich poradie určuje server (/api/pretest/state), takže po návrate
 // sa zobrazí tá istá otázka, na ktorej študent skončil; späť sa vrátiť nedá.
+
 let codeMirrorEditor;
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -35,7 +36,6 @@ function resetQuestionUi() {
     document.getElementById("solution-code").innerText = "";
 }
 
-// Načíta stav predtestu zo servera a zobrazí aktuálnu (nezodpovedanú) otázku.
 async function loadState() {
     const res = await fetch("/api/pretest/state", { credentials: "include" });
     if (res.status === 401) {
@@ -61,10 +61,20 @@ window.onload = () => {
     loadState();
 };
 
+let currentQuestion = null;
+
+function renderQuestionText() {
+    if (!currentQuestion) return;
+    document.getElementById("instruction").innerText = I18N.questionText(currentQuestion);
+    document.getElementById("category").innerHTML =
+        `<strong>${I18N.t("test.category")}:</strong> ${I18N.category(currentQuestion.category)}`;
+}
+document.addEventListener("langchange", renderQuestionText);
+
 function showQuestion(question, number, total) {
-    document.getElementById("instruction").innerText = question.instruction;
+    currentQuestion = question;
+    renderQuestionText();
     document.getElementById("input").innerText = question.input_data;
-    document.getElementById("category").innerHTML = `<strong>Kategória:</strong> ${question.category}`;
     document.getElementById("question_id").value = question.id;
     if (codeMirrorEditor) {
         codeMirrorEditor.setValue(question.starter_code || "");
@@ -98,7 +108,6 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
         return;
     }
     if (response.status === 409) {
-        // server je o krok inde (napr. iná karta) - zosúlaď sa s ním
         await loadState();
         return;
     }

@@ -1,11 +1,10 @@
 // Hlavný test - progres sa ukladá na serveri. Server drží session testu,
 // počet zodpovedaných otázok aj otázku, ktorá bola zobrazená, ale ešte nie je
 // zodpovedaná (po návrate sa zobrazí tá istá). Klient nič z toho neurčuje.
+
 let codeMirrorEditor = null;
 
 window.onload = async () => {
-    // Hlavný test je prístupný len po dokončení predtestu.
-    // Overíme to cez server (dashboard endpoint) - neobchádzateľné cez URL.
     try {
         const r = await fetch("/api/auth/dashboard", { credentials: "include" });
         if (r.status === 401) { window.location.href = "/login"; return; }
@@ -20,7 +19,6 @@ window.onload = async () => {
         return;
     }
 
-    // Inicializuj CodeMirror
     const textarea = document.getElementById("student_code");
     codeMirrorEditor = CodeMirror.fromTextArea(textarea, {
         mode: "python",
@@ -51,13 +49,12 @@ async function fetchNextQuestion() {
 
     const question = await response.json();
 
-    // session testu si pamätá server; v localStorage ju držíme len pre stránku s analýzou
     if (question.test_session) {
         localStorage.setItem("main_test_session", question.test_session);
     }
 
     if (question.finished) {
-        alert("✅ Hlavný test hotový!");
+        alert("Hlavný test hotový!");
         window.location.href = `/analyza`;
         return;
     }
@@ -65,10 +62,20 @@ async function fetchNextQuestion() {
     displayQuestion(question);
 }
 
+let currentQuestion = null;
+
+function renderQuestionText() {
+    if (!currentQuestion) return;
+    document.getElementById("instruction").innerText = I18N.questionText(currentQuestion);
+    document.getElementById("category").innerText =
+        `${I18N.t("test.category")}: ${I18N.category(currentQuestion.category)}`;
+}
+document.addEventListener("langchange", renderQuestionText);
+
 function displayQuestion(q) {
-    document.getElementById("instruction").innerText = q.instruction;
+    currentQuestion = q;
+    renderQuestionText();
     document.getElementById("input").innerText = q.input_data;
-    document.getElementById("category").innerText = "Kategória: " + q.category;
     document.getElementById("question_id").value = q.id;
     document.getElementById("question-counter").innerText = `${q.answered + 1}/${q.total}`;
     codeMirrorEditor.setValue(q.starter_code || "");
@@ -95,7 +102,6 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
 
     if (response.status === 401) { window.location.href = "/login"; return; }
     if (response.status === 409) {
-        // server je o krok inde (napr. iná karta) - zosúlaď sa s ním
         await fetchNextQuestion();
         return;
     }
@@ -104,7 +110,6 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
     resultBox.innerText = result.student_output || "";
     resultMessage.innerText = result.message || (result.correct ? "Správne!" : "Nesprávne!");
 
-    // Zafarbi hlášku podľa výsledku (zladené s témou)
     resultMessage.classList.remove("test-result--correct", "test-result--wrong", "test-result--info");
     if (result.correct) {
         resultMessage.classList.add("test-result--correct");
@@ -114,7 +119,6 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
         resultMessage.classList.add("test-result--wrong");
     }
 
-    // "final" = odpoveď je uložená na serveri a otázka je uzavretá
     const isFinal = result.correct || result.final || (!result.message && result.correct === false);
 
     if (result.show_solution) {

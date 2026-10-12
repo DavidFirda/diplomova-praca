@@ -1,6 +1,5 @@
 /* AdaptPy - Štatistiky: výsledky posledného testu + predtest po kategóriách */
 document.addEventListener("DOMContentLoaded", async () => {
-  // bez session server vyberie posledný test prihláseného študenta
   const session = localStorage.getItem("main_test_session");
   const loading = document.getElementById("stats-loading");
 
@@ -40,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         wrap.innerHTML = stats.pretest.categories.map(c => `
           <div class="cat-row">
             <div class="cat-row__head">
-              <span class="cat-row__name">${c.category}</span>
+              <span class="cat-row__name">${I18N.category(c.category)}</span>
               <span class="cat-row__val">${c.correct}/${c.total} · ${c.accuracy}%</span>
             </div>
             <div class="cat-bar"><div class="cat-bar__fill" style="width:${c.accuracy}%"></div></div>

@@ -37,13 +37,6 @@ MAX_RETRIES = 1
 # Zámok na študenta
 # ------------------------------------------------------------
 def lock_student(student_id):
-    """
-    Riadkový zámok (do konca transakcie) na študenta. Všetky zápisy testu jedného
-    študenta (odpoveď, výber ďalšej otázky) tak prebiehajú po jednom - dvojklik,
-    dve karty alebo dva workery nevytvoria duplicitné odpovede ani dve rôzne
-    "aktuálne" otázky. Rôzni študenti sa nijako neblokujú.
-    (FOR NO KEY UPDATE neblokuje vkladanie riadkov s cudzím kľúčom na študenta.)
-    """
     db.session.execute(
         select(Student.id).where(Student.id == student_id).with_for_update(key_share=True)
     )
@@ -259,6 +252,7 @@ def question_payload(question, **extra):
     data = {
         "id": question.id,
         "instruction": question.instruction,
+        "instruction_sk": question.instruction_sk,
         "input_data": question.input_data,
         "category": question.category,
         "starter_code": extract_starter_code(question.output),
