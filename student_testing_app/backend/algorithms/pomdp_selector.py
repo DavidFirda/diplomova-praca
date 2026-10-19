@@ -48,6 +48,15 @@ class POMDPQuestionSelector:
             if last_cat:
                 self.last_action = TutorAction(last_cat)
 
+            self._restore_extra(saved)
+
+    # Háčiky pre podtriedy (napr. selektor úloh): dodatočný stav v tom istom JSON súbore.
+    def _restore_extra(self, saved):
+        pass
+
+    def _extra_state(self):
+        return {}
+
     def _save_state(self):
         current_state = self.model.env.state
         save_data = {
@@ -62,6 +71,7 @@ class POMDPQuestionSelector:
                 for st, p in self.model.agent.belief.histogram.items()
             ],
             "last_action": self.last_action.category if self.last_action else None,
+            **self._extra_state(),
         }
         save_json(self.model_path, save_data, indent=2)
 

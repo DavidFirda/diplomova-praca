@@ -9,6 +9,11 @@ window.onload = async () => {
         const r = await fetch("/api/auth/dashboard", { credentials: "include" });
         if (r.status === 401) { window.location.href = "/login"; return; }
         const dash = await r.json();
+        // admin vypol testy: študent sa sem nedostane ani cez priamy odkaz
+        if (dash.sections && dash.sections.tests === false && !dash.is_admin) {
+            window.location.href = "/dashboard";
+            return;
+        }
         if (!dash.pretest || !dash.pretest.done) {
             alert("Najprv musíš dokončiť predtest.");
             window.location.href = "/predtest";

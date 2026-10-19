@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Úlohy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="ulohy"></div>
+
+    <main class="app-main app-main--centered">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="ul.title">Úlohy</h1>
+          <p data-i18n="ul.subtitle">Samoštúdium: systém ti priebežne vyberá úlohy z tém, ktoré ešte nezvládaš.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <div class="centered-card" style="max-width:720px;">
+        <div class="test-card" id="task-container">
+          <div class="test-header">
+            <span class="test-header__label"><span data-i18n="ul.task">Úloha</span>:</span>
+            <span class="ul-stats" id="task-stats"></span>
+          </div>
+
+          <p id="instruction" class="test-instruction"></p>
+
+          <div class="test-input-row">
+            <strong><span data-i18n="test.input">Vstup</span>:</strong>
+            <div class="test-tooltip">
+              <span class="test-tooltip__icon">i</span>
+              <span class="test-tooltip__text" data-i18n="ul.inputHint">Nezabudni použiť vstup uvedený pri úlohe. V niektorých prípadoch budeš potrebovať aj print(). Máš 5 pokusov; po nesprávnej odpovedi musíš kód opraviť sám. Po druhej nesprávnej odpovedi ti môže pomôcť asistent.</span>
+            </div>
+          </div>
+
+          <pre id="input" class="test-input-plain"></pre>
+          <p class="test-category" id="category"></p>
+
+          <textarea id="student_code" name="code"></textarea>
+
+          <div class="ul-attempts" id="attempts-bar" aria-live="polite">
+            <span class="ul-attempts__label" id="attempts-label"></span>
+            <span class="ul-attempts__dots" id="attempts-dots"></span>
+          </div>
+
+          <pre id="output-box" class="test-output"></pre>
+          <div id="feedback-box" class="ul-feedback" style="display:none;"></div>
+
+          <div id="solution-box" class="test-solution" style="display:none;">
+            <h3 data-i18n="test.solution">Správne riešenie:</h3>
+            <pre id="solution-code"></pre>
+          </div>
+
+          <button id="submit-answer" data-i18n="test.submit">Odpovedať</button>
+          <button id="next-task" class="btn--secondary" style="margin-top:10px; display:none;" data-i18n="ul.next">Ďalšia úloha</button>
+          <p class="test-result" id="result-message"></p>
+          <p class="ul-empty" id="empty-message" style="display:none;"></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Ikony (sprite): robot, minimalizovať, odoslať -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="ul-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3.2v3"/><circle cx="12" cy="2.9" r="1" fill="currentColor" stroke="none"/>
+      <rect x="4.5" y="6.5" width="15" height="12.5" rx="4.2"/>
+      <path d="M2.4 11.6v3.2M21.6 11.6v3.2"/>
+      <circle cx="9.1" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      <circle cx="14.9" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      <path d="M9.4 15.6c.75.6 1.6.9 2.6.9s1.85-.3 2.6-.9"/>
+    </symbol>
+    <symbol id="ul-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M6 12h12"/>
+    </symbol>
+    <symbol id="ul-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 3 10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5 21 3z"/>
+    </symbol>
+  </svg>
+
+  <!-- Asistent: po 2. nesprávnej odpovedi vyskočí; minimalizuje sa do ikony robota -->
+  <button type="button" class="ul-agent-fab" id="agent-fab" aria-label="Asistent" aria-expanded="false" aria-controls="agent-panel">
+    <svg class="ul-icon" aria-hidden="true"><use href="#ul-robot"/></svg>
+    <span class="ul-agent-fab__tip" data-i18n="ul.agent" role="tooltip">Asistent</span>
+  </button>
+  <section class="ul-agent" id="agent-panel" aria-label="Asistent" aria-hidden="true">
+    <header class="ul-agent__head">
+      <div class="ul-avatar ul-avatar--lg" aria-hidden="true"><svg class="ul-icon"><use href="#ul-robot"/></svg></div>
+      <div class="ul-agent__title">
+        <strong data-i18n="ul.agentTitle">AI asistent</strong>
+        <span class="ul-agent__sub"><i class="ul-online" aria-hidden="true"></i><span data-i18n="ul.agentSubtitle">Vždy ti rád pomôžem</span></span>
+      </div>
+      <button type="button" class="ul-agent__min" id="agent-minimize" data-i18n-aria-label="ul.agentMinimize" aria-label="Minimalizovať" data-i18n-title="ul.agentMinimize" title="Minimalizovať">
+        <svg class="ul-icon" aria-hidden="true"><use href="#ul-minimize"/></svg>
+      </button>
+    </header>
+    <div class="ul-agent__messages" id="agent-messages" aria-live="polite"></div>
+    <div class="ul-agent__quick">
+      <span class="ul-agent__hints" id="agent-hints"></span>
+      <button type="button" class="ul-chip" id="agent-explain" data-i18n="ul.agentExplain">Vysvetli, čo je zle</button>
+      <button type="button" class="ul-chip" id="agent-hint" data-i18n="ul.agentHint">Daj mi nápovedu</button>
+    </div>
+    <form class="ul-agent__form" id="agent-form" autocomplete="off">
+      <input type="text" id="agent-input" maxlength="500" data-i18n-placeholder="ul.agentPlaceholder" placeholder="Napíš otázku…">
+      <button type="submit" class="ul-send" id="agent-send" data-i18n-aria-label="ul.agentSend" aria-label="Poslať">
+        <svg class="ul-icon" aria-hidden="true"><use href="#ul-send"/></svg>
+      </button>
+    </form>
+  </section>
+
+  <script src="/config.js"></script>
+  <script src="/js/core/session-guard.js"></script>
+  <script src="/js/core/i18n.js"></script>
+  <script src="/js/core/sidebar.js"></script>
+  <script src="/js/core/topbar-controls.js"></script>
+  <script src="/js/pages/ulohy.js"></script>
+  <script src="/js/auth/script.js"></script>
+  <script> checkAccessCode(); </script>
+</body>
+</html>

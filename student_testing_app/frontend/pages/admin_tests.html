@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Správa testov</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="admin-tests"></div>
+
+    <main class="app-main">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="adminT.title">Správa testov</h1>
+          <p data-i18n="adminT.subtitle">Sprístupni alebo skry testy študentom. Ďalšia správa testov pribudne neskôr.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <!-- Zapnutie / vypnutie testov (js/admin/admin_sections.js) -->
+      <div class="card" id="admin-sections-card">
+        <div class="admin-q">
+          <div class="admin-q__main">
+            <div class="admin-q__label" data-i18n="adminS.testsTitle">Testy (kolónka na dashboarde a odkaz v menu)</div>
+            <div class="admin-muted" data-i18n="adminS.testsDesc">Keď testy vypneš, študenti ich nevidia na dashboarde ani v menu a nedostanú sa k nim ani cez priamy odkaz. Ty ich vidíš stále, aby si ich mohol upravovať.</div>
+            <div class="admin-q__meta" style="margin-top:8px;">
+              <span class="admin-q__badge" id="sec-tests-status">…</span>
+            </div>
+          </div>
+          <div class="admin-q__actions">
+            <button class="btn" id="sec-tests-btn" disabled data-i18n="adminS.disable">Vypnúť pre študentov</button>
+          </div>
+        </div>
+        <p class="admin-hint" id="sec-tests-hint"></p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/core/session-guard.js"></script>
+  <script src="/js/core/i18n.js"></script>
+  <script src="/js/core/sidebar.js"></script>
+  <script src="/js/core/topbar-controls.js"></script>
+  <script src="/js/admin/admin_sections.js"></script>
+</body>
+</html>

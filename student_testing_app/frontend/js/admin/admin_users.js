@@ -37,9 +37,11 @@
         </td>
         <td class="admin-hide-sm">${u.pretest_answers > 0 ? "✓" : "–"}</td>
         <td class="admin-hide-sm">${u.main_tests}</td>
+        <td class="admin-hide-sm" title="vyriešené / dokončené">${u.ulohy_solved || 0}/${u.ulohy_total || 0}</td>
         <td>
           <div class="admin-actions">
             <a class="btn btn--secondary btn--sm" href="/admin-user-exercises?uid=${u.id}" data-i18n="adminU.exercises">${tr("adminU.exercises","Cvičenia")}</a>
+            <a class="btn btn--secondary btn--sm" href="/admin-user-ulohy?uid=${u.id}" data-i18n="adminU.ulohy">${tr("adminU.ulohy","Úlohy")}</a>
             <button class="btn btn--secondary btn--sm" data-i18n="adminU.tests" data-tests="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.tests","Testy")}</button>
             <button class="btn btn--danger-outline btn--sm" data-i18n="adminU.delete" data-del="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.delete","Vymazať")}</button>
           </div>
@@ -58,6 +60,7 @@
               <th data-i18n="adminU.role">Rola</th>
               <th class="admin-hide-sm" data-i18n="adminU.pretest">Predtest</th>
               <th class="admin-hide-sm" data-i18n="adminU.mainTests">Testy</th>
+              <th class="admin-hide-sm" data-i18n="adminU.ulohyCol">Úlohy</th>
               <th data-i18n="adminU.actions">Akcie</th>
             </tr>
           </thead>

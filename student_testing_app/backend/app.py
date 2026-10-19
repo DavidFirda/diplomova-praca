@@ -41,7 +41,10 @@ PAGE_ROUTES = {
     "cvicenia": "cvicenia.html",
     "cvicenie": "cvicenie.html",
     "admin-exercises": "admin_exercises.html",
+    "admin-tests": "admin_tests.html",
     "admin-user-exercises": "admin_user_exercises.html",
+    "ulohy": "ulohy.html",
+    "admin-user-ulohy": "admin_user_ulohy.html",
 }
 
 
@@ -103,12 +106,15 @@ def _register_blueprints(app):
     from routes.admin_api_routes import admin_api_bp
     from routes.admin_exercise_routes import admin_exercise_bp
     from routes.admin_routes import admin_bp
+    from routes.admin_ulohy_routes import admin_ulohy_bp
     from routes.api_routes import api_bp
     from routes.auth_routes import auth_bp
     from routes.exercise_routes import exercise_bp
     from routes.invite_routes import invite_admin_bp, invite_public_bp
+    from routes.ulohy_routes import ulohy_bp
     import models_exercises  # noqa: F401  (modely sa musia načítať pre migrácie)
     import models_invites    # noqa: F401
+    import models_ulohy      # noqa: F401
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(api_bp, url_prefix="/api")
@@ -116,6 +122,8 @@ def _register_blueprints(app):
     app.register_blueprint(admin_api_bp, url_prefix="/api/admin")
     app.register_blueprint(exercise_bp, url_prefix="/api/exercises")
     app.register_blueprint(admin_exercise_bp, url_prefix="/api/admin/exercises")
+    app.register_blueprint(ulohy_bp, url_prefix="/api/ulohy")
+    app.register_blueprint(admin_ulohy_bp, url_prefix="/api/admin/ulohy")
     app.register_blueprint(invite_public_bp, url_prefix="/api/invites")
     app.register_blueprint(invite_admin_bp, url_prefix="/api/admin/invitations")
 

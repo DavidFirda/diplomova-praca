@@ -23,14 +23,21 @@ backend/
 │   ├── auth_routes.py      # registrácia, login, logout, reset hesla, dashboard
 │   ├── api_routes.py       # predtest, hlavný test, odpovede, dotazník
 │   ├── admin_routes.py     # servisné admin operácie (cez ADMIN_TOKEN)
-│   └── admin_api_routes.py # admin panel API (cez session + rola "admin")
+│   ├── admin_api_routes.py # admin panel API (cez session + rola "admin")
+│   ├── ulohy_routes.py     # Úlohy (samoštúdium) - študentské API (/api/ulohy)
+│   └── admin_ulohy_routes.py # Úlohy v admin paneli (/api/admin/ulohy)
 │
 ├── services/               # pomocné služby
 │   ├── test_flow.py        # logika testov: kto je na rade, progres, stavový automat otázky
 │   ├── capture_output.py   # spúšťa kód v sandboxe (runner) a porovnáva výstup
 │   ├── code_runner.py      # HTTP klient pre izolovaný kontajner `runner`
 │   ├── extract_starter_code.py
-│   └── mail_utils.py       # odosielanie emailov (reset hesla)
+│   ├── mail_utils.py       # odosielanie emailov (reset hesla)
+│   ├── task_flow.py        # Úlohy: stavový automat (pokusy, asistent, riešenie, POMDP)
+│   ├── task_feedback.py    #   spätná väzba k nesprávnemu pokusu (bez prezradenia riešenia)
+│   ├── task_agent.py       #   asistent (pravidlový; `reply()` sa dá nahradiť LLM)
+│   ├── task_log.py         #   logovanie: tabuľka task_events + textový JSONL súbor
+│   └── task_text.py        #   SK/EN texty pre Úlohy
 │
 └── algorithms/             # adaptívny výber úloh
     ├── random_selector.py  # náhodný výber (baseline)
@@ -38,6 +45,7 @@ backend/
     ├── q_selector.py       #   + selektor
     ├── pomdp.py            # POMDP
     ├── pomdp_selector.py   #   + selektor
+    ├── pomdp_task_selector.py # POMDP selektor pre Úlohy (vlastný stav, negatívna odmena)
     └── storage.py          # atomický zápis stavu selektorov do JSON
 ```
 
@@ -58,6 +66,9 @@ backend/
 | `FeedbackResponse` | Odpoveď na otázku dotazníka |
 | `AppSetting` | Nastavenia aplikácie (kľúč-hodnota), napr. `questionnaire_published` |
 | `FeedbackMessage` | Správa z feedback formulára (dostupný vždy) |
+| `TaskAssignment` | (`models_ulohy.py`) Úloha pridelená študentovi v Úlohách: stav `open/solved/failed/void`, počet pokusov, nápovedy, odmena POMDP |
+| `TaskAttempt` | Každý pokus (aj nesprávny): `attempt_no` 1–5, kód, výstup, spätná väzba, správnosť |
+| `TaskEvent` | Log všetkých interakcií v Úlohách (pridelenie, pokus, asistent, nápoveda, riešenie, zásahy admina) |
 
 ---
 
@@ -69,8 +80,34 @@ backend/
 | `api_bp` | `/api` | session / prístupový kód | predtest, test, odpovede, dotazník |
 | `admin_bp` | `/api/admin` (servis) | `ADMIN_TOKEN` | servisné operácie |
 | `admin_api_bp`| `/api/admin` | session + rola `admin` | správa používateľov a otázok dotazníka |
+| (v `admin_api_bp`) | `GET/PUT /api/admin/sections` | session + rola `admin` | zapnutie/vypnutie **Testov** pre študentov (admin stránka `/admin-tests`, menu „Testy (správa)“) (`app_settings.tests_enabled`, predvolene zapnuté); vypnuté = skrytá karta na dashboarde, odkaz v menu aj API (`403 test.sectionDisabled`), admin ich vidí stále |
+| `ulohy_bp` | `/api/ulohy` | session | Úlohy: `GET /current`, `POST /next`, `POST /submit`, `POST /agent` |
+| `admin_ulohy_bp` | `/api/admin/ulohy` | session + rola `admin` | prehľad pokusov a logu, úprava/mazanie úloh používateľa |
 
 Zoznam namapovaných stránok (URL → HTML) je v `app.py` v `PAGE_ROUTES`.
+
+---
+
+## Úlohy (samoštúdium, `services/task_flow.py`)
+
+Rozhranie `/ulohy` funguje ako test, ale úlohy vyberá **iba POMDP**
+(`algorithms/pomdp_task_selector.py`, stav v `data/pomdp/pomdp_<id>_ulohy.json`)
+z tém, ktoré študent zatiaľ nezvláda. Pravidlá (konštanty v `task_flow.py`):
+
+- študent má `MAX_ATTEMPTS = 5` pokusov; prvý robí bez pomoci,
+- po nesprávnom pokuse dostane spätnú väzbu (čo bolo zle), kód musí opraviť sám,
+- po `AGENT_AFTER_WRONG = 2` nesprávnych pokusoch vyskočí asistent (max. 3 nápovedy),
+- po správnej odpovedi alebo 5. pokuse sa ukáže správne riešenie; po 5. nesprávnom
+  pokuse je úloha označená ako nesprávna a do POMDP ide negatívna odmena
+  (`FAILED_TASK_REWARD = -10`),
+- rovnaký kód ako predtým a prázdny/nezmenený kód sa nepočítajú ako pokus;
+  nedostupný runner vráti 503 a pokus sa nepočíta.
+
+Logovanie: každá udalosť ide do tabuľky `task_events` **a** do textového súboru
+`data/ulohy_logs/student_<id>.jsonl` (cesta sa mení cez `TASK_LOG_DIR`; v Docker
+compose je mount `ULOHY_LOGS_MOUNT`, predvolene `./ulohy_logs`). Každý pokus (aj
+nesprávny) je naviac v `task_attempts` s poradovým číslom pokusu - admin ho vidí
+na stránke `/admin-user-ulohy?uid=<id>`. Úprava správnosti adminom nemení stav POMDP.
 
 ---
 

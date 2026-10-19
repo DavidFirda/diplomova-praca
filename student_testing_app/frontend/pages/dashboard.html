@@ -10,6 +10,21 @@
   <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
+  <!-- Ikona robota (sprite) pre tlačidlo asistenta -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="ul-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3.2v3"/><circle cx="12" cy="2.9" r="1" fill="currentColor" stroke="none"/>
+      <rect x="4.5" y="6.5" width="15" height="12.5" rx="4.2"/>
+      <path d="M2.4 11.6v3.2M21.6 11.6v3.2"/>
+      <circle cx="9.1" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      <circle cx="14.9" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      <path d="M9.4 15.6c.75.6 1.6.9 2.6.9s1.85-.3 2.6-.9"/>
+    </symbol>
+    <symbol id="ul-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M6 12h12"/>
+    </symbol>
+  </svg>
+
   <div class="app-shell">
     <div id="sidebar-mount" data-active="dashboard"></div>
 
@@ -23,7 +38,7 @@
       </div>
 
       <div class="app-layout">
-        <div>
+        <div class="app-layout__main">
           <!-- Metriky -->
           <div class="metric-row" style="margin-bottom:24px;">
             <div class="metric">
@@ -38,41 +53,17 @@
               <div class="metric__label" data-i18n="dash.main.count">Absolvované testy</div>
               <div class="metric__value" id="main-count">0</div>
             </div>
+            <div class="metric" id="metric-ulohy">
+              <div class="metric__label" data-i18n="dash.ulohy.metric">Vyriešené úlohy</div>
+              <div class="metric__value" id="stat-ulohy">–</div>
+            </div>
           </div>
 
-          <!-- Úlohy -->
+          <!--
+            Poradie kariet (zhora): Dotazník (len ak ho zverejní admin) → Predtest (po dokončení zmizne)
+            → Úlohy → Cvičenia → Testy (len ak ich admin zverejnil) → Spätná väzba.
+          -->
           <div class="task-list">
-            <!-- Predtest -->
-            <div class="task-row" id="row-pretest">
-              <div class="task-row__icon">
-                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
-              </div>
-              <div class="task-row__body">
-                <div class="task-row__title" data-i18n="dash.pretest.title">Predtest</div>
-                <div class="task-row__desc" data-i18n="dash.pretest.desc">Úvodný test, ktorý zistí tvoju úroveň. Spraví sa iba raz.</div>
-              </div>
-              <div class="task-row__badge" id="pretest-badge" style="display:none;">
-                ✓ <span data-i18n="dash.pretest.done">Predtest dokončený</span>
-              </div>
-              <div class="task-row__action" id="pretest-action">
-                <a class="btn" href="/predtest" data-i18n="dash.pretest.start">Spustiť predtest</a>
-              </div>
-            </div>
-
-            <!-- Hlavné testy -->
-            <div class="task-row" id="row-main">
-              <div class="task-row__icon">
-                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
-              </div>
-              <div class="task-row__body">
-                <div class="task-row__title" data-i18n="dash.main.title">Hlavné testy</div>
-                <div class="task-row__desc" data-i18n="dash.main.desc">Adaptívne testy podľa tvojej výkonnosti. Môžeš ich spraviť viac.</div>
-              </div>
-              <div class="task-row__action" id="main-action">
-                <a class="btn" id="main-btn" href="/hlavnytest" data-i18n="dash.main.start">Spustiť nový test</a>
-              </div>
-            </div>
-
             <!-- Dotazník (zobrazí sa len ak ho admin zverejnil) -->
             <div class="task-row" id="row-questionnaire" style="display:none;">
               <div class="task-row__icon">
@@ -90,7 +81,84 @@
               </div>
             </div>
 
-            <!-- Feedback formulár (dostupný vždy) -->
+            <!-- Predtest -->
+            <div class="task-row" id="row-pretest">
+              <div class="task-row__icon">
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+              </div>
+              <div class="task-row__body">
+                <div class="task-row__title" data-i18n="dash.pretest.title">Predtest</div>
+                <div class="task-row__desc" data-i18n="dash.pretest.desc">Úvodný test, ktorý zistí tvoju úroveň. Spraví sa iba raz.</div>
+              </div>
+              <div class="task-row__badge" id="pretest-badge" style="display:none;">
+                ✓ <span data-i18n="dash.pretest.done">Predtest dokončený</span>
+              </div>
+              <div class="task-row__action" id="pretest-action">
+                <a class="btn" href="/predtest" data-i18n="dash.pretest.start">Spustiť predtest</a>
+              </div>
+            </div>
+
+            <!-- Úlohy (samoštúdium) -->
+            <section class="dash-hero" id="row-ulohy">
+              <div class="dash-hero__head">
+                <div class="dash-hero__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg>
+                </div>
+                <div class="dash-hero__titles">
+                  <div class="dash-hero__name">
+                    <span data-i18n="dash.ulohy.title">Úlohy</span>
+                    <span class="dash-pill" data-i18n="dash.ulohy.pill">Samoštúdium</span>
+                  </div>
+                  <div class="dash-hero__desc" data-i18n="dash.ulohy.desc">Systém ti priebežne vyberá úlohy z tém, ktoré ešte nezvládaš.</div>
+                </div>
+              </div>
+
+              <div class="dash-hero__body" id="ulohy-body">
+                <div class="dash-mastery">
+                  <div class="dash-label" data-i18n="dash.ulohy.topics">Zvládnutie tém</div>
+                  <div class="dash-mastery__list" id="ulohy-mastery"></div>
+                </div>
+                <div class="dash-next" id="ulohy-next"></div>
+              </div>
+
+              <div class="dash-hero__foot">
+                <span class="dash-hero__stats" id="ulohy-stats"></span>
+                <a class="btn btn--secondary" id="ulohy-btn" href="/ulohy">Začať úlohy</a>
+              </div>
+            </section>
+
+            <!-- Cvičenia -->
+            <section class="dash-card" id="row-cvicenia">
+              <div class="dash-card__head">
+                <div class="task-row__icon">
+                  <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/><path d="M8 13l2 2 4-4"/></svg>
+                </div>
+                <div class="task-row__body">
+                  <div class="task-row__title" data-i18n="dash.cv.title">Cvičenia</div>
+                  <div class="task-row__desc" data-i18n="dash.cv.desc">Interaktívne zošity s kódom a okamžitou spätnou väzbou.</div>
+                </div>
+                <div class="task-row__action">
+                  <a class="btn btn--secondary" href="/cvicenia" data-i18n="dash.cv.open">Otvoriť cvičenia</a>
+                </div>
+              </div>
+              <div class="dash-ex-grid" id="cvicenia-list"></div>
+            </section>
+
+            <!-- Hlavné testy (admin ich môže skryť) -->
+            <div class="task-row" id="row-main">
+              <div class="task-row__icon">
+                <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+              </div>
+              <div class="task-row__body">
+                <div class="task-row__title" data-i18n="dash.main.title">Hlavné testy</div>
+                <div class="task-row__desc" data-i18n="dash.main.desc">Adaptívne testy podľa tvojej výkonnosti. Môžeš ich spraviť viac.</div>
+              </div>
+              <div class="task-row__action" id="main-action">
+                <a class="btn" id="main-btn" href="/hlavnytest" data-i18n="dash.main.start">Spustiť nový test</a>
+              </div>
+            </div>
+
+            <!-- Feedback formulár (dostupný vždy, úplne na konci) -->
             <div class="task-row" id="row-feedback-form">
               <div class="task-row__icon">
                 <svg viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -106,12 +174,21 @@
           </div>
         </div>
 
-        <!-- Pravý panel - AI chat asistent -->
-        <aside class="side-panel">
+        <!--
+          Pravý panel - AI chat asistent.
+          Široké okno: panel je pripnutý vpravo (sticky) a siaha až dolu.
+          Užšie okno: panel sa skryje a zobrazí sa ikona robota; klik otvorí okno asistenta.
+        -->
+        <aside class="side-panel" id="dash-assistant" aria-label="Asistent">
           <div class="chat-panel">
             <div class="chat-panel__header">
               <span class="chat-panel__dot"></span>
               <span data-i18n="chat.title">AdaptPy asistent</span>
+              <button type="button" class="chat-panel__min" id="chat-minimize"
+                      data-i18n-aria-label="ul.agentMinimize" aria-label="Minimalizovať"
+                      data-i18n-title="ul.agentMinimize" title="Minimalizovať">
+                <svg class="ul-icon" aria-hidden="true"><use href="#ul-minimize"/></svg>
+              </button>
             </div>
             <div class="chat-panel__messages" id="chat-messages">
               <div class="chat-msg chat-msg--bot">
@@ -130,12 +207,19 @@
     </main>
   </div>
 
+  <!-- Ikona asistenta (zobrazí sa len pri užšom okne, keď je panel skrytý) -->
+  <button type="button" class="ul-agent-fab" id="chat-fab" aria-label="Asistent" aria-expanded="false" aria-controls="dash-assistant">
+    <svg class="ul-icon" aria-hidden="true"><use href="#ul-robot"/></svg>
+    <span class="ul-agent-fab__tip" data-i18n="ul.agent" role="tooltip">Asistent</span>
+  </button>
+
   <script src="/config.js"></script>
   <script src="/js/core/session-guard.js"></script>
   <script src="/js/core/i18n.js"></script>
   <script src="/js/core/sidebar.js"></script>
   <script src="/js/core/topbar-controls.js"></script>
   <script src="/js/pages/dashboard.js"></script>
+  <script src="/js/pages/dashboard_assistant.js"></script>
   <script src="/js/pages/chat.js"></script>
 </body>
 </html>

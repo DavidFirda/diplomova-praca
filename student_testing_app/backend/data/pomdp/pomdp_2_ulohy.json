@@ -1,0 +1,55 @@
+{
+  "policy": {
+    "Data Structures": {
+      "alpha": 3.52438125,
+      "beta": 1.81450625
+    },
+    "Syntax": {
+      "alpha": 1.8573749999999998,
+      "beta": 2.709875
+    },
+    "Sorting": {
+      "alpha": 3.709875,
+      "beta": 0.8573749999999999
+    },
+    "Scientific Computing": {
+      "alpha": 0.8145062499999999,
+      "beta": 4.524381249999999
+    }
+  },
+  "reward": {
+    "Data Structures": {
+      "correct": 3,
+      "incorrect": 1
+    },
+    "Syntax": {
+      "correct": 1,
+      "incorrect": 2
+    },
+    "Sorting": {
+      "correct": 3,
+      "incorrect": 0
+    },
+    "Scientific Computing": {
+      "correct": 0,
+      "incorrect": 4
+    }
+  },
+  "state": {
+    "category": "Sorting",
+    "level": 1
+  },
+  "belief": [
+    {
+      "category": "Data Structures",
+      "level": 1,
+      "p": 1.0
+    }
+  ],
+  "last_action": "Syntax",
+  "rewards": {
+    "count": 1,
+    "total": -10.0,
+    "last": -10.0
+  }
+}

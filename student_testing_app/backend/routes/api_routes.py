@@ -16,7 +16,7 @@ from services.capture_output import (
 )
 from services.extract_starter_code import extract_starter_code
 from services.mail_utils import send_email
-from services.settings import questionnaire_published
+from services.settings import questionnaire_published, tests_enabled
 from services.test_flow import (
     MAIN_TEST_TOTAL, QuestionFlow,
     answered_question_ids, build_selector, get_question, get_retries_used, get_turn,
@@ -25,6 +25,16 @@ from services.test_flow import (
 )
 
 api_bp = Blueprint('api', __name__)
+
+def _tests_disabled():
+    """Admin vypol hlavné testy: študent dostane 403, admin ich vidí stále."""
+    if tests_enabled() or current_user.is_admin:
+        return None
+    return jsonify({
+        "error": "Testy sú momentálne nedostupné.",
+        "error_key": "test.sectionDisabled",
+    }), 403
+
 
 # Identita študenta je VŽDY z prihláseného používateľa (current_user, Flask-Login),
 # nikdy z tela požiadavky - inak by si klient mohol podstrčiť cudzie student_id.
@@ -78,6 +88,9 @@ def start_main_test():
     Kategórie, už použité otázky a session určuje server (nie klient).
     """
     student_id = current_user.id
+    blocked = _tests_disabled()
+    if blocked:
+        return blocked
     if not pretest_state(student_id)["done"]:
         return jsonify({
             "error": "Najprv musíš dokončiť predtest.",
@@ -151,6 +164,10 @@ def evaluate_answer():
         return jsonify({"error": "Missing question ID"}), 400
     if test_type not in ("predtest", "main"):
         return jsonify({"error": "Neplatný typ testu"}), 400
+    if test_type == "main":
+        blocked = _tests_disabled()
+        if blocked:
+            return blocked
 
     question = get_question(question_id)
     if question is None:
@@ -265,6 +282,9 @@ def update_summary(student_id, test_type, test_session, category, is_correct):
 @login_required
 def test_analysis():
     student_id = current_user.id
+    blocked = _tests_disabled()
+    if blocked:
+        return blocked
     data = request.get_json(silent=True) or {}
     test_session = data.get("test_session")
     if not test_session:

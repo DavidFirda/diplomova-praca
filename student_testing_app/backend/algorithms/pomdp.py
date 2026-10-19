@@ -216,13 +216,21 @@ class BayesianTutorPOMDP(pomdp_py.POMDP):
         env = TutorEnvironment(init_state, TutorTransitionModel(), TutorRewardModel())
         super().__init__(agent, env)
     
-    def step_with_action(self, action, observation):
-        """ Aktualizuje belief, reward, policy a state na základe odpovede. """
+    def step_with_action(self, action, observation, reward=None, next_state=None):
+        """
+        Aktualizuje belief, reward, policy a state na základe odpovede.
+
+        Voliteľné `next_state` a `reward` prebijú náhodný prechod a vypočítanú odmenu
+        (používajú ich úlohy: neúspešná úloha má pevne zápornú odmenu a stav sa nezlepší).
+        Bez nich sa správanie nemení.
+        """
         category = action.category
         correct = observation.correctness
 
-        next_state = self.env.transition_model.sample(self.env.state, action)
-        reward = self.env.reward_model.reward(self.env.state, action, next_state)
+        if next_state is None:
+            next_state = self.env.transition_model.sample(self.env.state, action)
+        if reward is None:
+            reward = self.env.reward_model.reward(self.env.state, action, next_state)
 
         self.env.set_state(next_state)
         self.agent.policy_model.update_performance(category, correct)

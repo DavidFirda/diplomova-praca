@@ -23,6 +23,8 @@ student_testing_app/q_learning_data/*
 !student_testing_app/q_learning_data/.gitkeep
 student_testing_app/pomdp_data/*
 !student_testing_app/pomdp_data/.gitkeep
+ulohy_logs/*
+!ulohy_logs/.gitkeep
 
 # --- OS / editor ---
 .DS_Store

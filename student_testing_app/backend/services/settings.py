@@ -5,6 +5,7 @@
 from models import db, AppSetting
 
 QUESTIONNAIRE_KEY = "questionnaire_published"
+TESTS_KEY = "tests_enabled"
 
 
 def get_setting(key, default=""):
@@ -29,3 +30,18 @@ def questionnaire_published():
 
 def set_questionnaire_published(published):
     set_setting(QUESTIONNAIRE_KEY, "true" if published else "false")
+
+
+def tests_enabled():
+    """Hlavné testy (/hlavnytest) vidia študenti, kým ich admin nevypne.
+    Predvolene ZAPNUTÉ, aby sa po nasadení nič nezmenilo."""
+    return get_setting(TESTS_KEY, "true") == "true"
+
+
+def set_tests_enabled(enabled):
+    set_setting(TESTS_KEY, "true" if enabled else "false")
+
+
+def sections_state():
+    """Dostupnosť sekcií pre študentov (admin ich vidí vždy)."""
+    return {"tests": tests_enabled()}

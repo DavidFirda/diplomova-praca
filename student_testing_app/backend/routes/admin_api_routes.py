@@ -13,7 +13,10 @@ from models import (
 )
 from models_exercises import ExerciseProgress
 from models_invites import Invitation
-from services.settings import questionnaire_published, set_questionnaire_published
+from models_ulohy import TaskAssignment, TaskAttempt, TaskEvent
+from services.settings import (
+    questionnaire_published, sections_state, set_questionnaire_published, set_tests_enabled,
+)
 from services.test_flow import clear_attempts, clear_main_progress
 
 admin_api_bp = Blueprint("admin_api", __name__)
@@ -37,6 +40,8 @@ def list_users():
         pre = StudentAnswer.query.filter_by(student_id=s.id, test_type="predtest").count()
         main_sessions = {a.test_session for a in StudentAnswer.query.filter_by(student_id=s.id, test_type="main").all() if a.test_session}
         fb = FeedbackResponse.query.filter_by(student_id=s.id).count() + StudentFeedback.query.filter_by(student_id=s.id).count()
+        ulohy_done = TaskAssignment.query.filter(
+            TaskAssignment.student_id == s.id, TaskAssignment.status.in_(("solved", "failed")))
         result.append({
             "id": s.id,
             "name": s.name,
@@ -46,6 +51,8 @@ def list_users():
             "role": getattr(s, "role", "user") or "user",
             "pretest_answers": pre,
             "main_tests": len(main_sessions),
+            "ulohy_total": ulohy_done.count(),
+            "ulohy_solved": ulohy_done.filter(TaskAssignment.status == "solved").count(),
             "feedback_done": fb > 0,
         })
     return jsonify({"users": result})
@@ -73,7 +80,9 @@ def delete_user(user_id):
     if not student:
         return jsonify({"error": "Používateľ neexistuje."}), 404
     try:
-        for model in (AnswerAttempt, TestProgress, StudentAnswer, TestSummary,
+        # poradie: pokusy musia ísť pred úlohami (cudzí kľúč)
+        for model in (TaskAttempt, TaskAssignment, TaskEvent,
+                      AnswerAttempt, TestProgress, StudentAnswer, TestSummary,
                       FeedbackResponse, StudentFeedback, FeedbackMessage, ExerciseProgress):
             model.query.filter_by(student_id=user_id).delete()
         Invitation.query.filter(
@@ -279,6 +288,26 @@ def set_questionnaire_state():
     set_questionnaire_published(data["published"])
     msg = "Dotazník je zverejnený." if data["published"] else "Dotazník je skrytý."
     return jsonify({"message": msg, "published": data["published"]})
+
+
+# ============================================================
+# DOSTUPNOSŤ SEKCIÍ PRE ŠTUDENTOV (kolónka na dashboarde, odkaz v menu, API)
+# ============================================================
+@admin_api_bp.route("/sections", methods=["GET"])
+@admin_required
+def get_sections():
+    return jsonify(sections_state())
+
+
+@admin_api_bp.route("/sections", methods=["PUT"])
+@admin_required
+def set_sections():
+    data = request.get_json(silent=True) or {}
+    if "tests" in data:
+        if not isinstance(data["tests"], bool):
+            return jsonify({"error": "Pole 'tests' musí byť true/false."}), 400
+        set_tests_enabled(data["tests"])
+    return jsonify({**sections_state(), "message": "Dostupnosť sekcií uložená."})
 
 
 # ============================================================
