@@ -17,7 +17,7 @@ from models_ulohy import TaskAssignment, TaskAttempt, TaskEvent
 from services.settings import (
     questionnaire_published, sections_state, set_questionnaire_published, set_tests_enabled,
 )
-from services.test_flow import clear_attempts, clear_main_progress
+from services.test_flow import clear_attempts, clear_main_progress, pretest_state
 
 admin_api_bp = Blueprint("admin_api", __name__)
 
@@ -37,7 +37,7 @@ def list_users():
     students = Student.query.order_by(Student.id).all()
     result = []
     for s in students:
-        pre = StudentAnswer.query.filter_by(student_id=s.id, test_type="predtest").count()
+        pre = pretest_state(s.id)   # predtest je hotový až po zodpovedaní všetkých otázok
         main_sessions = {a.test_session for a in StudentAnswer.query.filter_by(student_id=s.id, test_type="main").all() if a.test_session}
         fb = FeedbackResponse.query.filter_by(student_id=s.id).count() + StudentFeedback.query.filter_by(student_id=s.id).count()
         ulohy_done = TaskAssignment.query.filter(
@@ -49,7 +49,9 @@ def list_users():
             "login": s.login,
             "email": s.email,
             "role": getattr(s, "role", "user") or "user",
-            "pretest_answers": pre,
+            "pretest_answers": pre["answered"],
+            "pretest_total": pre["total"],
+            "pretest_done": pre["done"],
             "main_tests": len(main_sessions),
             "ulohy_total": ulohy_done.count(),
             "ulohy_solved": ulohy_done.filter(TaskAssignment.status == "solved").count(),

@@ -35,9 +35,9 @@
             <option value="admin" ${u.role === "admin" ? "selected" : ""}>${tr("role.admin","Administrátor")}</option>
           </select>
         </td>
-        <td class="admin-hide-sm">${u.pretest_answers > 0 ? "✓" : "–"}</td>
-        <td class="admin-hide-sm">${u.main_tests}</td>
-        <td class="admin-hide-sm" title="vyriešené / dokončené">${u.ulohy_solved || 0}/${u.ulohy_total || 0}</td>
+        <td class="admin-hide-sm admin-center" title="${u.pretest_answers}/${u.pretest_total}">${u.pretest_done ? "✓" : (u.pretest_answers > 0 ? `${u.pretest_answers}/${u.pretest_total}` : "–")}</td>
+        <td class="admin-hide-sm admin-center">${u.main_tests}</td>
+        <td class="admin-hide-sm admin-center" title="vyriešené / dokončené">${u.ulohy_solved || 0}/${u.ulohy_total || 0}</td>
         <td>
           <div class="admin-actions">
             <a class="btn btn--secondary btn--sm" href="/admin-user-exercises?uid=${u.id}" data-i18n="adminU.exercises">${tr("adminU.exercises","Cvičenia")}</a>
@@ -58,9 +58,9 @@
               <th data-i18n="adminU.user">Používateľ</th>
               <th class="admin-hide-sm" data-i18n="adminU.email">Email</th>
               <th data-i18n="adminU.role">Rola</th>
-              <th class="admin-hide-sm" data-i18n="adminU.pretest">Predtest</th>
-              <th class="admin-hide-sm" data-i18n="adminU.mainTests">Testy</th>
-              <th class="admin-hide-sm" data-i18n="adminU.ulohyCol">Úlohy</th>
+              <th class="admin-hide-sm admin-center" data-i18n="adminU.pretest">Predtest</th>
+              <th class="admin-hide-sm admin-center" data-i18n="adminU.mainTests">Testy</th>
+              <th class="admin-hide-sm admin-center" data-i18n="adminU.ulohyCol">Úlohy</th>
               <th data-i18n="adminU.actions">Akcie</th>
             </tr>
           </thead>

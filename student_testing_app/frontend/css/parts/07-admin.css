@@ -38,6 +38,7 @@
 }
 .admin-table th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .admin-table td { color: var(--text); }
+.admin-table .admin-center { text-align: center; }
 .admin-role-select { width: auto; min-width: 130px; margin: 0; padding: 7px 10px; font-size: 0.85rem; }
 .admin-actions { display: flex; gap: 6px; flex-wrap: nowrap; }
 
