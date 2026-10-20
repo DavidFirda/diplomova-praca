@@ -1,18 +1,24 @@
-.app-layout { grid-template-columns: minmax(0, 1fr); gap: 0; max-width: 1515px; }
+/* ============================================================
+   AdaptPy - dashboard: karty Úlohy a Cvičenia (asistent: 13-assistant.css).
+   Poradie kariet určuje pages/dashboard.html, texty a dáta js/pages/dashboard.js,
+   otváranie asistenta js/pages/dashboard_assistant.js.
+   ============================================================ */
+
+.app-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }   /* asistent je plávajúci, obsah má celú šírku */
 .app-layout__main { min-width: 0; }
 
 /* ---------- Úlohy (hlavná karta) ---------- */
 .dash-hero {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 22px;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
   display: flex; flex-direction: column; gap: 18px;
 }
-.dash-hero:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); transform: translateY(-1px);}
 .dash-hero--locked { opacity: 0.6; border-color: var(--border); }
-.dash-hero__head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.dash-hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 16px; }
-a.dash-hero:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.dash-hero__head { display: flex; align-items: center; gap: 16px; }
+.dash-hero:hover { border-color: var(--border-strong); transform: translateY(-1px); }
 .dash-hero__icon {
   width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
   display: grid; place-items: center; color: var(--text);
@@ -95,7 +101,7 @@ a.dash-hero:hover { border-color: var(--border-strong); transform: translateY(-1
 .dash-hero__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .dash-hero__stats { color: var(--text-muted); font-size: 0.85rem; }
 .dash-hero__stats b { color: var(--text); }
-.dash-hero__foot .btn { width: auto; min-height: 42px; padding: 9px 20px; font-size: 0.85rem; white-space: nowrap; }
+.dash-hero__foot .btn { width: auto; min-height: 44px; padding: 10px 24px; white-space: nowrap; }
 
 /* ---------- Cvičenia ---------- */
 .dash-card {
@@ -129,46 +135,3 @@ a.dash-ex:hover { border-color: var(--border-strong); transform: translateY(-1px
 .dash-ex--done .dash-bar__fill { background: var(--success); }
 .dash-ex--locked { opacity: 0.6; }
 .dash-empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 0.88rem; padding: 10px; }
-
-/* ---------- Asistent: skrolovanie správ bez viditeľného posuvníka ---------- */
-.chat-panel__messages { scrollbar-width: none; -ms-overflow-style: none; }
-.chat-panel__messages::-webkit-scrollbar { display: none; }
-
-.chat-panel__min {
-  margin-left: auto; width: 32px; min-width: 32px; height: 32px; min-height: 32px;
-  aspect-ratio: 1 / 1; flex: none; padding: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
-  border: 1px solid var(--border); border-radius: 50%; cursor: pointer; box-shadow: none;
-  background: var(--surface); color: var(--text-muted);
-  transition: background 0.2s, color 0.2s, transform 0.2s;
-}
-.chat-panel__min:hover { background: var(--surface-hover); color: var(--text); transform: none; box-shadow: none; }
-.chat-panel__min:active { transform: scale(0.92); }
-
-/* ---------- Asistent: vždy ikona robota; klik ju rozbalí na okno cez výšku obrazovky ---------- */
-.app-layout .side-panel {
-  position: fixed; right: 22px; top: 22px; bottom: 22px; z-index: 260;
-  width: min(380px, calc(100vw - 24px));
-  transform-origin: calc(100% - 28px) calc(100% - 28px);          /* rozbalí sa z ikony vpravo dole */
-  opacity: 0; visibility: hidden; pointer-events: none; transform: scale(0.15) translateY(12px);
-  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease, visibility 0s linear 0.38s;
-}
-.app-layout .side-panel.is-open {
-  opacity: 1; visibility: visible; pointer-events: auto; transform: none;
-  transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.2s ease, visibility 0s;
-}
-.app-layout .chat-panel {
-  flex: 1 1 auto; height: auto; min-height: 0;
-  border-radius: 22px; box-shadow: var(--shadow-lg);
-}
-.chat-panel__min { display: flex; }
-/* rezerva pod obsahom, aby ikona asistenta neprekrývala posledné tlačidlo */
-body.dash-has-fab .app-main { padding-bottom: 96px; }
-
-@media (max-width: 640px) {
-  .app-layout .side-panel { right: 12px; top: 12px; bottom: 12px; }
-  .ul-agent-fab { right: 12px; bottom: 12px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .app-layout .side-panel, .app-layout .side-panel.is-open { transition-duration: 0.01s; }
-}

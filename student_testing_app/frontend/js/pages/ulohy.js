@@ -253,54 +253,18 @@ async function refreshStats() {
 $("next-task").addEventListener("click", loadTask);
 
 // ---------- asistent ----------
-// Okno asistenta sa otvára z ikony robota a minimalizuje späť do nej (animované cez CSS triedy).
-const timeNow = () => new Date().toLocaleTimeString(I18N.lang === "sk" ? "sk-SK" : "en-GB", { hour: "2-digit", minute: "2-digit" });
-const ROBOT = '<svg class="ul-icon" aria-hidden="true"><use href="#ul-robot"/></svg>';
-
-function scrollMessages() {
-    const box = $("agent-messages");
-    box.scrollTop = box.scrollHeight;
-}
-
-function addAgentMessage(who, text, withTime = true) {
-    const row = document.createElement("div");
-    row.className = `ul-row ul-row--${who}`;
-    if (who === "agent") {
-        const av = document.createElement("div");
-        av.className = "ul-avatar";
-        av.innerHTML = ROBOT;
-        row.appendChild(av);
-    }
-    const wrap = document.createElement("div");
-    wrap.className = "ul-bubble-wrap";
-    const bubble = document.createElement("div");
-    bubble.className = `ul-msg ul-msg--${who}`;
-    bubble.textContent = text;
-    wrap.appendChild(bubble);
-    if (withTime) {
-        const time = document.createElement("span");
-        time.className = "ul-time";
-        time.textContent = timeNow();
-        wrap.appendChild(time);
-    }
-    row.appendChild(wrap);
-    $("agent-messages").appendChild(row);
-    scrollMessages();
-}
-
-function showTyping() {
-    const row = document.createElement("div");
-    row.className = "ul-row ul-row--agent";
-    row.id = "agent-typing";
-    row.innerHTML = `<div class="ul-avatar">${ROBOT}</div>
-        <div class="ul-bubble-wrap"><div class="ul-msg ul-msg--agent ul-typing"><i></i><i></i><i></i></div></div>`;
-    $("agent-messages").appendChild(row);
-    scrollMessages();
-}
-function hideTyping() {
-    const el = $("agent-typing");
-    if (el) el.remove();
-}
+// Okno, ikona robota, animácie a bubliny rieši spoločný komponent (js/core/assistant.js),
+// rovnaký ako na dashboarde. Tu je len to, čo je špecifické pre úlohy: odomknutie po 2. chybe,
+// tlačidlá "Vysvetli, čo je zle" / "Daj mi nápovedu" a volanie /api/ulohy/agent.
+const assistant = AdaptAssistant.create({
+    onSubmit: (text) => askAgent(null, text),
+    canShowFab: () => !!(task && task.agent_available),
+});
+const addAgentMessage = (who, text, withTime = true) => assistant.addMessage(who, text, withTime);
+const showTyping = () => assistant.showTyping();
+const hideTyping = () => assistant.hideTyping();
+const openAgent = () => assistant.open();
+const setFab = (visible, pulsing = false) => assistant.setFab(visible, pulsing);
 
 function renderAgentHints() {
     if (!task) return;
@@ -308,42 +272,10 @@ function renderAgentHints() {
     $("agent-hint").disabled = task.hints_used >= task.max_hints;
 }
 
-function setFab(visible, pulsing = false) {
-    const fab = $("agent-fab");
-    fab.classList.toggle("is-visible", visible);
-    fab.classList.toggle("is-pulsing", visible && pulsing);
-    document.body.classList.toggle("ul-has-fab", visible || $("agent-panel").classList.contains("is-open"));
-}
-
-function openAgent() {
-    const panel = $("agent-panel");
-    panel.classList.add("is-open");
-    panel.setAttribute("aria-hidden", "false");
-    $("agent-fab").setAttribute("aria-expanded", "true");
-    setFab(false);
-    document.body.classList.add("ul-has-fab");
-    scrollMessages();
-    setTimeout(() => $("agent-input").focus({ preventScroll: true }), 300);
-}
-
-// minimalizovanie = okno sa zmenší späť do ikony robota (správy ostávajú)
-function minimizeAgent() {
-    const panel = $("agent-panel");
-    panel.classList.remove("is-open");
-    panel.setAttribute("aria-hidden", "true");
-    $("agent-fab").setAttribute("aria-expanded", "false");
-    setFab(!!(task && task.agent_available));
-}
-
 // Asistent nie je dostupný (úloha je uzavretá / ešte nie je odomknutý): skry okno aj ikonu.
 function setAgentAvailable(on) {
     if (task) task.agent_available = on;
-    if (!on) {
-        $("agent-panel").classList.remove("is-open");
-        $("agent-panel").setAttribute("aria-hidden", "true");
-        setFab(false);
-        document.body.classList.remove("ul-has-fab");
-    }
+    if (!on) assistant.hide();
 }
 
 // Sprístupní asistenta; keď ho študent ešte neotvoril, vyskočí sám (pozdrav).
@@ -382,17 +314,5 @@ async function askAgent(intent, message) {
     applyState(r.data);
 }
 
-$("agent-fab").addEventListener("click", openAgent);
-$("agent-minimize").addEventListener("click", minimizeAgent);
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && $("agent-panel").classList.contains("is-open")) minimizeAgent();
-});
 $("agent-explain").addEventListener("click", () => askAgent("explain", ""));
 $("agent-hint").addEventListener("click", () => askAgent("hint", ""));
-$("agent-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const text = $("agent-input").value.trim();
-    if (!text) return;
-    $("agent-input").value = "";
-    askAgent(null, text);
-});

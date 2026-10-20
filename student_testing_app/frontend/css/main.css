@@ -10,4 +10,5 @@
 @import url("parts/09-exercises.css"); /* Cvičenia (zoznam + notebook plocha + admin) */
 @import url("parts/10-invites.css");
 @import url("parts/11-ulohy.css"); /* Úlohy (samoštúdium: pokusy, asistent) */
-@import url("parts/12-dashboard.css"); /* Dashboard: karty Úlohy/Cvičenia, umiestnenie asistenta */
+@import url("parts/12-dashboard.css"); /* Dashboard: karty Úlohy/Cvičenia */
+@import url("parts/13-assistant.css"); /* Asistent: ikona + okno (Úlohy aj dashboard) */
