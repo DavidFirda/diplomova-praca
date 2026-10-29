@@ -239,7 +239,9 @@
     const imagesEl = wrap.querySelector(".nb-code__images");
     const runBtn = wrap.querySelector(".nb-code__run");
 
-    const rec = { code_index: cell.code_index, cm, statusEl, outEl, imagesEl, wrap, custom, timeout: (!custom && cell.timeout) ? cell.timeout : 0 };
+    // kontrola originality: zákaz vkladania zvonku + sledovanie písania (js/core/originality.js)
+    const guard = (typeof Originality !== "undefined") ? Originality.attach(cm) : null;
+    const rec = { code_index: cell.code_index, cm, guard, statusEl, outEl, imagesEl, wrap, custom, timeout: (!custom && cell.timeout) ? cell.timeout : 0 };
     wrap.__rec = rec;
     editors.push(rec);
     runBtn.addEventListener("click", () => runCell(rec, runBtn));
@@ -288,6 +290,7 @@
 
   async function runCell(rec, runBtn) {
     runBtn.disabled = true;
+    const prevStatus = { cls: rec.statusEl.className, text: rec.statusEl.textContent };
     rec.statusEl.className = "nb-code__status nb-code__status--idle";
 
     // --- odpočet (orientačný; reálny strop drží runner) ---
@@ -304,18 +307,30 @@
     const stopTimer = () => { if (timer) clearInterval(timer); };
 
     try {
-      const r = await fetch(`/api/exercises/${exId}/run`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          code_index: rec.code_index,
-          code: rec.cm.getValue(),
-          prelude: buildPrelude(rec.wrap),
-        }),
-      });
-      const data = await r.json();
+      const code = rec.cm.getValue();
+      const prelude = buildPrelude(rec.wrap);
+      const send = async (integrity) => {
+        const r = await fetch(`/api/exercises/${exId}/run`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ code_index: rec.code_index, code, prelude, integrity }),
+        });
+        let data = {};
+        try { data = await r.json(); } catch (e) { /* prázdne telo */ }
+        return { r, data };
+      };
+      // podozrivé písanie -> server chce potvrdenie, Originality ukáže okno a spustí znova
+      const sent = rec.guard
+        ? await Originality.submit(rec.guard, send, (x) => x.data)
+        : await send(undefined);
       stopTimer();
+      if (sent.cancelled) {                     // študent sa vrátil k úprave - nič sa nespustilo
+        rec.statusEl.className = prevStatus.cls;
+        rec.statusEl.textContent = prevStatus.text;
+        return;
+      }
+      const { r, data } = sent;
 
       if (!r.ok) {
         rec.outEl.className = "nb-code__output nb-code__output--err";

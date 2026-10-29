@@ -12,6 +12,7 @@
 # na viacerých gunicorn workeroch.
 # ============================================================
 import re
+import json
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -138,6 +139,25 @@ def set_retries_used(student_id, test_type, test_session, question_id, value):
         )
         db.session.add(row)
     row.attempts = value
+
+
+def add_pending_integrity(student_id, test_type, test_session, question_id, record):
+    """Zapamätá si podozrivé odoslanie počas opráv (riadok vytvorí set_retries_used)."""
+    row = _attempt_row(student_id, test_type, test_session, question_id)
+    if row is None:
+        return
+    pending = json.loads(row.integrity_json) if row.integrity_json else []
+    pending.append(record)
+    row.integrity_json = json.dumps(pending, ensure_ascii=False)
+
+
+def pending_integrity(student_id, test_type, test_session, question_id):
+    """Podozrivé odoslania z predošlých opráv tejto otázky."""
+    row = _attempt_row(student_id, test_type, test_session, question_id)
+    try:
+        return json.loads(row.integrity_json) if row and row.integrity_json else []
+    except ValueError:
+        return []
 
 
 def clear_attempts(student_id, test_type, test_session=None):

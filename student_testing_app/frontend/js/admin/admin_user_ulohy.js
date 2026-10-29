@@ -65,7 +65,6 @@
           ${chip(tr("adminUL.sAttempts", "Pokusov spolu"), s.total_attempts)}
           ${chip(tr("adminUL.sReward", "Súčet odmien POMDP"), s.total_reward)}
         </div>
-        <p class="admin-muted" style="margin:10px 0 0;">${tr("adminUL.editHint", "Úprava správnosti nemení POMDP.")}</p>
       </div>`;
   }
 
@@ -75,7 +74,7 @@
     const out = (t.student_output || "").trim()
       ? `<div class="ux-cell__answer-label">${tr("adminUL.output", "Výstup")}</div><pre class="ux-code">${esc(t.student_output)}</pre>` : "";
     return `
-      <div class="admin-answer ul-attempt ${t.is_correct ? "ul-attempt--ok" : "ul-attempt--bad"}" data-attempt="${t.id}">
+      <div class="admin-answer ul-attempt ${t.is_correct ? "ul-attempt--ok" : "ul-attempt--bad"} ${t.integrity && t.integrity.active ? "orig-has-flag" : ""}" data-attempt="${t.id}">
         <div class="admin-answer__head">
           <span><strong>${tr("adminUL.attempt", "Pokus")} ${t.attempt_no}/5</strong>
             <span class="admin-muted"> · ${esc(when(t.created_at))}</span></span>
@@ -84,6 +83,7 @@
             <span>${tr("adminUL.correct", "Správne")}</span>
           </label>
         </div>
+        ${OrigFlag.html(t.integrity, t.id)}
         <textarea class="admin-answer__code" data-code="${t.id}" rows="4">${esc(t.code)}</textarea>
         ${out}${fb}
         <div class="admin-answer__actions" style="margin-top:8px;">
@@ -95,13 +95,15 @@
   function eventSummary(e) {
     const p = e.payload || {};
     switch (e.type) {
-      case "agent_message": return `${p.role === "agent" ? "🤖" : "🧑"} ${p.text || ""}`;
+      case "agent_message": return `${p.role === "agent" ? "AI:" : "Student:"} ${p.text || ""}`;
       case "attempt_submitted":
         return `#${p.attempt_no}: ${p.is_correct ? "✓" : "✕"} ${p.feedback_kind || ""}`;
       case "submission_rejected": return p.reason || "";
       case "pomdp_update": return `reward ${p.reward} (${p.observation_correct ? "správne" : "nesprávne"}${p.failed_task ? ", 5 chýb" : ""})`;
       case "task_assigned": return `${p.category || ""} (${p.selection || ""})`;
       case "task_finished": return `${p.status}, pokusov ${p.attempts_used}`;
+      case "integrity_flagged": return `⚑ #${p.attempt_no}: ${(p.reasons || []).join(", ")} → ${p.confirmation || ""}`;
+      case "integrity_confirmation_required": return `⚑ ${(p.reasons || []).join(", ")}`;
       default: return Object.keys(p).length ? JSON.stringify(p) : "";
     }
   }
@@ -124,9 +126,10 @@
     const meta = [
       chip(tr("adminUL.attemptsUsed", "pokusov"), `${a.attempts_used}/5`),
       chip(tr("adminUL.hints", "nápovedy"), `${a.hints_used}/3`),
-      a.agent_opened ? `<span class="inv-chip">💡 ${tr("adminUL.agentOpened", "asistent otvorený")}</span>` : "",
+      a.agent_opened ? `<span class="inv-chip"> ${tr("adminUL.agentOpened", "asistent otvorený")}</span>` : "",
       a.solution_shown ? `<span class="inv-chip">${tr("adminUL.solutionShown", "riešenie ukázané")}</span>` : "",
       a.reward != null ? chip(tr("adminUL.reward", "odmena POMDP"), a.reward) : "",
+      OrigFlag.chip(a.active_flags),
     ].join("");
     const attempts = a.attempts.length
       ? a.attempts.map(t => attemptBlock(t, a)).join("")
@@ -197,6 +200,12 @@
         if (d.open) openState.add(k); else openState.delete(k);
       });
     });
+
+    // zrušiť / obnoviť red flag pokusu (kontrola originality)
+    OrigFlag.bind(root, async (id, dismissed) => {
+      const r = await call(`attempts/${id}`, "PATCH", { flag_dismissed: dismissed });
+      return !!(r && r.ok);
+    }, load);
 
     // uložiť pokus (kód + správnosť)
     root.querySelectorAll("[data-save]").forEach(btn => {

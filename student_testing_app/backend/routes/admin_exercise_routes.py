@@ -5,9 +5,11 @@ import json
 import os
 
 from flask import Blueprint, request, jsonify
+from flask_login import current_user
 
 from extensions import admin_required
-from models import db
+from models import db, Student
+from services import integrity as integrity_check
 from models_exercises import Exercise, ExerciseProgress
 from services.exercise_store import get_exercises_dir, exercise_path, is_notebook
 from services import notebook_scan
@@ -89,6 +91,7 @@ def user_exercises(uid):
         except Exception:
             answers = {}
 
+        flags = integrity_check.exercise_cells(p.integrity_json) if p else {}
         cells = []
         try:
             nb = _load_notebook(ex)
@@ -102,6 +105,7 @@ def user_exercises(uid):
                         "answer": ans,
                         "answered": ans is not None,
                         "ran_ok": ci in done,
+                        "integrity": flags.get(str(ci)),
                     })
                     ci += 1
         except Exception:
@@ -113,6 +117,7 @@ def user_exercises(uid):
             "code_cells": ex.code_cells,
             "percent": percent, "status": status,
             "cells": cells,
+            "active_flags": sum(1 for f in flags.values() if f["active"]),
         })
 
     return jsonify({
@@ -122,6 +127,23 @@ def user_exercises(uid):
         },
         "exercises": out,
     })
+
+
+# ---------- zrušenie / obnovenie red flagu bunky (kontrola originality) ----------
+@admin_exercise_bp.route("/user/<int:uid>/<int:ex_id>/cells/<int:ci>/flag", methods=["PATCH"])
+@admin_required
+def set_cell_flag(uid, ex_id, ci):
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data.get("flag_dismissed"), bool):
+        return jsonify({"error": "Pole 'flag_dismissed' musí byť true/false."}), 400
+    p = ExerciseProgress.query.filter_by(student_id=uid, exercise_id=ex_id).first()
+    new_json = integrity_check.exercise_set_dismissed(
+        p.integrity_json if p else None, ci, data["flag_dismissed"], current_user.id)
+    if new_json is None:
+        return jsonify({"error": "Bunka nemá red flag."}), 400
+    p.integrity_json = new_json
+    db.session.commit()
+    return jsonify({"message": "Red flag aktualizovaný.", "flag_dismissed": data["flag_dismissed"]})
 
 
 # ---------- nahratie nového notebooku ----------

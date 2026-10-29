@@ -17,6 +17,7 @@ from flask_login import current_user, login_required
 from models import db, Student
 from models_exercises import Exercise, ExerciseProgress
 from services.exercise_store import exercise_path, asset_path, source_dir_rel_for_slug
+from services import integrity as integrity_check
 from services.code_runner import execute as run_code
 
 exercise_bp = Blueprint("exercise", __name__)
@@ -235,12 +236,23 @@ def run_exercise_cell(ex_id):
         ci = int(code_index)
     except (TypeError, ValueError):
         return jsonify({"error": "Neplatný code_index."}), 400
-    cell_to = _timeout_for_cell(ex, ci) if 0 <= ci < (ex.code_cells or 0) else (ex.run_timeout or None)
-    res = run_code(prelude, code, workrel, timeout=cell_to)
-
     is_real = (0 <= ci < (ex.code_cells or 0))
 
+    # Kontrola originality (len bunky cvičenia, nie vlastné/scratch): podozrivé písanie ->
+    # študent najprv potvrdí, čia je to práca; kým nepotvrdí, bunka sa nespustí.
+    verdict, integrity_record = ("ok", None)
+    if is_real:
+        verdict, integrity_record = integrity_check.check(code, data.get("integrity"))
+        if verdict == "confirm":
+            return jsonify(integrity_check.confirm_response(integrity_record))
+
+    cell_to = _timeout_for_cell(ex, ci) if is_real else (ex.run_timeout or None)
+    res = run_code(prelude, code, workrel, timeout=cell_to)
+
     p = _get_progress(student.id, ex.id)
+    if verdict == "flagged":
+        integrity_record["code"] = code      # admin uvidí, čo presne bolo podozrivé
+        p.integrity_json = integrity_check.exercise_add_flag(p.integrity_json, ci, integrity_record)
     done = _done_cells(p)
     if res.get("ok") and is_real:
         done.add(ci)
@@ -257,6 +269,7 @@ def run_exercise_cell(ex_id):
     db.session.commit()
 
     return jsonify({
+        "counted": True,
         "ok": res.get("ok", False),
         "output": res.get("output", ""),
         "error": res.get("error"),

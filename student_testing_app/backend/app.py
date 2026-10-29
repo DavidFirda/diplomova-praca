@@ -45,6 +45,7 @@ PAGE_ROUTES = {
     "admin-user-exercises": "admin_user_exercises.html",
     "ulohy": "ulohy.html",
     "admin-user-ulohy": "admin_user_ulohy.html",
+    "admin-user-tests": "admin_user_tests.html",
 }
 
 

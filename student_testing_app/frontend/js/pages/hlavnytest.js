@@ -3,6 +3,7 @@
 // zodpovedaná (po návrate sa zobrazí tá istá). Klient nič z toho neurčuje.
 
 let codeMirrorEditor = null;
+let originality = null;   // kontrola originality editora (js/core/originality.js)
 
 window.onload = async () => {
     try {
@@ -33,6 +34,7 @@ window.onload = async () => {
         tabSize: 4,
         lineWrapping: true
     });
+    originality = Originality.attach(codeMirrorEditor);
 
     await fetchNextQuestion();
 };
@@ -84,6 +86,7 @@ function displayQuestion(q) {
     document.getElementById("question_id").value = q.id;
     document.getElementById("question-counter").innerText = `${q.answered + 1}/${q.total}`;
     codeMirrorEditor.setValue(q.starter_code || "");
+    originality.reset({ clearHistory: true });
 
     document.getElementById("submit-answer").style.display = "inline-block";
     document.getElementById("next-question").style.display = "none";
@@ -98,12 +101,24 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
     const resultBox = document.getElementById("output-box");
     const resultMessage = document.getElementById("result-message");
 
-    const response = await fetch("/api/test/answer", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question_id, code, test_type: "main" })
-    });
+    const submitBtn = document.getElementById("submit-answer");
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+    // podozrivé písanie -> server chce potvrdenie, Originality ukáže okno a odošle znova
+    const sent = await Originality.submit(originality, async (integrity) => {
+        const res = await fetch("/api/test/answer", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question_id, code, test_type: "main", integrity })
+        });
+        let body = null;
+        if (res.ok) { try { body = await res.clone().json(); } catch (e) { /* bez tela */ } }
+        return { res, body };
+    }, (x) => x.body);
+    submitBtn.disabled = false;
+    if (sent.cancelled) return;
+    const response = sent.res;
 
     if (response.status === 401) { window.location.href = "/login"; return; }
     if (response.status === 409) {

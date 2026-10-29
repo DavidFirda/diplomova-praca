@@ -3,6 +3,7 @@
 // sa zobrazí tá istá otázka, na ktorej študent skončil; späť sa vrátiť nedá.
 
 let codeMirrorEditor;
+let originality = null;   // kontrola originality editora (js/core/originality.js)
 
 window.addEventListener("DOMContentLoaded", () => {
     const textarea = document.getElementById("student_code");
@@ -15,6 +16,7 @@ window.addEventListener("DOMContentLoaded", () => {
         lineWrapping: true,
         viewportMargin: 10
     });
+    originality = Originality.attach(codeMirrorEditor);
 });
 
 function goToDashboard() {
@@ -78,6 +80,7 @@ function showQuestion(question, number, total) {
     document.getElementById("question_id").value = question.id;
     if (codeMirrorEditor) {
         codeMirrorEditor.setValue(question.starter_code || "");
+        if (originality) originality.reset({ clearHistory: true });
     }
     document.getElementById("question-counter").innerText = `${number}/${total}`;
 }
@@ -96,12 +99,20 @@ document.getElementById("submit-answer").addEventListener("click", async () => {
     const code = codeMirrorEditor.getValue();
     const question_id = document.getElementById("question_id").value;
 
-    const response = await fetch("/api/test/answer", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question_id, code, test_type: "predtest" })
-    });
+    // podozrivé písanie -> server chce potvrdenie, Originality ukáže okno a odošle znova
+    const sent = await Originality.submit(originality, async (integrity) => {
+        const res = await fetch("/api/test/answer", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question_id, code, test_type: "predtest", integrity })
+        });
+        let body = null;
+        if (res.ok) { try { body = await res.clone().json(); } catch (e) { /* bez tela */ } }
+        return { res, body };
+    }, (x) => x.body);
+    if (sent.cancelled) { submitBtn.disabled = false; return; }
+    const response = sent.res;
 
     if (response.status === 401) {
         window.location.href = "/login";

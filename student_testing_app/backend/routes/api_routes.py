@@ -14,13 +14,15 @@ from models import (
 from services.capture_output import (
     RunnerUnavailable, capture_output, compare_outputs, expected_output,
 )
+from services import integrity as integrity_check
 from services.extract_starter_code import extract_starter_code
 from services.mail_utils import send_email
 from services.settings import questionnaire_published, tests_enabled
 from services.test_flow import (
     MAIN_TEST_TOTAL, QuestionFlow,
     answered_question_ids, build_selector, get_question, get_retries_used, get_turn,
-    lock_student, pretest_state, question_payload, set_retries_used,
+    add_pending_integrity, lock_student, pending_integrity, pretest_state, question_payload,
+    set_retries_used,
     start_main_progress, active_main_progress, update_selector,
 )
 
@@ -184,9 +186,15 @@ def evaluate_answer():
     nothing_to_complete = starter_code == solution_code.strip()
     if not code.strip() or (code.strip() == starter_code and not nothing_to_complete):
         return jsonify({
-            "correct": False,
+            "correct": False, "counted": False,
             "message": "Nezadal si žiadny kód. Skús niečo napísať a odoslať odpoveď."
         })
+
+    # Kontrola originality: podozrivé písanie -> študent najprv potvrdí, čia je to práca
+    # (kód sa dovtedy nespustí a odoslanie sa nezapočíta). Pozri services/integrity.py.
+    verdict, integrity_record = integrity_check.check(code, data.get("integrity"))
+    if verdict == "confirm":
+        return jsonify(integrity_check.confirm_response(integrity_record))
 
     # Beh kódu môže trvať sekundy -> DB spojenie sa medzitým vráti do poolu
     # (inak by pri veľa študentoch naraz došli spojenia).
@@ -206,9 +214,10 @@ def evaluate_answer():
 
     if expected_error:
         # chyba referenčného riešenia nie je chyba študenta: otázka sa uzavrie bez opravy
-        _record_final(student_id, turn, question_id, category, code, correct=False)
+        _record_final(student_id, turn, question_id, category, code, correct=False,
+                      integrity=(verdict, integrity_record))
         return jsonify({
-            "correct": False, "final": True, "student_output": student_out,
+            "correct": False, "final": True, "counted": True, "student_output": student_out,
             "message": f"Interná chyba v hodnotení otázky: {expected_error}",
         })
 
@@ -218,31 +227,46 @@ def evaluate_answer():
 
     if flow.state == "retry":
         set_retries_used(student_id, test_type, turn.test_session, question_id, flow.retries_used)
+        if verdict == "flagged":
+            db.session.flush()      # riadok opráv musí existovať, aby sa doň zapísalo
+            add_pending_integrity(student_id, test_type, turn.test_session, question_id, integrity_record)
         db.session.commit()
         return jsonify({
-            "correct": False,
+            "correct": False, "counted": True,
             "message": "Výstup nie je správny. Skús to ešte raz opraviť!",
             "student_output": student_out,
         })
 
-    _record_final(student_id, turn, question_id, category, code, correct)
-    response = {"correct": correct, "final": True, "student_output": student_out}
+    _record_final(student_id, turn, question_id, category, code, correct,
+                  integrity=(verdict, integrity_record))
+    response = {"correct": correct, "final": True, "counted": True, "student_output": student_out}
     if not correct:
         response.update(show_solution=True, solution_code=solution_code)
     return jsonify(response)
 
 
-def _record_final(student_id, turn, question_id, category, code, correct):
+def _record_final(student_id, turn, question_id, category, code, correct, integrity=None):
     """
     Jediné miesto, kde sa zapíše výsledok otázky: StudentAnswer + súhrn
     (a posun progresu hlavného testu) a výsledok sa odovzdá selektoru.
     Volá sa pod zámkom študenta; všetko sa zapíše jedným commitom.
+
+    `integrity` = (verdikt, záznam) kontroly originality posledného odoslania. Red flag
+    dostane odpoveď, ak bolo podozrivé hociktoré odoslanie tejto otázky (aj počas opráv).
     """
+    verdict, record = integrity or ("ok", None)
+    flagged = pending_integrity(student_id, turn.test_type, turn.test_session, question_id)
+    if verdict == "flagged":
+        flagged.append(record)
+    integrity_data = {"metrics": (record or {}).get("metrics"), "flagged": flagged}
+
     update_summary(student_id, turn.test_type, turn.test_session, category, correct)
     db.session.add(StudentAnswer(
         student_id=student_id, question_id=question_id, answer_code=code,
         category=category, is_correct=correct,
         test_type=turn.test_type, test_session=turn.test_session,
+        integrity_json=integrity_check.dumps(integrity_data),
+        integrity_flag=bool(flagged),
     ))
     if turn.progress is not None:
         turn.progress.current_question_id = None

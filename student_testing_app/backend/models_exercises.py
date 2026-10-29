@@ -50,6 +50,9 @@ class ExerciseProgress(db.Model):
 
     done_cells_json = db.Column(db.Text, default="[]")
     answers_json = db.Column(db.Text, default="{}")
+    # kontrola originality (services/integrity.py): podozrivé spustenia po bunkách
+    # {"cells": {"<code_index>": {"flagged": [záznam, ...], "dismissed_by": .., "dismissed_at": ..}}}
+    integrity_json = db.Column(db.Text, nullable=True)
 
     percent = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default="not_started")

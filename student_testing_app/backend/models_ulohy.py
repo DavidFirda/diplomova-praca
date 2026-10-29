@@ -69,6 +69,10 @@ class TaskAttempt(db.Model):
     error = db.Column(db.Text, nullable=True)                   # chyba pri behu kódu
     feedback_kind = db.Column(db.String(30), nullable=True)
     feedback_json = db.Column(db.Text, nullable=True)           # {"kind", "params", "message"}
+    # kontrola originality (services/integrity.py): metriky písania, dôvody, potvrdenie študenta
+    integrity_json = db.Column(db.Text, nullable=True)
+    integrity_flag = db.Column(db.Boolean, nullable=False, default=False)   # red flag
+    flag_dismissed = db.Column(db.Boolean, nullable=False, default=False)   # admin ho zrušil
     created_at = db.Column(db.DateTime, default=_now)
 
     __table_args__ = (

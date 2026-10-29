@@ -63,6 +63,10 @@ class StudentAnswer(db.Model):
     is_correct = db.Column(db.Boolean, nullable=False)
     test_type = db.Column(db.String, default="main")
     test_session = db.Column(db.String, nullable=True)
+    # kontrola originality (services/integrity.py): podozrivé odoslania otázky + metriky poslednej odpovede
+    integrity_json = db.Column(db.Text, nullable=True)
+    integrity_flag = db.Column(db.Boolean, nullable=False, default=False)   # red flag
+    flag_dismissed = db.Column(db.Boolean, nullable=False, default=False)   # admin ho zrušil
 
 # Agregovaná metrika
 class TestSummary(db.Model):
@@ -121,6 +125,8 @@ class AnswerAttempt(db.Model):
     test_session = db.Column(db.String, nullable=False, default="")
     question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False)
     attempts = db.Column(db.Integer, nullable=False, default=0)
+    # podozrivé odoslania pri opravách (kontrola originality) - prenesú sa do StudentAnswer
+    integrity_json = db.Column(db.Text, nullable=True)
     __table_args__ = (
         db.UniqueConstraint("student_id", "test_type", "test_session", "question_id", name="uq_attempt_key"),
     )

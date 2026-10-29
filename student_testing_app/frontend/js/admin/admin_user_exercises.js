@@ -23,6 +23,7 @@
 
   const uid = new URLSearchParams(location.search).get("uid");
   let data = null;
+  const openState = new Set();      // rozbalené cvičenia prežijú prekreslenie (napr. po zrušení flagu)
 
   function statusBadge(status) {
     if (status === "completed") return `<span class="ex-badge ex-badge--done">✓ ${tr("ex.done", "Dokončené")}</span>`;
@@ -30,14 +31,34 @@
     return `<span class="ex-badge ex-badge--locked">${tr("adminUX.notStarted", "Nezačaté")}</span>`;
   }
 
-  function cellBlock(c) {
+  // zrušiť / obnoviť red flag bunky (kontrola originality)
+  function bindFlags() {
+    OrigFlag.bind(root, async (id, dismissed) => {
+      const [eid, ci] = id.split(":");
+      const r = await fetch(`/api/admin/exercises/user/${encodeURIComponent(uid)}/${eid}/cells/${ci}/flag`, {
+        method: "PATCH", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flag_dismissed: dismissed }),
+      });
+      return r.ok;
+    }, load);
+  }
+
+  function flaggedCode(c) {
+    const g = c.integrity;
+    if (!g || !g.code || g.code === c.answer) return "";
+    return `<div class="ux-cell__answer-label">${tr("orig.flaggedCode", "Kód pri podozrivom spustení")}</div>
+      <pre class="ux-code">${esc(g.code)}</pre>`;
+  }
+
+  function cellBlock(c, ex) {
     const stateCls = c.ran_ok ? "ux-cell--ok" : (c.answered ? "ux-cell--err" : "ux-cell--none");
     const stateLbl = c.ran_ok
       ? "✓ " + tr("adminUX.ranOk", "bez chyby")
       : (c.answered ? tr("adminUX.notOk", "nespustené / s chybou") : tr("adminUX.noAnswer", "bez odpovede"));
     const answer = c.answered ? esc(c.answer) : `<span class="ux-muted">${tr("adminUX.noAnswer", "bez odpovede")}</span>`;
     return `
-      <div class="ux-cell ${stateCls}">
+      <div class="ux-cell ${stateCls} ${c.integrity && c.integrity.active ? "orig-has-flag" : ""}">
         <div class="ux-cell__head">
           <span class="ux-cell__idx">${tr("adminUX.cell", "Bunka")} ${c.code_index + 1}</span>
           <span class="ux-cell__state">${stateLbl}</span>
@@ -46,15 +67,17 @@
           <summary>${tr("adminUX.prompt", "Predpis")}</summary>
           <pre class="ux-code ux-code--muted">${esc(c.prompt)}</pre>
         </details>
+        ${OrigFlag.html(c.integrity, `${ex.id}:${c.code_index}`)}
         <div class="ux-cell__answer-label">${tr("adminUX.studentCode", "Odpoveď študenta")}</div>
         <pre class="ux-code">${answer}</pre>
+        ${flaggedCode(c)}
       </div>`;
   }
 
   function exerciseCard(ex, idx) {
     const title = esc(pick(ex, "title") || ("#" + ex.id));
     const answeredCount = (ex.cells || []).filter(c => c.answered).length;
-    const cells = (ex.cells || []).map(cellBlock).join("") ||
+    const cells = (ex.cells || []).map(c => cellBlock(c, ex)).join("") ||
       `<div class="ux-muted" style="padding:8px 0;">${tr("adminUX.noCells", "Cvičenie nemá code-bunky.")}</div>`;
 
     return `
@@ -62,7 +85,7 @@
         <div class="ux-ex__top">
           <div class="ux-ex__num">${idx + 1}</div>
           <div class="ux-ex__main">
-            <div class="ux-ex__title">${title}</div>
+            <div class="ux-ex__title">${title} ${OrigFlag.chip(ex.active_flags)}</div>
             <div class="ex-progress">
               <div class="ex-progress__top">
                 <span class="ex-progress__pct">${ex.percent}%</span>
@@ -73,7 +96,7 @@
           </div>
           <div class="ux-ex__badge">${statusBadge(ex.status)}</div>
         </div>
-        <details class="ux-ex__answers">
+        <details class="ux-ex__answers" data-key="ex-${ex.id}" ${openState.has("ex-" + ex.id) ? "open" : ""}>
           <summary>${tr("adminUX.showAnswers", "Zobraziť odpovede")}</summary>
           <div class="ux-cells">${cells}</div>
         </details>
@@ -101,6 +124,11 @@
 
     root.innerHTML = head + body;
     if (typeof I18N !== "undefined") I18N.apply();
+    root.querySelectorAll("details[data-key]").forEach(d => d.addEventListener("toggle", () => {
+      const k = d.getAttribute("data-key");
+      if (d.open) openState.add(k); else openState.delete(k);
+    }));
+    bindFlags();
   }
 
   async function load() {

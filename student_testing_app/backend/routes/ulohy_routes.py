@@ -100,6 +100,7 @@ def submit():
         return jsonify({"error": "Chýba ID úlohy."}), 400
     status, body = task_flow.submit_attempt(
         current_user.id, assignment_id, data.get("code") or "", normalize_lang(data.get("lang")),
+        integrity=data.get("integrity"),
     )
     return jsonify(body), status
 

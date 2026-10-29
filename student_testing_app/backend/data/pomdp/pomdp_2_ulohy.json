@@ -5,16 +5,16 @@
       "beta": 1.81450625
     },
     "Syntax": {
-      "alpha": 1.8573749999999998,
-      "beta": 2.709875
+      "alpha": 3.3653435460937495,
+      "beta": 4.064585124218749
     },
     "Sorting": {
       "alpha": 3.709875,
       "beta": 0.8573749999999999
     },
     "Scientific Computing": {
-      "alpha": 0.8145062499999999,
-      "beta": 4.524381249999999
+      "alpha": 0.7737809374999999,
+      "beta": 5.298162187499999
     }
   },
   "reward": {
@@ -23,8 +23,8 @@
       "incorrect": 1
     },
     "Syntax": {
-      "correct": 1,
-      "incorrect": 2
+      "correct": 3,
+      "incorrect": 4
     },
     "Sorting": {
       "correct": 3,
@@ -32,11 +32,11 @@
     },
     "Scientific Computing": {
       "correct": 0,
-      "incorrect": 4
+      "incorrect": 5
     }
   },
   "state": {
-    "category": "Sorting",
+    "category": "Data Structures",
     "level": 1
   },
   "belief": [
@@ -48,8 +48,8 @@
   ],
   "last_action": "Syntax",
   "rewards": {
-    "count": 1,
-    "total": -10.0,
+    "count": 6,
+    "total": -26.0,
     "last": -10.0
   }
 }

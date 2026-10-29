@@ -4,6 +4,7 @@
 // len zobrazuje to, čo vráti /api/ulohy/*.
 
 let codeMirrorEditor = null;
+let originality = null;   // kontrola originality editora (js/core/originality.js)
 let task = null;          // aktuálna úloha (payload zo servera)
 let busy = false;
 const DRAFT_KEY = "ulohy_lang_draft";
@@ -35,6 +36,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         mode: "python", theme: "default", lineNumbers: true,
         indentUnit: 4, tabSize: 4, lineWrapping: true, viewportMargin: 10,
     });
+    originality = Originality.attach(codeMirrorEditor);
     await loadTask();
 });
 
@@ -77,6 +79,7 @@ document.addEventListener("langchange", () => {
             sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
                 id: task.id, code: codeMirrorEditor.getValue(),
                 panelOpen: $("agent-panel").classList.contains("is-open"),
+                originality: originality.exportState(),
             }));
         }
     } catch (e) { /* sessionStorage nemusí byť dostupné */ }
@@ -100,6 +103,8 @@ function showTask(a) {
     const startCode = draft ? draft.code : (a.last_code != null ? a.last_code : (a.question.starter_code || ""));
     codeMirrorEditor.setValue(startCode);
     codeMirrorEditor.refresh();
+    originality.reset({ clearHistory: true });
+    if (draft && draft.originality) originality.importState(draft.originality);
 
     $("output-box").innerText = a.last_output || "";
     $("result-message").innerText = "";
@@ -171,9 +176,15 @@ function setBusy(on) {
 $("submit-answer").addEventListener("click", async () => {
     if (!task || busy) return;
     setBusy(true);
-    const r = await api("submit", { assignment_id: task.id, code: codeMirrorEditor.getValue() });
+    const assignmentId = task.id, code = codeMirrorEditor.getValue();
+    // podozrivé písanie -> server chce potvrdenie, Originality ukáže okno a odošle znova
+    const r = await Originality.submit(
+        originality,
+        (integrity) => api("submit", { assignment_id: assignmentId, code, integrity }),
+        (res) => res && res.data,
+    );
     setBusy(false);
-    if (!r) return;
+    if (!r || r.cancelled) return;
     const d = r.data;
 
     if (r.status === 404 || r.status === 400) { setResult(d.error || t("ul.loadError", "Chyba."), "info"); return; }

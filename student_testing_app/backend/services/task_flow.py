@@ -22,6 +22,7 @@ from flask import current_app
 from algorithms.pomdp_task_selector import POMDPTaskSelector
 from models import db, StudentAnswer
 from models_ulohy import TaskAssignment, TaskAttempt, TaskEvent
+from services import integrity as integrity_check
 from services import task_agent
 from services.capture_output import RunnerUnavailable, capture_output, compare_outputs, expected_output
 from services.extract_starter_code import extract_starter_code
@@ -304,8 +305,9 @@ def _finished_response(a, lang):
     return 200, body
 
 
-def submit_attempt(student_id, assignment_id, code, lang="sk"):
-    """(http_status, telo odpovede). Jediné miesto, kde vzniká pokus a mení sa stav úlohy."""
+def submit_attempt(student_id, assignment_id, code, lang="sk", integrity=None):
+    """(http_status, telo odpovede). Jediné miesto, kde vzniká pokus a mení sa stav úlohy.
+    `integrity` = metriky písania z editora (kontrola originality, services/integrity.py)."""
     lang = normalize_lang(lang)
     code = code or ""
     if len(code) > MAX_CODE_LEN:
@@ -321,6 +323,15 @@ def submit_attempt(student_id, assignment_id, code, lang="sk"):
     reason = _rejection(a, question, code)
     if reason:
         return _rejected_response(student_id, a, code, reason, lang)
+
+    # Kontrola originality: podozrivé písanie -> študent najprv potvrdí, čia je to práca.
+    # Kým nepotvrdí, kód sa nespustí a pokus sa nezapočíta.
+    verdict, integrity_record = integrity_check.check(code, integrity)
+    if verdict == "confirm":
+        log_event(student_id, "integrity_confirmation_required", a,
+                  payload={"reasons": integrity_record}, file_extra={"code": code})
+        db.session.commit()
+        return 200, integrity_check.confirm_response(integrity_record, state_fields(a))
 
     # Beh kódu môže trvať sekundy -> DB spojenie sa medzitým vráti do poolu.
     question_id, solution_code = question.id, question.output
@@ -365,6 +376,8 @@ def submit_attempt(student_id, assignment_id, code, lang="sk"):
         student_output=student_out, error=student_err,
         feedback_kind=feedback["kind"] if feedback else None,
         feedback_json=json.dumps(feedback, ensure_ascii=False) if feedback else None,
+        integrity_json=integrity_check.dumps(integrity_record),
+        integrity_flag=verdict == "flagged",
         created_at=now,
     ))
     a.attempts_used = attempt_no
@@ -387,6 +400,11 @@ def submit_attempt(student_id, assignment_id, code, lang="sk"):
         "feedback_kind": feedback["kind"] if feedback else None,
         "feedback_params": feedback["params"] if feedback else None,
     }, file_extra={"code": code, "student_output": student_out, "error": student_err})
+    if verdict == "flagged":
+        log_event(student_id, "integrity_flagged", a, payload={
+            "attempt_no": attempt_no, "reasons": integrity_record["reasons"],
+            "confirmation": integrity_record["confirmation"],
+        })
     if agent_unlocked_now:
         log_event(student_id, "agent_unlocked", a, payload={"after_wrong_attempts": a.wrong_attempts})
     if a.status == "failed":

@@ -8,12 +8,14 @@ from flask_login import current_user
 
 from extensions import admin_required
 from models import (
-    db, Student, StudentAnswer, TestSummary, TestProgress, AnswerAttempt,
+    db, Student, Question, StudentAnswer, TestSummary, TestProgress, AnswerAttempt,
     FeedbackQuestion, FeedbackResponse, StudentFeedback, FeedbackMessage,
 )
-from models_exercises import ExerciseProgress
+from models_exercises import Exercise, ExerciseProgress
 from models_invites import Invitation
 from models_ulohy import TaskAssignment, TaskAttempt, TaskEvent
+from routes.admin_ulohy_routes import flag_count as ulohy_flag_count
+from services import integrity as integrity_check
 from services.settings import (
     questionnaire_published, sections_state, set_questionnaire_published, set_tests_enabled,
 )
@@ -35,6 +37,7 @@ def admin_me():
 @admin_required
 def list_users():
     students = Student.query.order_by(Student.id).all()
+    published_ex = [e.id for e in Exercise.query.filter_by(published=True).all()]
     result = []
     for s in students:
         pre = pretest_state(s.id)   # predtest je hotový až po zodpovedaní všetkých otázok
@@ -53,9 +56,21 @@ def list_users():
             "pretest_total": pre["total"],
             "pretest_done": pre["done"],
             "main_tests": len(main_sessions),
+            # cvičenia: dokončené / publikované
+            "exercises_total": len(published_ex),
+            "exercises_done": ExerciseProgress.query.filter(
+                ExerciseProgress.student_id == s.id, ExerciseProgress.status == "completed",
+                ExerciseProgress.exercise_id.in_(published_ex)).count() if published_ex else 0,
             "ulohy_total": ulohy_done.count(),
             "ulohy_solved": ulohy_done.filter(TaskAssignment.status == "solved").count(),
             "feedback_done": fb > 0,
+            "flags_ulohy": ulohy_flag_count(s.id),
+            "flags_tests": StudentAnswer.query.filter_by(
+                student_id=s.id, integrity_flag=True, flag_dismissed=False).count(),
+            "flags_exercises": sum(
+                integrity_check.exercise_active_count(p.integrity_json)
+                for p in ExerciseProgress.query.filter(
+                    ExerciseProgress.student_id == s.id, ExerciseProgress.integrity_json.isnot(None))),
         })
     return jsonify({"users": result})
 
@@ -108,7 +123,12 @@ def user_tests(user_id):
     if not student:
         return jsonify({"error": "Používateľ neexistuje."}), 404
 
+    answers = StudentAnswer.query.filter_by(student_id=user_id).order_by(StudentAnswer.id).all()
+    questions = {q.id: q for q in Question.query.filter(
+        Question.id.in_({a.question_id for a in answers})).all()} if answers else {}
+
     def serialize(a):
+        q = questions.get(a.question_id)
         return {
             "id": a.id,
             "question_id": a.question_id,
@@ -117,21 +137,43 @@ def user_tests(user_id):
             "is_correct": a.is_correct,
             "test_type": a.test_type,
             "test_session": a.test_session,
+            # zadanie a správne riešenie (admin ich vidí pri odpovedi)
+            "instruction": ((q.instruction_sk or q.instruction) if q else ""),
+            "input_data": q.input_data if q else "",
+            "solution_code": q.output if q else "",
+            "integrity": integrity_check.admin_view(a.integrity_json, a.integrity_flag, a.flag_dismissed),
         }
 
-    pretest = [serialize(a) for a in StudentAnswer.query.filter_by(student_id=user_id, test_type="predtest").order_by(StudentAnswer.id).all()]
+    def stats(items):
+        return {
+            "answered": len(items),
+            "correct": sum(1 for x in items if x["is_correct"]),
+            "active_flags": sum(1 for x in items if x["integrity"]["active"]),
+        }
 
-    main_answers = StudentAnswer.query.filter_by(student_id=user_id, test_type="main").order_by(StudentAnswer.id).all()
-    # zoskup main podľa test_session
+    pretest = [serialize(a) for a in answers if a.test_type == "predtest"]
+    pre = pretest_state(user_id)
+
+    # hlavné testy zoskupené podľa test_session (v poradí, ako vznikli)
     sessions = {}
-    for a in main_answers:
-        key = a.test_session or "—"
-        sessions.setdefault(key, []).append(serialize(a))
-    main_tests = [{"test_session": k, "answers": v} for k, v in sessions.items()]
+    for a in answers:
+        if a.test_type == "main":
+            sessions.setdefault(a.test_session or "—", []).append(serialize(a))
+    progress = {p.test_session: p for p in TestProgress.query.filter_by(student_id=user_id, test_type="main")}
+    main_tests = []
+    for k, items in sessions.items():
+        p = progress.get(k)
+        main_tests.append({
+            "test_session": k, "answers": items, **stats(items),
+            "total": p.total_questions if p else None,
+            "status": p.status if p else "done",
+        })
 
     return jsonify({
-        "user": {"id": student.id, "name": student.name, "surname": student.surname, "login": student.login},
+        "user": {"id": student.id, "name": student.name, "surname": student.surname,
+                 "login": student.login, "email": student.email},
         "pretest": pretest,
+        "pretest_summary": {**stats(pretest), "total": pre["total"], "done": pre["done"]},
         "main_tests": main_tests,
     })
 
@@ -144,6 +186,13 @@ def update_answer(answer_id):
     if not a:
         return jsonify({"error": "Odpoveď neexistuje."}), 404
     data = request.get_json(silent=True) or {}
+    if "flag_dismissed" in data:        # zrušenie / obnovenie red flagu (kontrola originality)
+        if not isinstance(data["flag_dismissed"], bool):
+            return jsonify({"error": "Pole 'flag_dismissed' musí byť true/false."}), 400
+        if not a.integrity_flag:
+            return jsonify({"error": "Odpoveď nemá red flag."}), 400
+        a.flag_dismissed = data["flag_dismissed"]
+        a.integrity_json = integrity_check.set_dismissed(a.integrity_json, a.flag_dismissed, current_user.id)
     if "answer_code" in data:
         a.answer_code = data["answer_code"]
     if "is_correct" in data:

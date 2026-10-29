@@ -14,6 +14,7 @@ from flask_login import current_user
 from extensions import admin_required
 from models import db, Question, Student
 from models_ulohy import TaskAssignment, TaskAttempt, TaskEvent
+from services import integrity as integrity_check
 from services.task_feedback import feedback_message
 from services.task_log import log_event
 
@@ -38,6 +39,7 @@ def _attempt_dict(t):
     return {
         "id": t.id, "attempt_no": t.attempt_no, "code": t.code, "is_correct": t.is_correct,
         "student_output": t.student_output, "error": t.error, "feedback": feedback,
+        "integrity": integrity_check.admin_view(t.integrity_json, t.integrity_flag, t.flag_dismissed),
         "created_at": _iso(t.created_at),
     }
 
@@ -60,6 +62,7 @@ def _assignment_dict(a, question, attempts, events):
         "reward": a.reward, "pomdp_applied": a.pomdp_applied, "strategy": a.strategy,
         "assigned_at": _iso(a.assigned_at), "finished_at": _iso(a.finished_at),
         "attempts": [_attempt_dict(t) for t in attempts],
+        "active_flags": sum(1 for t in attempts if t.integrity_flag and not t.flag_dismissed),
         "events": [_event_dict(e) for e in events],
     }
 
@@ -79,6 +82,12 @@ def summary_for(assignments):
         "total_attempts": sum(a.attempts_used for a in assignments),
         "total_reward": round(sum(a.reward or 0 for a in assignments), 2),
     }
+
+
+def flag_count(student_id):
+    """Počet aktívnych (nezrušených) red flagov v úlohách študenta."""
+    return TaskAttempt.query.filter_by(
+        student_id=student_id, integrity_flag=True, flag_dismissed=False).count()
 
 
 @admin_ulohy_bp.route("/user/<int:user_id>", methods=["GET"])
@@ -118,6 +127,24 @@ def update_attempt(attempt_id):
         return jsonify({"error": "Pokus neexistuje."}), 404
     data = request.get_json(silent=True) or {}
     before = {"code": t.code, "is_correct": t.is_correct}
+
+    # zrušenie / obnovenie red flagu (kontrola originality) - samostatný zásah
+    if "flag_dismissed" in data:
+        if not isinstance(data["flag_dismissed"], bool):
+            return jsonify({"error": "Pole 'flag_dismissed' musí byť true/false."}), 400
+        if not t.integrity_flag:
+            return jsonify({"error": "Pokus nemá red flag."}), 400
+        t.flag_dismissed = data["flag_dismissed"]
+        t.integrity_json = integrity_check.set_dismissed(t.integrity_json, t.flag_dismissed, current_user.id)
+        log_event(t.student_id, "admin_edit", question_id=t.question_id, payload={
+            "admin_id": current_user.id, "target": "integrity_flag", "attempt_id": t.id,
+            "assignment_id": t.assignment_id, "attempt_no": t.attempt_no,
+            "flag_dismissed": t.flag_dismissed,
+        })
+        if "code" not in data and "is_correct" not in data:
+            db.session.commit()
+            return jsonify({"message": "Red flag aktualizovaný.", "flag_dismissed": t.flag_dismissed})
+
     if "code" in data:
         t.code = data["code"]
     if "is_correct" in data:
