@@ -14,8 +14,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
   <!-- Markdown render pre text bunky -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <!-- AI asistent: markdown odpovedí sa vždy čistí (DOMPurify) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 </head>
 <body>
+  <!-- Ikona robota (sprite) pre bubliny AI asistenta -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="ul-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3.2v3"/><circle cx="12" cy="2.9" r="1" fill="currentColor" stroke="none"/>
+      <rect x="4.5" y="6.5" width="15" height="12.5" rx="4.2"/>
+      <path d="M2.4 11.6v3.2M21.6 11.6v3.2"/>
+      <circle cx="9.1" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      <circle cx="14.9" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      <path d="M9.4 15.6c.75.6 1.6.9 2.6.9s1.85-.3 2.6-.9"/>
+    </symbol>
+  </svg>
   <div class="app-shell">
     <div id="sidebar-mount" data-active="exercises"></div>
 
@@ -40,8 +53,9 @@
   <script src="/js/core/sidebar.js"></script>
   <script src="/js/core/topbar-controls.js"></script>
   <script src="/js/core/originality.js"></script>
+  <script src="/js/core/ai_chat.js"></script>
   <script src="/js/pages/cvicenie.js"></script>
-  <!-- pripravený chatbot (rovnaký skript ako dashboard, napojí sa keď bude panel v DOM) -->
+  <!-- správanie panelu asistenta (pripnutie / dok na mobile); obsah chatu rieši ai_chat.js -->
   <script src="/js/pages/chat.js"></script>
 </body>
 </html>

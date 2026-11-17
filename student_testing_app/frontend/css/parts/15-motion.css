@@ -1,0 +1,125 @@
+/* ============================================================
+   AdaptPy - pohyb. Krátke, účelné animácie (Apple HIG › Motion:
+   "brief and precise", nie pri častých akciách, dajú sa vypnúť).
+   Triedy .mo-in / .mo-bar pridáva js/core/motion.js.
+   ============================================================ */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);      /* rýchly štart, mäkké dobehnutie */
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1); /* jemný "pružinový" prekmit */
+}
+
+/* ---------- Prechody medzi stránkami (Chrome, Edge, Safari 18.2+) ----------
+   Bočný panel, horná lišta a tab bar ostanú na mieste, mení sa len obsah. */
+@view-transition { navigation: auto; }
+
+html:not(.theme-vt) .sidebar { view-transition-name: sidebar; }
+html:not(.theme-vt) .tabbar { view-transition-name: tabbar; }
+html:not(.theme-vt) .app-topbar__actions { view-transition-name: toolbar; }
+html:not(.theme-vt) .navbar { view-transition-name: toolbar; }
+html:not(.theme-vt) .app-main { view-transition-name: main; }
+
+::view-transition-group(main) { animation-duration: 0s; }
+::view-transition-old(main) { animation: 140ms ease-out both mo-fade-out; }
+::view-transition-new(main) { animation: 320ms var(--ease-out) both mo-page-in; }
+::view-transition-old(root) { animation: 160ms ease-out both mo-fade-out; }
+::view-transition-new(root) { animation: 220ms ease-out both mo-fade-in; }
+::view-transition-group(sidebar),
+::view-transition-group(tabbar),
+::view-transition-group(toolbar) { animation-duration: 0s; }
+::view-transition-old(sidebar), ::view-transition-old(tabbar), ::view-transition-old(toolbar) { animation: none; opacity: 0; }
+::view-transition-new(sidebar), ::view-transition-new(tabbar), ::view-transition-new(toolbar) { animation: none; }
+
+/* Prepnutie témy: nová téma sa rozleje kruhom od prepínača (js v i18n.js) */
+.theme-vt::view-transition-old(root),
+.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.theme-vt::view-transition-new(root) { z-index: 2; }
+
+@keyframes mo-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mo-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes mo-page-in { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: none; } }
+
+/* ---------- Nástup obsahu pri načítaní ---------- */
+.mo-in {
+  animation: mo-rise 0.5s var(--ease-out) backwards;
+  animation-delay: calc(var(--mo-i, 0) * 45ms);
+}
+.auth-card.mo-in { animation-name: mo-zoom; animation-duration: 0.6s; }
+@keyframes mo-rise { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: none; } }
+@keyframes mo-zoom { from { opacity: 0; scale: 0.97; translate: 0 8px; } to { opacity: 1; scale: none; translate: none; } }
+
+/* ---------- Pruhy pokroku sa naplnia zľava ---------- */
+.mo-bar { animation: mo-fill 0.9s var(--ease-out) backwards; animation-delay: 0.15s; }
+.dash-dot.mo-bar, .ul-dot.mo-bar { animation: mo-dot 0.4s var(--ease-spring) backwards; }
+.dash-dot.mo-bar:nth-child(2), .ul-dot.mo-bar:nth-child(2) { animation-delay: 0.06s; }
+.dash-dot.mo-bar:nth-child(3), .ul-dot.mo-bar:nth-child(3) { animation-delay: 0.12s; }
+.dash-dot.mo-bar:nth-child(4), .ul-dot.mo-bar:nth-child(4) { animation-delay: 0.18s; }
+.dash-dot.mo-bar:nth-child(5), .ul-dot.mo-bar:nth-child(5) { animation-delay: 0.24s; }
+@keyframes mo-fill { from { clip-path: inset(0 100% 0 0 round 999px); } to { clip-path: inset(0 0 0 0 round 999px); } }
+@keyframes mo-dot { from { scale: 0.2 1; opacity: 0; } to { scale: none; opacity: 1; } }
+
+/* ---------- Zobrazenie pri scrollovaní ---------- */
+.mo [data-reveal] { opacity: 0; translate: 0 18px; transition: opacity 0.7s var(--ease-out), translate 0.7s var(--ease-out); transition-delay: var(--reveal-delay, 0s); }
+.mo [data-reveal].is-revealed { opacity: 1; translate: none; }
+
+/* ---------- Spätná väzba ---------- */
+/* správna odpoveď: krátky "pop" + zelený odznak s fajkou */
+.test-result--correct {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  animation: mo-pop 0.45s var(--ease-spring) both;
+}
+.test-result--correct::before {
+  content: ""; flex: 0 0 22px; height: 22px; border-radius: 50%;
+  background: var(--success) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center / 14px no-repeat;
+  animation: mo-badge 0.5s var(--ease-spring) 0.05s both;
+}
+@keyframes mo-pop { 0% { opacity: 0; scale: 0.9; } 100% { opacity: 1; scale: none; } }
+@keyframes mo-badge { 0% { scale: 0; rotate: -30deg; } 100% { scale: none; rotate: none; } }
+
+/* chyba: krátke potrasenie ako pri zlom hesle v macOS */
+.test-result--wrong, .error-message, .ul-feedback, .fb-message--error {
+  animation: mo-shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes mo-shake {
+  0%, 100% { translate: 0; }
+  15% { translate: -7px; } 30% { translate: 6px; } 45% { translate: -5px; }
+  60% { translate: 3px; } 75% { translate: -2px; }
+}
+.info-message, .test-solution, .test-output:not(:empty), .nb-code__output:not(:empty) {
+  animation: mo-fade-in 0.3s ease-out both;
+}
+
+/* poďakovanie po odoslaní dotazníka */
+.fb-thanks__icon { animation: mo-badge 0.6s var(--ease-spring) 0.1s both; }
+
+/* načítavanie: jemné pulzovanie textu */
+.admin-loading, .stats-loading { animation: mo-pulse 1.4s ease-in-out infinite; }
+@keyframes mo-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+/* ---------- Dotyk / kurzor ---------- */
+.tabbar__item svg { transition: scale 0.18s var(--ease-out); }
+.tabbar__item:active svg { scale: 0.86; }
+.tabbar__item.active svg { animation: mo-tab 0.4s var(--ease-spring); }
+@keyframes mo-tab { 0% { scale: 0.8; } 100% { scale: none; } }
+
+.sidebar__link, .sidebar__profile { transition: background var(--transition), color var(--transition), scale 0.15s ease; }
+.sidebar__link:active, .sidebar__profile:active { scale: 0.98; }
+
+a.dash-ex, .ex-row, .task-row, .ux-ex {
+  transition: background var(--transition), box-shadow 0.3s var(--ease-out), translate 0.3s var(--ease-out);
+}
+@media (hover: hover) {
+  a.dash-ex:hover { translate: 0 -2px; box-shadow: var(--shadow-md); }
+  .ex-row:not(.ex-row--locked):hover, .task-row:not(.task-row--locked):hover { box-shadow: var(--shadow-md); }
+}
+
+.lang-switch button.active { transition: background 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out); }
+
+/* ---------- Bez pohybu, keď si to človek nastavil ---------- */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  .mo-in, .mo-bar, .test-result--correct, .test-result--correct::before, .test-result--wrong,
+  .error-message, .ul-feedback, .fb-message--error, .fb-thanks__icon, .admin-loading, .stats-loading,
+  .tabbar__item.active svg { animation: none !important; }
+  .mo [data-reveal] { opacity: 1; translate: none; transition: none; }
+  a.dash-ex:hover { translate: none; }
+}

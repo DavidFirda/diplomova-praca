@@ -13,6 +13,7 @@ from models import db, Student, StudentAnswer, FeedbackResponse
 from services.settings import questionnaire_published, sections_state
 from services.mail_utils import send_email
 from services.test_flow import pretest_state
+from services import task_flow
 from services.rate_limiter import rate_limited as _rate_limited, retry_after as _retry_after
 
 auth_bp = Blueprint("auth", __name__)
@@ -244,7 +245,14 @@ def dashboard():
         "feedback_done": feedback_done,
         "questionnaire_published": questionnaire_published(),
         "sections": sections_state(),
+        # počet materiálov sprístupnených študentom (položka "Materiály" v menu)
+        "materials_count": _materials_count(),
     }), 200
+
+
+def _materials_count():
+    from models_ai import CourseMaterial
+    return CourseMaterial.query.filter(CourseMaterial.visible_to_students.is_(True)).count()
 
 
 ### Štatistiky - výsledky predtestu podľa kategórií ###
@@ -294,6 +302,11 @@ def stats():
         },
         "main": {
             "categories": main_cats,
+        },
+        # Úlohy (samoštúdium): hodnotenie zohľadňuje nápovedy (task_flow.HINT_CREDIT)
+        "tasks": {
+            **task_flow.task_stats(student_id),
+            "categories": task_flow.task_category_stats(student_id),
         },
     }), 200
 

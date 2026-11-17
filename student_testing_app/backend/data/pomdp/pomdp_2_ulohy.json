@@ -5,8 +5,8 @@
       "beta": 1.81450625
     },
     "Syntax": {
-      "alpha": 3.3653435460937495,
-      "beta": 4.064585124218749
+      "alpha": 3.197076368789062,
+      "beta": 4.861355868007811
     },
     "Sorting": {
       "alpha": 3.709875,
@@ -24,7 +24,7 @@
     },
     "Syntax": {
       "correct": 3,
-      "incorrect": 4
+      "incorrect": 5
     },
     "Sorting": {
       "correct": 3,
@@ -36,7 +36,7 @@
     }
   },
   "state": {
-    "category": "Data Structures",
+    "category": "Syntax",
     "level": 1
   },
   "belief": [
@@ -46,10 +46,10 @@
       "p": 1.0
     }
   ],
-  "last_action": "Syntax",
+  "last_action": "Scientific Computing",
   "rewards": {
-    "count": 6,
-    "total": -26.0,
+    "count": 7,
+    "total": -36.0,
     "last": -10.0
   }
 }

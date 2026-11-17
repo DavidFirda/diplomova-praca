@@ -23,16 +23,23 @@
       </div>
 
       <div class="centered-card" style="max-width:640px;">
-        <!-- Výsledky posledného testu -->
-        <div class="card" id="test-result-card" style="display:none; margin-bottom:18px;">
+        <!-- Úlohy (samoštúdium): vyriešené, hodnotenie so zrážkou za nápovedy, kategórie -->
+        <div class="card" id="tasks-card" style="display:none; margin-bottom:18px;">
+          <div class="stats-section-title" data-i18n="stats.tasksTitle">Úlohy</div>
           <div class="stats-hero">
-            <div class="stats-donut"><canvas id="circleChart"></canvas></div>
+            <div class="stats-donut"><canvas id="tasksChart"></canvas></div>
             <div class="stats-big">
-              <div class="stats-big__value" id="test-correct">–</div>
-              <div class="stats-big__label" data-i18n="stats.correctOfTotal">správnych odpovedí</div>
+              <div class="stats-big__value" id="tasks-solved">–</div>
+              <div class="stats-big__label" data-i18n="stats.tasksSolvedOf">vyriešených úloh</div>
             </div>
           </div>
-          <div id="test-metrics" style="text-align:center; color:var(--text-muted); font-size:0.9rem;"></div>
+          <div class="stats-kpis" id="tasks-kpis"></div>
+          <div class="stats-note" data-i18n="stats.scoreNote">Hodnotenie zohľadňuje nápovedy: bez nápovedy 100 %, s 1 nápovedou 75 %, s 2 nápovedami 50 %, s 3 nápovedami 25 %. Nevyriešená úloha má 0 %.</div>
+        </div>
+
+        <div class="card" id="tasks-cats-card" style="display:none; margin-bottom:18px;">
+          <div class="stats-section-title" data-i18n="stats.tasksByCategory">Úlohy podľa kategórií</div>
+          <div class="cat-list" id="tasks-cats"></div>
         </div>
 
         <!-- Výsledky predtestu podľa kategórií -->

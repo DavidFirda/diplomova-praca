@@ -86,15 +86,29 @@ class POMDPTaskSelector(POMDPQuestionSelector):
         return None, None
 
     # --- výsledok úlohy -> POMDP ---
-    def update_after_task(self, category, correct, failed=False):
+    def update_after_task(self, category, correct, failed=False, credit=1.0):
         """
         Odovzdá výsledok úlohy POMDP a vráti odmenu.
           správne         -> pozorovanie "správne", odmena podľa modelu (prechod stavov),
           failed (5 chýb) -> pozorovanie "nesprávne", pevne záporná odmena a stav sa
                              nezlepší (kategória sa tým označí ako slabšia).
+          credit (0-1)    -> vyriešené s nápovedami (HINT_CREDIT v task_flow): výkon v kategórii
+                             sa aktualizuje len čiastočne (alpha += credit, beta += 1 - credit),
+                             kladná odmena sa zníži v rovnakom pomere; pri credit < 0,5 (3 nápovedy)
+                             sa pozorovanie berie ako "nesprávne" a stav sa nezlepší.
         """
         action = TutorAction(category)
-        if failed:
+        credit = 1.0 if credit is None else max(0.0, min(float(credit), 1.0))
+        if not failed and correct and credit < 1.0:
+            state = self.model.env.state
+            observed_correct = credit >= 0.5
+            next_state = None if observed_correct else state
+            _, reward = self.model.step_with_action(
+                action, TutorObservation(observed_correct), next_state=next_state, weight=credit,
+            )
+            if reward > 0:
+                reward = round(reward * credit, 4)
+        elif failed:
             state = self.model.env.state
             next_state = state
             if state.category == category:

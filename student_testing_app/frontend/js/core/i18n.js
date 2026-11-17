@@ -20,6 +20,7 @@ const TRANSLATIONS = {
     "index.step4": "Po dokončení testu uvidíš štatistiky svojho progresu.",
     "index.step5": "Nakoniec vyplň krátky dotazník spätnej väzby.",
     "index.cta": "Začať",
+    "index.demoOk": "Správne – výborne!",
     "index.thesis": "Aplikácia vznikla ako súčasť diplomovej práce na Technickej univerzite v Košiciach, Fakulte elektrotechniky a informatiky.",
 
     // login
@@ -149,6 +150,16 @@ const TRANSLATIONS = {
     "stats.accuracy": "Správnosť",
     "stats.percentile": "Percentil",
     "stats.pretestByCategory": "Výsledky predtestu podľa kategórií",
+    "stats.tasksTitle": "Úlohy",
+    "stats.tasksSolvedOf": "vyriešených úloh",
+    "stats.tasksScore": "hodnotenie úloh",
+    "stats.tasksFirstTry": "na prvý pokus",
+    "stats.tasksHints": "použitých nápoved",
+    "stats.tasksByCategory": "Úlohy podľa kategórií",
+    "stats.solved": "Vyriešené",
+    "stats.failed": "Nevyriešené",
+    "stats.score": "hodnotenie",
+    "stats.scoreNote": "Hodnotenie zohľadňuje nápovedy: bez nápovedy 100 %, s 1 nápovedou 75 %, s 2 nápovedami 50 %, s 3 nápovedami 25 %. Nevyriešená úloha má 0 %.",
     "stats.toFeedback": "Na dotazník",
     "sb.feedbackForm": "Spätná väzba",
     "fb.notPublishedTitle": "Dotazník zatiaľ nie je dostupný",
@@ -193,7 +204,7 @@ const TRANSLATIONS = {
     "adminF.noMessages": "Zatiaľ žiadne správy.",
     "adminF.confirmDelMsg": "Vymazať túto správu?",
     "stats.emptyTitle": "Zatiaľ žiadne dáta",
-    "stats.emptyText": "Pre tento účet nemáme žiadne výsledky. Najprv absolvuj predtest alebo test a tvoje štatistiky sa ti zobrazia.",
+    "stats.emptyText": "Pre tento účet zatiaľ nemáme žiadne výsledky. Najprv absolvuj predtest a vyrieš pár úloh – štatistiky sa ti potom zobrazia.",
     "stats.emptyBtn": "Späť na prehľad",
 
     // dotazník
@@ -298,6 +309,12 @@ const TRANSLATIONS = {
     "chat.typing": "AdaptPy píše…",
     "chat.placeholderReply": "Zatiaľ som len ukážkový asistent 🙂 Čoskoro ma napojíme na vlastný model AdaptPy.",
     "chat.error": "Prepáč, niečo sa pokazilo. Skús to znova.",
+    "chat.online": "Online · pomôžem ti s cvičením",
+    "chat.expand": "Rozbaliť chat",
+    "chat.collapse": "Zbaliť chat",
+    "chat.send": "Odoslať",
+    "chat.chipExplain": "Vysvetli mi zadanie",
+    "chat.chipHint": "Daj mi nápovedu",
 
     // dashboard
     "dash.welcome": "Vitaj späť",
@@ -414,7 +431,7 @@ const TRANSLATIONS = {
     "ex.cellIdle": "nespustená",
     "ex.cellErr": "chyba",
     "ex.badId": "Chýba identifikátor cvičenia.",
-    "ex.chatGreeting": "Ahoj! Pomôžem ti s týmto cvičením. (asistent čoskoro pribudne)",
+    "ex.chatGreeting": "Ahoj! Som AI asistent tohto cvičenia.",
     "ex.insertHere": "Pridať bunku sem",
     "ex.scratchHint": "Vlastné bunky na experimentovanie – nezapočítavajú sa do progresu. Pridať ich môžeš kdekoľvek cez „＋“.",
     "ex.scratchCell": "vlastná bunka",
@@ -489,7 +506,7 @@ const TRANSLATIONS = {
     "ul.title": "Úlohy",
     "ul.subtitle": "Samoštúdium: systém ti priebežne vyberá úlohy z tém, ktoré ešte nezvládaš.",
     "ul.task": "Úloha",
-    "ul.inputHint": "Nezabudni použiť vstup uvedený pri úlohe. V niektorých prípadoch budeš potrebovať aj print(). Máš 5 pokusov; po nesprávnej odpovedi musíš kód opraviť sám. Po druhej nesprávnej odpovedi ti môže pomôcť asistent.",
+    "ul.inputHint": "Nezabudni použiť vstup uvedený pri úlohe. V niektorých prípadoch budeš potrebovať aj print(). Máš 5 pokusov; po nesprávnej odpovedi musíš kód opraviť sám. AI asistent ti od začiatku vysvetlí pojmy aj chyby; nápovedy (max. 3) sa odomykajú postupne po nesprávnych pokusoch a znižujú hodnotenie úlohy.",
     "ul.next": "Ďalšia úloha",
     "ul.attempt": "Pokus",
     "ul.attempts": "Pokusov",
@@ -502,6 +519,10 @@ const TRANSLATIONS = {
     "ul.loadError": "Úlohu sa nepodarilo načítať.",
     "ul.noTasks": "Zatiaľ nie sú ďalšie úlohy.",
     "sb.hiddenTag": "skryté",
+    "sb.learn": "Učenie",
+    "sb.more": "Ďalšie",
+    "sb.menu": "Menu",
+    "sb.profileSub": "Profil a nastavenia",
     "dash.hiddenTag": "skryté pre študentov",
     "dash.ulohy.title": "Úlohy",
     "dash.ulohy.desc": "Systém ti priebežne vyberá úlohy z tém, ktoré ešte nezvládaš.",
@@ -512,7 +533,7 @@ const TRANSLATIONS = {
     "dash.ulohy.how": "Ako to funguje",
     "dash.ulohy.how1": "Máš 5 pokusov, prvý robíš bez pomoci.",
     "dash.ulohy.how2": "Po nesprávnej odpovedi uvidíš, čo je zle, a kód opravíš sám.",
-    "dash.ulohy.how3": "Po 2. chybe ti pomôže asistent, po 5. sa ukáže riešenie.",
+    "dash.ulohy.how3": "AI asistent pomáha od začiatku, nápovedy sa odomykajú po chybách (znižujú hodnotenie), po 5. chybe sa ukáže riešenie.",
     "dash.ulohy.current": "Rozpracovaná úloha",
     "dash.ulohy.input": "Vstup",
     "dash.ulohy.attempt": "Pokus",
@@ -545,7 +566,7 @@ const TRANSLATIONS = {
     "as.replyPretest": "Najprv urob predtest. Zistí tvoju úroveň a podľa nej ti systém potom vyberá úlohy. Nájdeš ho hore na prehľade (Spustiť predtest).",
     "as.replyNext": "Pokračuj v úlohách: systém ti vyberie tie z tém, ktoré ešte nezvládaš. Ak chceš prejsť látku postupne, otvor cvičenia.",
     "as.replyNextTests": " Keď si chceš overiť, ako na tom si, môžeš spraviť aj hlavný test.",
-    "as.replyHow": "Aplikácia má tieto časti:\n• Predtest: zistí tvoju úroveň, robí sa raz.\n• Úlohy: samoštúdium, systém ti vyberá úlohy z tém, ktoré nezvládaš. Máš 5 pokusov a po 2. chybe ti pomôžem.\n• Cvičenia: interaktívne zošity krok za krokom.\n• Testy: adaptívne testy, ak ich vyučujúci sprístupní.\n• Spätná väzba: napíš nám nápad alebo chybu.",
+    "as.replyHow": "Aplikácia má tieto časti:\n• Predtest: zistí tvoju úroveň, robí sa raz.\n• Úlohy: samoštúdium, systém ti vyberá úlohy z tém, ktoré nezvládaš. Máš 5 pokusov, pýtať sa ma môžeš od začiatku a po chybách si vypýtaš nápovedu.\n• Cvičenia: interaktívne zošity krok za krokom.\n• Testy: adaptívne testy, ak ich vyučujúci sprístupní.\n• Spätná väzba: napíš nám nápad alebo chybu.",
     "ul.agentExplain": "Vysvetli, čo je zle",
     "ul.agentHint": "Daj mi nápovedu",
     "ul.agentPlaceholder": "Napíš otázku…",
@@ -636,6 +657,71 @@ const TRANSLATIONS = {
     "adminU.ulohyTitle": "vyriešené / dokončené",
     "adminU.testsHint": "Predtest a hlavné testy",
 
+    // AI asistent a materiály
+    "sb.materials": "Materiály",
+    "sb.adminAssistant": "AI asistent",
+    "sb.adminMaterials": "Materiály (správa)",
+    "ai.netError": "Spojenie so serverom zlyhalo.",
+    "ai.error": "Asistent teraz neodpovedá.",
+    "ai.interrupted": "Odpoveď sa prerušila. Skús to znova.",
+    "ai.searching": "Hľadám v prednáškach…",
+    "ai.thinking": "Premýšľam…",
+    "ai.sources": "Zdroje",
+    "ai.insertEditor": "Vložiť do editora…",
+    "ai.insertCell": "Vložiť do bunky…",
+    "ai.confirmEditor": "Vložiť tento kód do editora?",
+    "ai.confirmCell": "Do ktorej bunky mám kód vložiť?",
+    "ai.howAppend": "pridať na koniec",
+    "ai.howReplace": "nahradiť obsah",
+    "ai.insertOk": "Vložiť",
+    "ai.insertCancel": "Zrušiť",
+    "ai.insertedEditor": "vložené do editora",
+    "ai.insertedCell": "vložené:",
+    "ai.insertLog": "Kód z odpovede vložený",
+    "ul.hintCost": "ďalšia zníži hodnotenie na",
+    "ul.hintAfterWrong": "nápoveda po prvom nesprávnom pokuse",
+    "ul.hintAfterNextWrong": "ďalšia po ďalšom nesprávnom pokuse",
+    "ul.taskScore": "hodnotenie úlohy",
+    "ul.agentGreeting": "Ahoj! Som tvoj AI asistent k tejto úlohe. Pýtaj sa ma kedykoľvek – vysvetlím ti pojmy aj chyby, ale riešenie ti neprezradím. Po nesprávnom pokuse si môžeš vypýtať nápovedu (každá zníži hodnotenie úlohy).",
+    "ul.agentExplainMsg": "Vysvetli mi, čo mám v kóde zle (bez riešenia).",
+    "ul.agentHintMsg": "Daj mi nápovedu.",
+    "ex.aiTitle": "AI asistent cvičenia",
+    "ex.aiExplainTask": "Vysvetli mi zadanie",
+    "ex.aiWhy": "Prečo mi to nefunguje?",
+    "ex.aiSkeleton": "Daj mi kostru riešenia",
+    "ex.aiPlaceholder": "Opýtaj sa na látku alebo svoj kód…",
+    "ex.aiScratch": "vlastná bunka",
+    "ex.aiCell": "Bunka",
+    "ex.aiExplainTaskMsg": "Vysvetli mi zadanie tejto bunky a čo z prednášok k nemu potrebujem.",
+    "ex.aiWhyMsg": "Prečo mi tento kód nefunguje? Navedi ma, kde je chyba.",
+    "ex.aiSkeletonMsg": "Daj mi kostru riešenia tejto bunky a vysvetli postup.",
+    "ex.aiHintMsg": "Daj mi nápovedu k tejto bunke – navedi ma, kde mám chybu alebo ako začať, ale nedávaj mi celé riešenie.",
+    "ex.aiActiveCell": "Bunka, ku ktorej sa pýtaš",
+    "ex.aiGreeting": "Ahoj! Som AI asistent tohto cvičenia. Klikni do bunky, s ktorou potrebuješ pomôcť, a opýtaj sa. Vysvetlím ti látku z prednášok a navediem ťa – celé riešenie ti nenapíšem, ale dám ti kostru. Kód do bunky vložím len keď to potvrdíš.",
+    "mat.title": "Materiály",
+    "mat.subtitle": "Prednášky a knihy predmetu, ktoré sprístupnil vyučujúci.",
+    "mat.lecture": "Prednáška",
+    "mat.book": "Kniha",
+    "mat.lectures": "Prednášky",
+    "mat.books": "Knihy",
+    "mat.download": "Stiahnuť",
+    "mat.none": "Vyučujúci zatiaľ nesprístupnil žiadne materiály.",
+    "mat.error": "Materiály sa nepodarilo načítať.",
+    "aiA.title": "AI asistent",
+    "aiA.subtitle": "Konverzácie študentov, zdroje RAG, zásahy strážcu a nastavenie modelu.",
+    "aiA.tabOverview": "Prehľad",
+    "aiA.tabConversations": "Konverzácie",
+    "aiA.tabSettings": "Model",
+    "aiA.loading": "Načítavam…",
+    "aiM.title": "Materiály kurzu",
+    "aiM.subtitle": "Prednášky a knihy, z ktorých čerpá AI asistent (RAG). Môžeš ich sprístupniť aj študentom.",
+    "aiM.status.pending": "čaká",
+    "aiM.status.indexing": "indexujem…",
+    "aiM.status.ready": "pripravené",
+    "aiM.status.error": "chyba",
+    "adminU.ai": "AI",
+    "adminU.aiHint": "Konverzácie s AI asistentom",
+    "orig.fromAssistant": "vložené z AI asistenta",
   },
 
   en: {
@@ -653,6 +739,7 @@ const TRANSLATIONS = {
     "index.step4": "After finishing, you'll see statistics of your progress.",
     "index.step5": "Finally, fill in a short feedback questionnaire.",
     "index.cta": "Get started",
+    "index.demoOk": "Correct – nice work!",
     "index.thesis": "This application was created as part of a master's thesis at the Technical University of Košice, Faculty of Electrical Engineering and Informatics.",
 
     "login.title": "Sign in",
@@ -772,6 +859,16 @@ const TRANSLATIONS = {
     "stats.accuracy": "Accuracy",
     "stats.percentile": "Percentile",
     "stats.pretestByCategory": "Pre-test results by category",
+    "stats.tasksTitle": "Tasks",
+    "stats.tasksSolvedOf": "tasks solved",
+    "stats.tasksScore": "task score",
+    "stats.tasksFirstTry": "on the first try",
+    "stats.tasksHints": "hints used",
+    "stats.tasksByCategory": "Tasks by category",
+    "stats.solved": "Solved",
+    "stats.failed": "Not solved",
+    "stats.score": "score",
+    "stats.scoreNote": "The score takes hints into account: no hint 100 %, 1 hint 75 %, 2 hints 50 %, 3 hints 25 %. An unsolved task scores 0 %.",
     "stats.toFeedback": "To feedback",
     "sb.feedbackForm": "Feedback",
     "fb.notPublishedTitle": "The questionnaire is not available yet",
@@ -816,7 +913,7 @@ const TRANSLATIONS = {
     "adminF.noMessages": "No messages yet.",
     "adminF.confirmDelMsg": "Delete this message?",
     "stats.emptyTitle": "No data yet",
-    "stats.emptyText": "There are no results for this account yet. Complete the pre-test or a test first and your statistics will appear here.",
+    "stats.emptyText": "There are no results for this account yet. Take the pre-test and solve a few tasks – your statistics will then appear here.",
     "stats.emptyBtn": "Back to overview",
 
     "fb.title": "Questionnaire",
@@ -916,6 +1013,12 @@ const TRANSLATIONS = {
     "chat.typing": "AdaptPy is typing…",
     "chat.placeholderReply": "I'm just a demo assistant for now 🙂 We'll soon connect me to a custom AdaptPy model.",
     "chat.error": "Sorry, something went wrong. Please try again.",
+    "chat.online": "Online · here to help with this exercise",
+    "chat.expand": "Expand chat",
+    "chat.collapse": "Collapse chat",
+    "chat.send": "Send",
+    "chat.chipExplain": "Explain the task",
+    "chat.chipHint": "Give me a hint",
 
     "dash.welcome": "Welcome back",
     "dash.subtitle": "Here's your overview. Choose what you'd like to do.",
@@ -1028,7 +1131,7 @@ const TRANSLATIONS = {
     "ex.cellIdle": "not run",
     "ex.cellErr": "error",
     "ex.badId": "Missing exercise id.",
-    "ex.chatGreeting": "Hi! I'll help you with this exercise. (assistant coming soon)",
+    "ex.chatGreeting": "Hi! I'm the AI assistant of this exercise.",
     "ex.insertHere": "Add cell here",
     "ex.scratchHint": "Scratch cells for experimenting – they don't count toward progress. Add them anywhere via “＋”.",
     "ex.scratchCell": "scratch cell",
@@ -1103,7 +1206,7 @@ const TRANSLATIONS = {
     "ul.title": "Tasks",
     "ul.subtitle": "Self-study: the system keeps picking tasks from topics you have not mastered yet.",
     "ul.task": "Task",
-    "ul.inputHint": "Remember to use the input given with the task. Sometimes you will also need print(). You have 5 attempts; after a wrong answer you must fix the code yourself. After the second wrong answer the assistant can help you.",
+    "ul.inputHint": "Remember to use the input given with the task. Sometimes you will also need print(). You have 5 attempts; after a wrong answer you must fix the code yourself. The AI assistant explains concepts and errors from the start; hints (max 3) unlock one by one after wrong attempts and lower the task score.",
     "ul.next": "Next task",
     "ul.attempt": "Attempt",
     "ul.attempts": "Attempts",
@@ -1116,6 +1219,10 @@ const TRANSLATIONS = {
     "ul.loadError": "Could not load the task.",
     "ul.noTasks": "No more tasks for now.",
     "sb.hiddenTag": "hidden",
+    "sb.learn": "Learning",
+    "sb.more": "More",
+    "sb.menu": "Menu",
+    "sb.profileSub": "Profile & settings",
     "dash.hiddenTag": "hidden from students",
     "dash.ulohy.title": "Tasks",
     "dash.ulohy.desc": "The system keeps picking tasks on topics you haven't mastered yet.",
@@ -1126,7 +1233,7 @@ const TRANSLATIONS = {
     "dash.ulohy.how": "How it works",
     "dash.ulohy.how1": "You get 5 attempts; the first one is without any help.",
     "dash.ulohy.how2": "After a wrong answer you see what is wrong and fix the code yourself.",
-    "dash.ulohy.how3": "After the 2nd mistake the assistant helps; after the 5th the solution is shown.",
+    "dash.ulohy.how3": "The AI assistant helps from the start, hints unlock after mistakes (they lower the score), after the 5th mistake the solution is shown.",
     "dash.ulohy.current": "Task in progress",
     "dash.ulohy.input": "Input",
     "dash.ulohy.attempt": "Attempt",
@@ -1159,7 +1266,7 @@ const TRANSLATIONS = {
     "as.replyPretest": "Start with the pretest. It finds out your level and the system then picks tasks for you based on it. You'll find it at the top of the overview (Start pretest).",
     "as.replyNext": "Keep going with the tasks: the system picks the ones from topics you haven't mastered yet. If you'd rather go through the material step by step, open the exercises.",
     "as.replyNextTests": " When you want to check how you're doing, you can also take the main test.",
-    "as.replyHow": "The app has these parts:\n• Pretest: finds out your level, done once.\n• Tasks: self-study, the system picks tasks from topics you haven't mastered. You get 5 attempts and I'll help after the 2nd mistake.\n• Exercises: interactive notebooks, step by step.\n• Tests: adaptive tests, if your teacher makes them available.\n• Feedback: send us an idea or a bug report.",
+    "as.replyHow": "The app has these parts:\n• Pretest: finds out your level, done once.\n• Tasks: self-study, the system picks tasks from topics you haven't mastered. You get 5 attempts, you can ask me from the start and get hints after mistakes.\n• Exercises: interactive notebooks, step by step.\n• Tests: adaptive tests, if your teacher makes them available.\n• Feedback: send us an idea or a bug report.",
     "ul.agentExplain": "Explain what is wrong",
     "ul.agentHint": "Give me a hint",
     "ul.agentPlaceholder": "Type a question…",
@@ -1249,6 +1356,71 @@ const TRANSLATIONS = {
     "adminUL.noAttempts": "No attempts yet.",
     "adminUL.editHint": "Editing the correctness of an attempt or task does not change the POMDP model state.",
     "adminUL.taskCorrect": "Task solved",
+    // AI asistent a materiály
+    "sb.materials": "Materials",
+    "sb.adminAssistant": "AI assistant",
+    "sb.adminMaterials": "Materials (admin)",
+    "ai.netError": "Connection to the server failed.",
+    "ai.error": "The assistant is not responding right now.",
+    "ai.interrupted": "The answer was interrupted. Try again.",
+    "ai.searching": "Searching the lectures…",
+    "ai.thinking": "Thinking…",
+    "ai.sources": "Sources",
+    "ai.insertEditor": "Insert into editor…",
+    "ai.insertCell": "Insert into cell…",
+    "ai.confirmEditor": "Insert this code into the editor?",
+    "ai.confirmCell": "Which cell should I put the code into?",
+    "ai.howAppend": "append to the end",
+    "ai.howReplace": "replace contents",
+    "ai.insertOk": "Insert",
+    "ai.insertCancel": "Cancel",
+    "ai.insertedEditor": "inserted into the editor",
+    "ai.insertedCell": "inserted:",
+    "ai.insertLog": "Code from the answer inserted",
+    "ul.hintCost": "the next one lowers the score to",
+    "ul.hintAfterWrong": "hint after the first wrong attempt",
+    "ul.hintAfterNextWrong": "next one after another wrong attempt",
+    "ul.taskScore": "task score",
+    "ul.agentGreeting": "Hi! I'm your AI assistant for this task. Ask me anything at any time – I'll explain concepts and errors, but I won't reveal the solution. After a wrong attempt you can ask for a hint (each one lowers the task score).",
+    "ul.agentExplainMsg": "Explain what is wrong in my code (without the solution).",
+    "ul.agentHintMsg": "Give me a hint.",
+    "ex.aiTitle": "Exercise AI assistant",
+    "ex.aiExplainTask": "Explain the task",
+    "ex.aiWhy": "Why doesn't it work?",
+    "ex.aiSkeleton": "Give me a solution skeleton",
+    "ex.aiPlaceholder": "Ask about the topic or your code…",
+    "ex.aiScratch": "own cell",
+    "ex.aiCell": "Cell",
+    "ex.aiExplainTaskMsg": "Explain the task of this cell and what I need from the lectures for it.",
+    "ex.aiWhyMsg": "Why doesn't this code work? Guide me to the mistake.",
+    "ex.aiSkeletonMsg": "Give me a skeleton of the solution for this cell and explain the approach.",
+    "ex.aiHintMsg": "Give me a hint for this cell – point me to my mistake or how to start, but don't give me the whole solution.",
+    "ex.aiActiveCell": "The cell you are asking about",
+    "ex.aiGreeting": "Hi! I'm the AI assistant of this exercise. Click into the cell you need help with and ask. I'll explain the topic from the lectures and guide you – I won't write the whole solution, but I'll give you a skeleton. I only insert code into a cell when you confirm it.",
+    "mat.title": "Materials",
+    "mat.subtitle": "Course lectures and books made available by the teacher.",
+    "mat.lecture": "Lecture",
+    "mat.book": "Book",
+    "mat.lectures": "Lectures",
+    "mat.books": "Books",
+    "mat.download": "Download",
+    "mat.none": "The teacher hasn't made any materials available yet.",
+    "mat.error": "Materials could not be loaded.",
+    "aiA.title": "AI assistant",
+    "aiA.subtitle": "Student conversations, RAG sources, guard interventions and model settings.",
+    "aiA.tabOverview": "Overview",
+    "aiA.tabConversations": "Conversations",
+    "aiA.tabSettings": "Model",
+    "aiA.loading": "Loading…",
+    "aiM.title": "Course materials",
+    "aiM.subtitle": "Lectures and books the AI assistant draws from (RAG). You can also make them available to students.",
+    "aiM.status.pending": "waiting",
+    "aiM.status.indexing": "indexing…",
+    "aiM.status.ready": "ready",
+    "aiM.status.error": "error",
+    "adminU.ai": "AI",
+    "adminU.aiHint": "Conversations with the AI assistant",
+    "orig.fromAssistant": "inserted from the AI assistant",
   },
 };
 
@@ -1349,9 +1521,47 @@ document.addEventListener("click", (e) => {
   }
   const themeBtn = e.target.closest("#theme-toggle");
   if (themeBtn) {
-    THEME.toggle();
+    toggleThemeAnimated(themeBtn);
   }
 });
+
+// Prepnutie témy s animáciou: nová téma sa rozleje kruhom od prepínača.
+// Bez podpory View Transitions alebo pri "Obmedziť pohyb" sa prepne okamžite.
+function toggleThemeAnimated(btn) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!document.startViewTransition || reduce || !btn) { THEME.toggle(); return; }
+  const r = btn.getBoundingClientRect();
+  const x = r.left + r.width / 2;
+  const y = r.top + r.height / 2;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const root = document.documentElement;
+  root.classList.add("theme-vt");
+  let t;
+  try {
+    t = document.startViewTransition(() => THEME.toggle());
+  } catch (err) {
+    root.classList.remove("theme-vt");
+    THEME.toggle();
+    return;
+  }
+  t.ready.then(() => {
+    root.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+      { duration: 520, easing: "cubic-bezier(0.22, 1, 0.36, 1)", pseudoElement: "::view-transition-new(root)" }
+    );
+  }).catch(() => {});
+  t.finished.finally(() => root.classList.remove("theme-vt"));
+}
+
+// Animácie (nástup obsahu, pruhy, počítadlá) - jeden súbor pre všetky stránky.
+(function loadMotion() {
+  if (document.querySelector('script[data-adaptpy-motion]')) return;
+  const s = document.createElement("script");
+  s.src = "/js/core/motion.js";
+  s.async = true;
+  s.dataset.adaptpyMotion = "1";
+  (document.head || document.documentElement).appendChild(s);
+})();
 
 // Keď navbar.js vloží obsah, znova aplikuj preklady a stav prepínačov.
 // (navbar.js beží synchrónne pri načítaní, takže po DOMContentLoaded je už v DOM.)

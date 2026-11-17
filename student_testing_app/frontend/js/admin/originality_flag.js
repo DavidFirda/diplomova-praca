@@ -47,7 +47,8 @@
         .replace("{typed}", m.typed_chars ?? "–")
         .replace("{corr}", m.corrections ?? "–")
         .replace("{paste}", m.paste_blocked ?? "–")
-    )}${m.cpm ? ` · ${esc(m.cpm)} zn./min` : ""}</div>` : "";
+    )}${m.cpm ? ` · ${esc(m.cpm)} zn./min` : ""}${m.assistant_chars
+      ? ` · ${esc(tr("orig.fromAssistant", "vložené z AI asistenta"))}: ${esc(m.assistant_chars)} zn.` : ""}</div>` : "";
     const dismissedNote = g.dismissed
       ? `<div class="orig-flag__metrics">${esc(tr("orig.dismissed", "Red flag zrušený adminom"))}${g.dismissed_at ? " · " + esc(when(g.dismissed_at)) : ""}</div>` : "";
     const btn = g.dismissed

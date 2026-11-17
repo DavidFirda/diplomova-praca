@@ -7,131 +7,154 @@
 .app-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }   /* asistent je plávajúci, obsah má celú šírku */
 .app-layout__main { min-width: 0; }
 
+/* ---------- Farebné ikony sekcií (ako v Nastaveniach iOS / macOS) ----------
+   Každá sekcia má vlastnú farbu dlaždice, aby sa dali rýchlo rozoznať.
+   Text pri ikone vždy hovorí, o čo ide - farba je len doplnok. */
+.task-row__icon {
+  --tile-a: #3a95ff; --tile-b: #0060c7;
+  background: linear-gradient(180deg, var(--tile-a) 0%, var(--tile-b) 100%);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0.5px 0 rgba(255, 255, 255, 0.25);
+}
+#row-questionnaire .task-row__icon { --tile-a: #8a87ff; --tile-b: #5856d6; }  /* indigo */
+#row-pretest .task-row__icon       { --tile-a: #ffae3d; --tile-b: #f07800; }  /* oranžová */
+#row-cvicenia .task-row__icon      { --tile-a: #4fd0e8; --tile-b: #1693b8; }  /* tyrkys */
+#row-main .task-row__icon          { --tile-a: #cf8bff; --tile-b: #9b51e0; }  /* fialová */
+#row-feedback-form .task-row__icon { --tile-a: #5ee07a; --tile-b: #26a345; }  /* zelená */
+.task-row--locked .task-row__icon,
+.dash-hero--locked .dash-hero__icon { background: var(--fill); color: var(--text-muted); box-shadow: none; }
+
 /* ---------- Úlohy (hlavná karta) ---------- */
 .dash-hero {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
-  padding: 22px;
+  padding: 24px 26px;
   box-shadow: var(--shadow-sm);
-  display: flex; flex-direction: column; gap: 18px;
+  display: flex; flex-direction: column; gap: 20px;
 }
-.dash-hero--locked { opacity: 0.6; border-color: var(--border); }
-.dash-hero__head { display: flex; align-items: center; gap: 16px; }
-.dash-hero:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.dash-hero__head { display: flex; align-items: center; gap: 14px; }
 .dash-hero__icon {
-  width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
-  display: grid; place-items: center; color: var(--text);
-  background: var(--surface-2);
+  width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+  display: grid; place-items: center; color: #fff;
+  background: linear-gradient(180deg, #3a95ff 0%, #0060c7 100%);
+  box-shadow: 0 2px 6px rgba(0, 96, 199, 0.25);
 }
-.dash-hero__icon svg { width: 24px; height: 24px; }
+.dash-hero__icon svg { width: 22px; height: 22px; }
 .dash-hero__titles { flex: 1; min-width: 0; }
 .dash-hero__name {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  color: var(--text); font-weight: 800; font-size: 1.1rem;
+  color: var(--text); font-family: var(--font-display);
+  font-weight: 700; font-size: 1.25rem; letter-spacing: -0.015em;
 }
-.dash-hero__desc { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+.dash-hero__desc { color: var(--text-muted); font-size: 0.9375rem; margin-top: 2px; }
+
+/* zamknutá karta (pred predtestom): plný kontrast, len sivá ikona */
+.dash-hero--locked .dash-hero__icon { background: var(--fill); color: var(--text-muted); box-shadow: none; }
 
 .dash-pill {
-  display: inline-block; padding: 3px 10px; border-radius: var(--radius-full);
-  background: var(--primary-soft); color: var(--primary);
-  font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+  display: inline-flex; align-items: center; padding: 2px 9px; border-radius: var(--radius-full);
+  background: var(--fill); color: var(--text-muted);
+  font-family: var(--font); font-size: 0.75rem; font-weight: 600; letter-spacing: 0; white-space: nowrap;
 }
-.dash-pill--warn {
-  background: color-mix(in srgb, var(--warning) 22%, transparent);
-  color: color-mix(in srgb, var(--warning) 62%, var(--text));
-}
+.dash-pill--warn { background: var(--warning-soft); color: var(--warning); }
 .dash-label {
-  color: var(--text-muted); font-size: 0.72rem; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted); font-size: 0.8125rem; font-weight: 600;
 }
 
-.dash-hero__body { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+.dash-hero__body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: stretch; }
 
 /* zvládnutie tém */
-.dash-mastery { display: flex; flex-direction: column; gap: 14px; justify-content: center; min-width: 0; }
-.dash-mastery__list { display: flex; flex-direction: column; gap: 13px; }
+.dash-mastery { display: flex; flex-direction: column; gap: 12px; justify-content: flex-start; min-width: 0; }
+.dash-mastery__list { display: flex; flex-direction: column; gap: 14px; }
 .dash-mastery__top {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  margin-bottom: 6px; font-size: 0.86rem; font-weight: 600; color: var(--text);
+  margin-bottom: 6px; font-size: 0.9375rem; font-weight: 500; color: var(--text);
 }
 .dash-mastery__name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
-.dash-mastery__pct { color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+.dash-mastery__pct { color: var(--text-muted); font-weight: 500; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-/* pruh (tému aj cvičenia) */
-.dash-bar { height: 8px; border-radius: var(--radius-full); background: var(--surface-2); overflow: hidden; }
+/* pruh (témy aj cvičenia) - jedna farba, stav hovorí text */
+.dash-bar { height: 6px; border-radius: var(--radius-full); background: var(--fill); overflow: hidden; }
 .dash-bar__fill { height: 100%; border-radius: var(--radius-full); background: var(--primary); transition: width 0.5s ease; }
-.dash-bar--low .dash-bar__fill { background: var(--warning); }
-.dash-bar--high .dash-bar__fill { background: var(--success); }
+.dash-bar--low .dash-bar__fill,
+.dash-bar--mid .dash-bar__fill,
+.dash-bar--high .dash-bar__fill { background: var(--primary); }
 
 /* rozpracovaná úloha / ako to funguje */
 .dash-next {
-  display: flex; flex-direction: column; gap: 10px; min-width: 0;
-  padding: 16px; border-radius: var(--radius);
-  background: var(--surface-2); border: 1px dashed var(--border-strong);
+  display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  padding: 18px; border-radius: var(--radius);
+  background: var(--surface-2);
 }
 .dash-next__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .dash-next__text {
-  color: var(--text); font-weight: 600; font-size: 0.92rem; line-height: 1.45;
+  color: var(--text); font-weight: 600; font-size: 1rem; line-height: 1.45;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.dash-next__input { font-size: 0.82rem; color: var(--text); min-width: 0; }
+.dash-next__input { font-size: 0.8125rem; color: var(--text-muted); min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dash-next__input b { font-weight: 500; }
 .dash-next__input code {
   display: inline-block; max-width: 100%; vertical-align: bottom;
-  padding: 3px 9px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border);
-  font-family: var(--font-mono); font-size: 0.8rem;
+  padding: 3px 9px; border-radius: 7px; background: var(--surface); color: var(--text);
+  font-family: var(--font-mono); font-size: 0.8125rem;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .dash-next__foot {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin-top: auto; color: var(--text-muted); font-size: 0.82rem; font-weight: 600;
+  margin-top: auto; color: var(--text-muted); font-size: 0.8125rem; font-weight: 600;
 }
-.dash-dots { display: inline-flex; gap: 6px; }
-.dash-dot {
-  display: block; width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box;
-  background: var(--surface); border: 1.5px solid var(--border-strong);
-}
-.dash-dot--bad { background: var(--danger); border-color: var(--danger); }
-.dash-dot--now { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+/* pokusy ako segmenty */
+.dash-dots { display: inline-flex; gap: 4px; }
+.dash-dot { display: block; width: 18px; height: 5px; border-radius: 3px; background: var(--fill-strong); }
+.dash-dot--bad { background: var(--danger); }
+.dash-dot--now { background: var(--primary); }
 .dash-how {
-  margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 9px;
-  color: var(--text); font-size: 0.86rem; line-height: 1.45;
+  margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px;
+  color: var(--text); font-size: 0.9375rem; line-height: 1.45;
 }
 
-.dash-hero__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.dash-hero__stats { color: var(--text-muted); font-size: 0.85rem; }
-.dash-hero__stats b { color: var(--text); }
-.dash-hero__foot .btn { width: auto; min-height: 44px; padding: 10px 24px; white-space: nowrap; }
+.dash-hero__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+.dash-hero__stats { color: var(--text-muted); font-size: 0.875rem; }
+.dash-hero__stats b { color: var(--text); font-weight: 600; }
+.dash-hero__foot .btn { width: auto; min-height: 40px; padding: 0 20px; white-space: nowrap; }
+/* hlavná akcia dashboardu = pokračovať v úlohách (plné modré tlačidlo) */
+.dash-hero__foot .btn.btn--secondary { background: var(--button); color: #fff; }
+.dash-hero__foot .btn.btn--secondary:hover { background: var(--button-hover); color: #fff; }
 
 /* ---------- Cvičenia ---------- */
 .dash-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px 18px;
+  background: var(--surface); border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg); padding: 16px 20px 20px; box-shadow: var(--shadow-sm);
   display: flex; flex-direction: column;
-  transition: border-color var(--transition), box-shadow var(--transition);
 }
-.dash-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
-.dash-card__head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.dash-ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 16px; }
+.dash-card__head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.dash-ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
 .dash-ex-grid:empty { display: none; }
 .dash-ex {
   display: flex; flex-direction: column; gap: 10px; min-width: 0;
-  padding: 14px; border-radius: var(--radius-sm);
-  background: var(--surface-2); border: 1px solid transparent;
+  padding: 14px 16px; border-radius: var(--radius);
+  background: var(--surface-2);
   color: var(--text); text-decoration: none;
-  transition: border-color var(--transition), transform var(--transition);
+  transition: background var(--transition);
 }
-a.dash-ex:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+a.dash-ex:hover { background: var(--surface-hover); color: var(--text); }
 .dash-ex__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.dash-ex__title { font-weight: 700; font-size: 0.88rem; line-height: 1.3; min-width: 0; }
+.dash-ex__title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; min-width: 0; }
 .dash-ex__badge {
-  flex-shrink: 0; padding: 2px 9px; border-radius: var(--radius-full);
-  background: var(--surface); color: var(--text-muted); font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+  flex-shrink: 0; padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--fill); color: var(--text-muted); font-size: 0.6875rem; font-weight: 600; white-space: nowrap;
 }
-.dash-ex .dash-bar { background: var(--surface); }
-.dash-ex__note { color: var(--text-muted); font-size: 0.78rem; }
+.dash-ex .dash-bar { background: var(--fill-strong); }
+.dash-ex__note { color: var(--text-muted); font-size: 0.8125rem; }
 .dash-ex--progress .dash-ex__badge { background: var(--primary-soft); color: var(--primary); }
 .dash-ex--done .dash-ex__badge { background: var(--success-soft); color: var(--success); }
 .dash-ex--done .dash-bar__fill { background: var(--success); }
-.dash-ex--locked { opacity: 0.6; }
-.dash-empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 0.88rem; padding: 10px; }
+.dash-ex--locked .dash-ex__title { color: var(--text-muted); }
+.dash-empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 0.9375rem; padding: 10px; }
+
+@media (max-width: 560px) {
+  .dash-hero { padding: 18px 16px; }
+  .dash-card { padding: 14px 16px 16px; }
+  .dash-hero__foot .btn { width: 100%; }
+}

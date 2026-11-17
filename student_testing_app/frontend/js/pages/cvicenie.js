@@ -8,7 +8,9 @@
    - Grafy (matplotlib) sa zobrazia pod výstupom.
    - Časový limit cvičenia: počas behu beží ODPOČET; pri timeoute pekná hláška.
    - Vlastné bunky sa dajú vložiť kdekoľvek cez "＋".
-   - Vpravo pripravený chat panel (napojí ho /js/pages/chat.js).
+   - Vpravo AI asistent cvičenia (RAG nad prednáškami, js/core/ai_chat.js): vidí zadanie
+     aktuálnej bunky a kód študenta; kód z odpovede vloží do bunky LEN po potvrdení
+     študentom (výber bunky + nahradiť/pridať). Vloženie sa zaloguje.
    ============================================================ */
 (function () {
   const root = document.getElementById("ex-content");
@@ -33,7 +35,7 @@
 
   const exId = new URLSearchParams(location.search).get("id");
 
-  // ---- SYNCHRÓNNY skeleton (aby chat.js našiel panel) ----
+  // ---- SYNCHRÓNNY skeleton (notebook + panel asistenta) ----
   const RUN_ICON = '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
   root.innerHTML = `
     <div class="ex-workspace">
@@ -45,23 +47,37 @@
         </div>
       </div>
       <aside class="side-panel">
-        <div class="chat-panel">
-          <div class="chat-panel__header">
-            <span class="chat-panel__dot"></span>
-            <span data-i18n="chat.title">AdaptPy asistent</span>
-          </div>
-          <div class="chat-panel__messages" id="chat-messages">
-            <div class="chat-msg chat-msg--bot">
-              <span data-i18n="ex.chatGreeting">Ahoj! Pomôžem ti s týmto cvičením. (asistent čoskoro pribudne)</span>
+        <!-- AI asistent cvičenia: rovnaký vzhľad ako na dashboarde a v Úlohách, ale stále viditeľný.
+             Na desktope je pripnutý vpravo, na tablete/mobile dole (dá sa rozbaliť, správanie v chat.js).
+             Odpovede, zdroje a vloženie kódu do bunky rieši js/core/ai_chat.js + initAssistant() nižšie. -->
+        <section class="chat-panel ai-panel" id="chat-panel" aria-labelledby="chat-title">
+          <header class="chat-panel__header">
+            <div class="ul-avatar ul-avatar--lg" aria-hidden="true">
+              <svg class="ul-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2v3"/><circle cx="12" cy="2.9" r="1" fill="currentColor" stroke="none"/><rect x="4.5" y="6.5" width="15" height="12.5" rx="4.2"/><path d="M2.4 11.6v3.2M21.6 11.6v3.2"/><circle cx="9.1" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="14.9" cy="12" r="1.25" fill="currentColor" stroke="none"/><path d="M9.4 15.6c.75.6 1.6.9 2.6.9s1.85-.3 2.6-.9"/></svg>
             </div>
+            <div class="chat-panel__title">
+              <strong id="chat-title" data-i18n="ex.aiTitle">AI asistent cvičenia</strong>
+              <span class="chat-panel__status"><i class="ul-online" aria-hidden="true"></i><span data-i18n="chat.online">Online · pomôžem ti s cvičením</span></span>
+              <span class="chat-panel__preview" id="chat-preview" aria-hidden="true"></span>
+            </div>
+            <span class="ai-panel__cell" id="ai-active-cell" data-i18n-title="ex.aiActiveCell" title="Bunka, ku ktorej sa pýtaš"></span>
+            <button type="button" class="chat-panel__toggle" id="chat-toggle" aria-expanded="false" aria-controls="chat-messages" data-i18n-aria-label="chat.expand" aria-label="Rozbaliť chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+            </button>
+          </header>
+          <div class="chat-panel__messages" id="chat-messages" aria-live="polite"></div>
+          <div class="chat-panel__quick">
+            <button type="button" class="ul-chip" data-ai-prompt="ex.aiExplainTaskMsg" data-i18n="chat.chipExplain">Vysvetli mi zadanie</button>
+            <button type="button" class="ul-chip" data-ai-prompt="ex.aiHintMsg" data-i18n="chat.chipHint">Daj mi nápovedu</button>
+            <button type="button" class="ul-chip" data-ai-prompt="ex.aiSkeletonMsg" data-i18n="ex.aiSkeleton">Daj mi kostru riešenia</button>
           </div>
-          <form class="chat-panel__input" id="chat-form">
-            <input type="text" id="chat-input" autocomplete="off" data-i18n-placeholder="chat.placeholder" placeholder="Napíš správu…" />
-            <button type="submit" class="chat-panel__send" aria-label="Odoslať">
-              <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+          <form class="chat-panel__input" id="chat-form" autocomplete="off">
+            <input type="text" id="chat-input" maxlength="1500" autocomplete="off" data-i18n-placeholder="ex.aiPlaceholder" placeholder="Opýtaj sa na látku alebo svoj kód…" />
+            <button type="submit" class="ul-send chat-panel__send" data-i18n-aria-label="chat.send" aria-label="Odoslať">
+              <svg class="ul-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5 21 3z"/></svg>
             </button>
           </form>
-        </div>
+        </section>
       </aside>
     </div>`;
 
@@ -74,6 +90,7 @@
   const cellsEl = document.getElementById("ex-cells");
 
   let editors = [];
+  let activeRec = null;   // bunka, v ktorej študent naposledy písal (kontext pre asistenta)
   let doneSet = new Set();
   let totalCode = 0;
   let percent = 0;
@@ -216,6 +233,7 @@
     wrap.className = "nb-code" + (cell.done ? " nb-code--done" : "") + (custom ? " nb-code--custom" : "");
     wrap.innerHTML = `
       <div class="nb-code__toolbar">
+        <span class="nb-code__num">${custom ? "✎" : (cell.code_index + 1)}</span>
         <button class="btn nb-code__run">${RUN_ICON}<span>${tr("ex.run", "Spustiť")}</span></button>
         ${(!custom && cell.timeout) ? `<span class="nb-code__limit" title="${tr("ex.limit", "Limit na bunku")}">⏱ ${cell.timeout}s</span>` : ""}
         ${custom ? `<button class="nb-code__remove" title="${tr("ex.removeCell", "Odstrániť bunku")}">✕</button>` : ""}
@@ -241,15 +259,17 @@
 
     // kontrola originality: zákaz vkladania zvonku + sledovanie písania (js/core/originality.js)
     const guard = (typeof Originality !== "undefined") ? Originality.attach(cm) : null;
-    const rec = { code_index: cell.code_index, cm, guard, statusEl, outEl, imagesEl, wrap, custom, timeout: (!custom && cell.timeout) ? cell.timeout : 0 };
+    const rec = { code_index: cell.code_index, cm, guard, statusEl, outEl, imagesEl, wrap, custom, timeout: (!custom && cell.timeout) ? cell.timeout : 0, lastOutput: "" };
     wrap.__rec = rec;
     editors.push(rec);
+    cm.on("focus", () => setActive(rec));
     runBtn.addEventListener("click", () => runCell(rec, runBtn));
 
     if (custom) {
       const rmBtn = wrap.querySelector(".nb-code__remove");
       if (rmBtn) rmBtn.addEventListener("click", () => {
         editors = editors.filter(e => e !== rec);
+        if (activeRec === rec) setActive(null);
         const next = wrap.nextElementSibling;
         if (next && next.classList.contains("ex-insert")) next.remove();
         wrap.remove();
@@ -353,6 +373,8 @@
 
       rec.outEl.className = "nb-code__output" + (data.ok ? "" : " nb-code__output--err");
       rec.outEl.textContent = (data.output || "") + (data.error || "");
+      rec.lastOutput = rec.outEl.textContent;
+      setActive(rec);
       renderImages(rec, data.images);
 
       if (rec.custom) {
@@ -399,6 +421,105 @@
     }
   }
 
+  // =========================================================
+  // AI asistent cvičenia
+  // =========================================================
+  const chatBox = document.getElementById("chat-messages");
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+  const activeLabel = document.getElementById("ai-active-cell");
+  let chat = null;
+  let chatBusy = false;
+
+  function cellLabel(rec) {
+    if (!rec) return "";
+    if (rec.custom) return tr("ex.aiScratch", "vlastná bunka");
+    return `${tr("ex.aiCell", "Bunka")} ${rec.code_index + 1}`;
+  }
+  function firstLine(code) {
+    const line = (code || "").split("\n").find(l => l.trim() && !l.trim().startsWith("#")) || "";
+    return line.trim().slice(0, 40);
+  }
+  function setActive(rec) {
+    activeRec = rec;
+    editors.forEach(e => e.wrap.classList.toggle("nb-code--active", e === rec));
+    if (activeLabel) activeLabel.textContent = rec ? cellLabel(rec) : "";
+  }
+  function recByValue(value) {
+    return editors.find(e => (e.custom ? "cx:" : "nb:") + e.code_index === value);
+  }
+
+  // ciele vloženia: všetky bunky v poradí na obrazovke, predvolená je aktívna
+  function insertTargets() {
+    const wraps = [...cellsEl.querySelectorAll(".nb-code")];
+    return wraps.map(w => w.__rec).filter(Boolean).map(rec => ({
+      value: (rec.custom ? "cx:" : "nb:") + rec.code_index,
+      short: cellLabel(rec),
+      label: `${cellLabel(rec)}${firstLine(rec.cm.getValue()) ? " – " + firstLine(rec.cm.getValue()) : ""}`,
+      selected: rec === activeRec,
+    }));
+  }
+
+  // vloženie kódu do bunky (študent potvrdil v okne asistenta)
+  function applyInsert(code, target, how) {
+    const rec = recByValue(target);
+    if (!rec) return false;
+    const cm = rec.cm;
+    const last = cm.lastLine();
+    const end = { line: last, ch: cm.getLine(last).length };
+    if (how === "replace") cm.replaceRange(code, { line: 0, ch: 0 }, end, "assistant");
+    else cm.replaceRange((cm.getValue().trim() ? "\n\n" : "") + code, end, end, "assistant");
+    setActive(rec);
+    if (window.adaptpyChatPanel && window.adaptpyChatPanel.isDock()) window.adaptpyChatPanel.setExpanded(false);
+    rec.wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+    rec.wrap.classList.add("nb-code--inserted");
+    setTimeout(() => rec.wrap.classList.remove("nb-code--inserted"), 1600);
+    try { cm.focus(); } catch (e) {}
+    return true;
+  }
+
+  function setChatBusy(on) {
+    chatBusy = on;
+    if (chatInput) chatInput.disabled = on;
+    document.querySelectorAll("#chat-panel [data-ai-prompt]").forEach(b => { b.disabled = on; });
+  }
+
+  async function askAssistant(text) {
+    if (!chat || chatBusy || !text) return;
+    setChatBusy(true);
+    const rec = activeRec;
+    const body = {
+      mode: "exercise", exercise_id: Number(exId), message: text,
+      cell_index: rec && !rec.custom ? rec.code_index : null,
+      cell_code: rec ? rec.cm.getValue() : null,
+      cell_output: rec ? (rec.lastOutput || "") : "",
+    };
+    const shown = rec ? `${text}\n(${cellLabel(rec)})` : text;
+    await AiChat.ask(chat, body, { userText: shown });
+    setChatBusy(false);
+    if (chatInput) chatInput.focus({ preventScroll: true });
+  }
+
+  async function initAssistant() {
+    if (chat || typeof AiChat === "undefined" || !chatBox) return;
+    chat = AiChat.view(chatBox, { insert: { targets: insertTargets, apply: applyInsert } });
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = "";
+      askAssistant(text);
+    });
+    // rýchle otázky: na tlačidle je krátky popis, odošle sa celá otázka (data-ai-prompt = kľúč prekladu)
+    document.querySelectorAll("#chat-panel [data-ai-prompt]").forEach(b => {
+      b.addEventListener("click", () => askAssistant(tr(b.dataset.aiPrompt, b.textContent.trim())));
+    });
+
+    const messages = await AiChat.history({ mode: "exercise", exercise_id: exId });
+    if (messages.length) chat.restore(messages);
+    else chat.plain(tr("ex.aiGreeting", "Ahoj! Som AI asistent tohto cvičenia. Klikni do bunky, s ktorou potrebuješ pomôcť, a opýtaj sa. Vysvetlím ti látku z prednášok a navediem ťa – celé riešenie ti nenapíšem, ale dám ti kostru. Kód do bunky vložím len keď to potvrdíš."), false);
+  }
+
   async function load() {
     try {
       const r = await fetch(`/api/exercises/${exId}`, { credentials: "include" });
@@ -424,6 +545,7 @@
 
       const bar = document.getElementById("ex-addcell-bar");
       if (bar) bar.style.display = "flex";
+      initAssistant();
 
       if (typeof I18N !== "undefined") I18N.apply();
     } catch (e) {

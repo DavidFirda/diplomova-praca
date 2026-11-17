@@ -35,6 +35,9 @@ class TaskAssignment(db.Model):
     attempts_used = db.Column(db.Integer, nullable=False, default=0)    # započítané pokusy
     wrong_attempts = db.Column(db.Integer, nullable=False, default=0)   # z nich nesprávne
     hints_used = db.Column(db.Integer, nullable=False, default=0)       # nápovedy agenta
+    # počet nesprávnych pokusov v čase poslednej nápovedy: ďalšia nápoveda sa
+    # odomkne až po novom nesprávnom pokuse (nápovedy sa nedajú vypýtať naraz)
+    last_hint_wrong = db.Column(db.Integer, nullable=False, default=0)
     agent_opened = db.Column(db.Boolean, nullable=False, default=False)
     solution_shown = db.Column(db.Boolean, nullable=False, default=False)
 

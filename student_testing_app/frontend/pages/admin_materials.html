@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – Materiály (správa)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="admin-materials"></div>
+
+    <main class="app-main">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="aiM.title">Materiály kurzu</h1>
+          <p data-i18n="aiM.subtitle">Prednášky a knihy, z ktorých čerpá AI asistent (RAG). Môžeš ich sprístupniť aj študentom.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <div id="mat-admin">
+        <div class="ex-empty" data-i18n="aiA.loading">Načítavam…</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/core/session-guard.js"></script>
+  <script src="/js/core/i18n.js"></script>
+  <script src="/js/core/sidebar.js"></script>
+  <script src="/js/core/topbar-controls.js"></script>
+  <script src="/js/admin/admin_materials.js"></script>
+</body>
+</html>

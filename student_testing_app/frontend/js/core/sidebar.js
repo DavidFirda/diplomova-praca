@@ -18,6 +18,9 @@
     exercises: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 4h11l5 5v11a0 0 0 0 1 0 0H4z"/><path d="M14 4v5h5"/><path d="M8 13l2 2 4-4"/></svg>',
     adminTests: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14h6M9 17h4"/></svg>',
     adminExercises: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/><path d="M8 14h6M8 17h4"/></svg>',
+    materials: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
+    adminAssistant: '<svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="4.5" y="6.5" width="15" height="12.5" rx="4.2"/><path d="M12 3.2v3"/><path d="M9 12h.01M15 12h.01"/><path d="M9.4 15.6c.75.6 1.6.9 2.6.9s1.85-.3 2.6-.9"/></svg>',
+    adminMaterials: '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/><path d="M15 9h4"/></svg>',
   };
 
 
@@ -28,6 +31,7 @@
     { key: "ulohy", href: "/ulohy", i18n: "sb.ulohy", label: "Úlohy" },
     { key: "tests", href: "/hlavnytest", i18n: "sb.tests", label: "Testy", sectionKey: "tests" },
     { key: "stats", href: "/analyza", i18n: "sb.stats", label: "Štatistika" },
+    { key: "materials", href: "/materialy", i18n: "sb.materials", label: "Materiály", materialsOnly: true },
     { key: "feedbackForm", href: "/feedback-form", i18n: "sb.feedbackForm", label: "Spätná väzba" },
     { key: "feedback", href: "/feedback", i18n: "sb.feedback", label: "Dotazník", questionnaireOnly: true },
   ];
@@ -55,7 +59,7 @@
     return false;
   }
 
-  function render(student, pretestDone, isAdmin, questionnairePublished, sections) {
+  function render(student, pretestDone, isAdmin, questionnairePublished, sections, materialsCount) {
     const mount = document.getElementById("sidebar-mount");
     if (!mount) return;
     const active = mount.getAttribute("data-active") || "dashboard";
@@ -65,27 +69,55 @@
     const navItems = NAV.filter(i =>
       !(pretestDone && i.key === "pretest") &&
       !(i.questionnaireOnly && !questionnairePublished) &&
+      !(i.materialsOnly && !materialsCount && !isAdmin) &&
       !(sectionOff(i) && !isAdmin));
 
-    const links = navItems.map(item => `
-      <a class="sidebar__link ${item.key === active ? "active" : ""}" href="${item.href}">
+    const linkHtml = item => `
+      <a class="sidebar__link ${item.key === active ? "active" : ""}" href="${item.href}"${item.key === active ? ' aria-current="page"' : ""}>
         <span class="ic">${ICONS[item.key]}</span>
         <span data-i18n="${item.i18n}">${item.label}</span>
         ${sectionOff(item) ? '<span class="sidebar__tag" data-i18n="sb.hiddenTag" title="Skryté pre študentov">skryté</span>' : ""}
       </a>
-    `).join("");
+    `;
+    // Učenie (hlavné sekcie) a Ďalšie (spätná väzba, dotazník)
+    const MORE_KEYS = ["feedbackForm", "feedback"];
+    const learnItems = navItems.filter(i => !MORE_KEYS.includes(i.key));
+    const moreItems = navItems.filter(i => MORE_KEYS.includes(i.key));
+    const links = `
+      <div class="sidebar__section-label" data-i18n="sb.learn">Učenie</div>
+      ${learnItems.map(linkHtml).join("")}
+      ${moreItems.length ? `<div class="sidebar__section-label" data-i18n="sb.more">Ďalšie</div>${moreItems.map(linkHtml).join("")}` : ""}
+    `;
+
+    // Mobilný tab bar: najdôležitejšie sekcie (zvyšok je v menu cez hamburger)
+    const tabKeys = ["dashboard", pretestDone ? "ulohy" : "pretest", "exercises", "tests", "stats"];
+    const tabItems = tabKeys
+      .map(k => navItems.find(i => i.key === k))
+      .filter(Boolean)
+      .slice(0, 5);
+    const tabbarHtml = `
+      <nav class="tabbar" aria-label="Hlavné sekcie">
+        ${tabItems.map(item => `
+          <a class="tabbar__item ${item.key === active ? "active" : ""}" href="${item.href}"${item.key === active ? ' aria-current="page"' : ""}>
+            ${ICONS[item.key]}
+            <span data-i18n="${item.i18n}">${item.label}</span>
+          </a>`).join("")}
+      </nav>
+    `;
 
 
     let adminHtml = "";
     if (isAdmin) {
       const adminNav = [
         { key: "adminUsers", href: "/admin-users", i18n: "sb.adminUsers", label: "Používatelia", active: "admin-users" },
+        { key: "adminAssistant", href: "/admin-assistant", i18n: "sb.adminAssistant", label: "AI asistent", active: "admin-assistant" },
         { key: "adminExercises", href: "/admin-exercises", i18n: "sb.adminExercises", label: "Cvičenia (správa)", active: "admin-exercises" },
         { key: "adminTests", href: "/admin-tests", i18n: "sb.adminTests", label: "Testy (správa)", active: "admin-tests" },
+        { key: "adminMaterials", href: "/admin-materials", i18n: "sb.adminMaterials", label: "Materiály (správa)", active: "admin-materials" },
         { key: "adminFeedback", href: "/admin-feedback", i18n: "sb.adminFeedback", label: "Dotazník a feedback", active: "admin-feedback" },
       ];
       const adminLinks = adminNav.map(item => `
-        <a class="sidebar__link ${item.active === active ? "active" : ""}" href="${item.href}">
+        <a class="sidebar__link ${item.active === active ? "active" : ""}" href="${item.href}"${item.active === active ? ' aria-current="page"' : ""}>
           <span class="ic">${ICONS[item.key]}</span>
           <span data-i18n="${item.i18n}">${item.label}</span>
         </a>
@@ -96,7 +128,7 @@
       `;
     }
 
-    // Profilová karta hore (ako referencia): avatar + meno + login
+    // Profil dole v sidebare (ako vo Finderi): avatar + meno + "Profil a nastavenia"
     let profileHtml = "";
     if (student) {
       const fullName = (student.name && student.surname)
@@ -104,50 +136,55 @@
         : (student.name || student.login || "");
       const initial = ((student.name || student.login || "?")[0] || "?").toUpperCase();
       profileHtml = `
-        <a class="sidebar__profile${active === "profile" ? " active" : ""}" href="/profile" title="Profil"${active === "profile" ? ' aria-current="page"' : ""}>
-          <span class="sidebar__profile-avatar">${initial}</span>
+        <a class="sidebar__profile${active === "profile" ? " active" : ""}" href="/profile" title="${student.login || ""}"${active === "profile" ? ' aria-current="page"' : ""}>
+          <span class="sidebar__profile-avatar" aria-hidden="true">${initial}</span>
           <span class="sidebar__profile-info">
             <span class="sidebar__profile-name">${fullName}</span>
-            <span class="sidebar__profile-sub">${student.login || ""}</span>
+            <span class="sidebar__profile-sub" data-i18n="sb.profileSub">Profil a nastavenia</span>
           </span>
         </a>
-        <hr class="sidebar__divider">
       `;
     }
 
+    const EXT_ICON = '<svg class="sidebar__ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>';
+
     mount.innerHTML = `
       <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-      <aside class="sidebar" id="sidebar">
+      <aside class="sidebar" id="sidebar" aria-label="Menu">
         <a class="sidebar__brand" href="/">
           <img src="/assets/logo.svg" alt="" />
           <span>Adapt<span class="accent-py">Py</span></span>
         </a>
-        ${profileHtml}
         <nav class="sidebar__nav">
           ${links}
           ${adminHtml}
         </nav>
         <div class="sidebar__spacer"></div>
-        <a class="sidebar__link" href="https://github.com/ianmagyar/introduction-to-python" target="_blank" rel="noopener">
-          <span class="ic">${ICONS.course}</span>
-          <span data-i18n="sb.course">Stránka predmetu</span>
-        </a>
-        <a class="sidebar__link sidebar__link--danger" href="#" onclick="adaptpyLogout(); return false;">
-          <span class="ic">${ICONS.logout}</span>
-          <span data-i18n="sb.logout">Odhlásiť sa</span>
-        </a>
+        <div class="sidebar__footer">
+          <a class="sidebar__link" href="https://github.com/ianmagyar/introduction-to-python" target="_blank" rel="noopener">
+            <span class="ic">${ICONS.course}</span>
+            <span data-i18n="sb.course">Stránka predmetu</span>
+            ${EXT_ICON}
+          </a>
+          ${profileHtml}
+        </div>
       </aside>
+      ${tabbarHtml}
     `;
 
     const backdrop = document.getElementById("sidebar-backdrop");
     const sidebar = document.getElementById("sidebar");
-    window.adaptpyToggleSidebar = function () {
-      sidebar.classList.toggle("open");
-      backdrop.classList.toggle("show");
+    const setOpen = (open) => {
+      sidebar.classList.toggle("open", open);
+      backdrop.classList.toggle("show", open);
+      document.querySelectorAll(".topbar-hamburger").forEach(b => b.setAttribute("aria-expanded", open ? "true" : "false"));
     };
-    if (backdrop) backdrop.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-      backdrop.classList.remove("show");
+    window.adaptpyToggleSidebar = function () {
+      setOpen(!sidebar.classList.contains("open"));
+    };
+    if (backdrop) backdrop.addEventListener("click", () => setOpen(false));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && sidebar.classList.contains("open")) setOpen(false);
     });
 
     if (typeof I18N !== "undefined") I18N.apply();
@@ -168,7 +205,8 @@
       if (!ok) return; // guard už presmeroval
     }
 
-    let student = null, pretestDone = false, isAdmin = false, questionnairePublished = false, sections = null;
+    let student = null, pretestDone = false, isAdmin = false, questionnairePublished = false, sections = null,
+        materialsCount = 0;
     if (window.adaptpyGetDashboard) {
       const dash = await window.adaptpyGetDashboard();
       if (dash && !dash._unauth) {
@@ -177,11 +215,12 @@
         isAdmin = !!dash.is_admin;
         questionnairePublished = !!dash.questionnaire_published;
         sections = dash.sections || null;
+        materialsCount = dash.materials_count || 0;
       }
     } else {
       [student, pretestDone, isAdmin] = await Promise.all([fetchStudent(), fetchPretestDone(), fetchIsAdmin()]);
     }
-    render(student, pretestDone, isAdmin, questionnairePublished, sections);
+    render(student, pretestDone, isAdmin, questionnairePublished, sections, materialsCount);
   }
 
   if (document.readyState === "loading") {

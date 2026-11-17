@@ -121,8 +121,8 @@ function checkAccessCode() {
     overlay.id = "access-overlay";
     overlay.style.cssText = `
       position: fixed; inset: 0;
-      background: rgba(8, 12, 18, 0.6);
-      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      background: var(--overlay, rgba(8, 12, 18, 0.5));
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       display: flex; justify-content: center; align-items: center;
       z-index: 9999; padding: 20px;
     `;
@@ -130,16 +130,16 @@ function checkAccessCode() {
     overlay.innerHTML = `
       <div style="
         background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 32px 28px;
-        border-radius: var(--radius-lg);
+        border: 1px solid var(--card-border, var(--border));
+        padding: 32px 28px 28px;
+        border-radius: 18px;
         box-shadow: var(--shadow-lg);
         text-align: center;
         width: 100%; max-width: 340px;
       ">
-        <img src="/assets/logo.svg" alt="AdaptPy" width="52" height="52"
-             style="border-radius:14px; box-shadow: var(--shadow-md); margin-bottom: 14px;" />
-        <h2 style="margin: 0 0 18px; color: var(--text); font-size: 1.3rem;" data-i18n="access.title">${tr("access.title", "Vstup do aplikácie")}</h2>
+        <img src="/assets/logo.svg" alt="AdaptPy" width="60" height="60"
+             style="border-radius:14px; margin-bottom: 14px;" />
+        <h2 style="margin: 0 0 18px; color: var(--text); font-size: 1.375rem;" data-i18n="access.title">${tr("access.title", "Vstup do aplikácie")}</h2>
         <input type="password" id="popup-password" data-i18n-placeholder="access.placeholder"
                placeholder="${tr("access.placeholder", "Zadaj heslo")}"
                onkeydown="if(event.key==='Enter'){validateAccess();}" />
@@ -188,8 +188,10 @@ async function login() {
             // že karta nebola medzičasom zatvorená.
             if (window.adaptpyMarkTabSession) window.adaptpyMarkTabSession();
             // Po prihlásení ide používateľ na dashboard (rozcestník),
-            // nie automaticky do testu.
-            window.location.href = "/dashboard";
+            // nie automaticky do testu. Postavičky sa krátko zaradujú.
+            document.dispatchEvent(new CustomEvent("adaptpy:auth-success"));
+            setTimeout(function () { window.location.href = "/dashboard"; },
+              document.getElementById("buddies-mount") ? 650 : 0);
         } else if (response.status === 429) {
             // Príliš veľa pokusov - spusti odpočet a zablokuj tlačidlo
             adaptpyStartLockout(data.retry_after || 60, "loginButton", "login.submit");
@@ -229,8 +231,11 @@ async function register() {
         let data = await response.json();
 
         if (response.ok && data.student) {
-            alert("Registrácia úspešná! Teraz sa môžeš prihlásiť.");
-            window.location.href = "/login";
+            document.dispatchEvent(new CustomEvent("adaptpy:auth-success"));
+            setTimeout(function () {
+                alert("Registrácia úspešná! Teraz sa môžeš prihlásiť.");
+                window.location.href = "/login";
+            }, document.getElementById("buddies-mount") ? 750 : 0);
         } else {
             errorMessage.innerText = adaptpyErrText(data);
             errorMessage.style.display = "block";

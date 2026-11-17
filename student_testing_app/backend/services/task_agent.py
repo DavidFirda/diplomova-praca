@@ -1,7 +1,11 @@
 # ============================================================
-# AdaptPy - agent, ktorý pomáha študentovi v ÚLOHÁCH.
+# AdaptPy - PRAVIDLOVÝ agent pre ÚLOHY (bez jazykového modelu).
 #
-# Sprístupní sa po 2. nesprávnom pokuse. Nikdy neprezradí riešenie - len:
+# Odpovede teraz generuje AI asistent (services/ai/, jazykový model cez Ollamu).
+# Tento modul ostáva ako ZÁLOHA: keď model neodpovedá, nápoveda danej úrovne sa
+# vytvorí odtiaľto (services/ai/service.py -> fallback_hint), a pre starý endpoint
+# /api/ulohy/agent. Pravidlá odomykania nápoved sú v services/task_flow.py.
+# Nikdy neprezradí riešenie - len:
 #   - vysvetlí, čo je zlé v poslednom pokuse (intent "explain"),
 #   - dá nápovedu, ktorá sa so každou ďalšou stupňuje (intent "hint", max 3):
 #       1. všeobecná nápoveda podľa kategórie a typu chyby,

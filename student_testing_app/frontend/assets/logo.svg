@@ -5,9 +5,9 @@
   <path d="M34 32 L45 21" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
   <circle cx="45" cy="21" r="3.5" fill="#fff"/>
   <defs>
-    <linearGradient id="adaptpy_grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#7c3aed"/>
+    <linearGradient id="adaptpy_grad" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3a95ff"/>
+      <stop offset="1" stop-color="#0060c7"/>
     </linearGradient>
   </defs>
 </svg>

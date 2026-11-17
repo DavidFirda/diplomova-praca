@@ -3,11 +3,14 @@
 #
 # Tok jednej úlohy (server rozhoduje o všetkom, klient nič z toho neurčuje):
 #
+#   od začiatku        AI asistent (voľný chat): vysvetľuje, nikdy nedá riešenie
 #   pokus 1            študent píše sám
 #   nesprávny pokus    dostane spätnú väzbu "čo bolo zlé", kód musí opraviť sám
-#   po 2. nesprávnom   sprístupní sa agent (nápovedy, nikdy nie riešenie)
+#   nápovedy           max. 3, postupne: každá ďalšia až po ďalšom nesprávnom pokuse
+#                      (1. kde je chyba, 2. všetky chyby + logika, 3. kostra kódu)
 #   5. nesprávny       úloha je NESPRÁVNA: ukáže sa riešenie a POMDP dostane zápornú odmenu
-#   správne (1.-5.)    úloha je vyriešená, POMDP dostane pozorovanie "správne"
+#   správne (1.-5.)    úloha je vyriešená; hodnotenie = HINT_CREDIT[počet nápoved]
+#                      (100 / 75 / 50 / 25 %) a s touto váhou ide aj do POMDP
 #
 # Nezapočítané odoslania (prázdny kód, rovnaký kód ako minule, nedostupný runner)
 # sa len zalogujú. Všetko ostatné (každý pokus, správy agenta, ...) ide do DB
@@ -32,7 +35,9 @@ from services.task_text import normalize_lang, tt
 from services.test_flow import TEST_CATEGORIES, get_question, lock_student, question_payload
 
 MAX_ATTEMPTS = 5            # po 5 nesprávnych pokusoch je úloha nesprávna a ukáže sa riešenie
-AGENT_AFTER_WRONG = 2       # agent sa sprístupní po 2. nesprávnom pokuse
+AGENT_AFTER_WRONG = 0       # AI asistent (chat) je dostupný od začiatku úlohy
+MAX_HINTS = task_agent.MAX_HINTS
+HINT_CREDIT = (1.0, 0.75, 0.5, 0.25)   # hodnotenie vyriešenej úlohy podľa počtu nápoved
 MAX_CODE_LEN = 20000
 MAX_MESSAGE_LEN = 1000
 
@@ -106,6 +111,65 @@ def start_task(student_id):
 
 
 # ------------------------------------------------------------
+# Nápovedy a hodnotenie
+# ------------------------------------------------------------
+def hint_credit(hints_used):
+    """Hodnotenie vyriešenej úlohy (0-1) podľa počtu použitých nápoved."""
+    return HINT_CREDIT[max(0, min(int(hints_used or 0), len(HINT_CREDIT) - 1))]
+
+
+def task_credit(a):
+    """Hodnotenie úlohy: vyriešená -> podľa nápoved, nevyriešená -> 0, otvorená/zrušená -> None."""
+    if a.status == "solved":
+        return hint_credit(a.hints_used)
+    if a.status == "failed":
+        return 0.0
+    return None
+
+
+def hint_state(a):
+    """
+    Je ďalšia nápoveda dostupná? Pravidlo: max MAX_HINTS a každá ďalšia až po novom
+    nesprávnom pokuse (prvá po prvom nesprávnom). Nápovedy sa teda nedajú vypýtať naraz.
+    """
+    reason = None
+    if a.status != "open":
+        reason = "closed"
+    elif a.hints_used >= MAX_HINTS:
+        reason = "max"
+    elif a.wrong_attempts < 1:
+        reason = "no_wrong_attempt"
+    elif a.hints_used > 0 and a.wrong_attempts <= (a.last_hint_wrong or 0):
+        reason = "need_new_wrong"
+    return {
+        "hints_used": a.hints_used, "max_hints": MAX_HINTS,
+        "hint_available": reason is None, "hint_reason": reason,
+        "credit_now": hint_credit(a.hints_used),
+        "credit_after_hint": hint_credit(a.hints_used + 1) if a.hints_used < MAX_HINTS else None,
+    }
+
+
+_HINT_BLOCK = {
+    "sk": {
+        "closed": "Úloha je už uzavretá.",
+        "max": "Využil si už všetky 3 nápovedy k tejto úlohe.",
+        "no_wrong_attempt": "Nápovedu dostaneš po prvom nesprávnom pokuse. Najprv to skús sám – a pýtať sa ma môžeš kedykoľvek.",
+        "need_new_wrong": "Ďalšiu nápovedu dostaneš po ďalšom nesprávnom pokuse. Skús opraviť kód podľa predchádzajúcej nápovedy.",
+    },
+    "en": {
+        "closed": "The task is already finished.",
+        "max": "You have already used all 3 hints for this task.",
+        "no_wrong_attempt": "You get a hint after your first wrong attempt. Try it on your own first – you can ask me questions any time.",
+        "need_new_wrong": "You get the next hint after another wrong attempt. Try to fix your code using the previous hint.",
+    },
+}
+
+
+def hint_block_message(state, lang="sk"):
+    return _HINT_BLOCK.get(lang, _HINT_BLOCK["sk"]).get(state["hint_reason"] or "closed")
+
+
+# ------------------------------------------------------------
 # POMDP: výsledok úlohy -> pozorovanie + odmena
 # ------------------------------------------------------------
 def apply_pomdp(assignment):
@@ -118,8 +182,9 @@ def apply_pomdp(assignment):
             student_id=int(assignment.student_id), categories=TEST_CATEGORIES,
             history=_student_history(assignment.student_id),
         )
+        credit = 0.0 if failed else hint_credit(assignment.hints_used)
         reward = selector.update_after_task(
-            assignment.category, correct=bool(assignment.is_correct), failed=failed,
+            assignment.category, correct=bool(assignment.is_correct), failed=failed, credit=credit,
         )
     except Exception:
         # zlyhanie selektora (súbor, ...) nesmie stratiť výsledok študenta;
@@ -130,7 +195,8 @@ def apply_pomdp(assignment):
     assignment.pomdp_applied = True
     log_event(assignment.student_id, "pomdp_update", assignment, payload={
         "category": assignment.category, "observation_correct": bool(assignment.is_correct),
-        "failed_task": failed, "reward": reward,
+        "failed_task": failed, "reward": reward, "hints_used": assignment.hints_used,
+        "credit": 0.0 if failed else hint_credit(assignment.hints_used),
     })
     db.session.commit()
 
@@ -157,8 +223,8 @@ def state_fields(a):
         "max_attempts": MAX_ATTEMPTS,
         "agent_available": a.status == "open" and a.wrong_attempts >= AGENT_AFTER_WRONG,
         "agent_after": AGENT_AFTER_WRONG,
-        "hints_used": a.hints_used,
-        "max_hints": task_agent.MAX_HINTS,
+        **hint_state(a),
+        "credit": task_credit(a),
     }
 
 
@@ -206,14 +272,39 @@ def assignment_payload(a, lang="sk"):
     return data
 
 
+def task_category_stats(student_id):
+    """Úlohy po kategóriách: počet ukončených, vyriešených a hodnotenie (so zrážkou za nápovedy)."""
+    rows = (TaskAssignment.query
+            .filter(TaskAssignment.student_id == student_id,
+                    TaskAssignment.status.in_(("solved", "failed"))).all())
+    cats = {}
+    for r in rows:
+        c = cats.setdefault(r.category or "Ostatné", {"total": 0, "solved": 0, "score": 0.0, "hints": 0})
+        c["total"] += 1
+        c["solved"] += 1 if r.status == "solved" else 0
+        c["score"] += task_credit(r)
+        c["hints"] += r.hints_used or 0
+    return [{
+        "category": cat, "total": v["total"], "solved": v["solved"], "hints_used": v["hints"],
+        "score_percent": round(100 * v["score"] / v["total"]) if v["total"] else 0,
+    } for cat, v in sorted(cats.items())]
+
+
 def task_stats(student_id):
     rows = TaskAssignment.query.filter_by(student_id=student_id).all()
     solved = [r for r in rows if r.status == "solved"]
+    finished = [r for r in rows if r.status in ("solved", "failed")]
+    score = sum(task_credit(r) for r in finished)
     return {
-        "total": sum(1 for r in rows if r.status in ("solved", "failed")),
+        "total": len(finished),
         "solved": len(solved),
         "failed": sum(1 for r in rows if r.status == "failed"),
         "solved_first_try": sum(1 for r in solved if r.solved_on_attempt == 1),
+        "solved_with_hints": sum(1 for r in solved if r.hints_used),
+        "hints_used": sum(r.hints_used for r in rows),
+        # hodnotenie: vyriešená úloha = 1 - zrážka za nápovedy, nevyriešená = 0
+        "score": round(score, 2),
+        "score_percent": round(100 * score / len(finished)) if finished else None,
     }
 
 
@@ -231,13 +322,14 @@ def topic_mastery(student_id):
         if category in total:
             total[category] += 1
             correct[category] += 1 if ok else 0
-    tasks = (db.session.query(TaskAssignment.category, TaskAssignment.status)
+    tasks = (db.session.query(TaskAssignment.category, TaskAssignment.status, TaskAssignment.hints_used)
              .filter(TaskAssignment.student_id == student_id,
                      TaskAssignment.status.in_(("solved", "failed"))).all())
-    for category, status in tasks:
+    for category, status, hints in tasks:
         if category in total:
             total[category] += 1
-            correct[category] += 1 if status == "solved" else 0
+            # vyriešená s nápovedou sa počíta len čiastočne (HINT_CREDIT)
+            correct[category] += hint_credit(hints) if status == "solved" else 0
     return [
         {"category": c, "answered": total[c],
          "percent": round(100 * correct[c] / total[c]) if total[c] else None}
@@ -395,6 +487,7 @@ def submit_attempt(student_id, assignment_id, code, lang="sk", integrity=None):
             finished = True
 
     log_event(student_id, "attempt_submitted", a, payload={
+        "hints_used": a.hints_used,
         "attempt_no": attempt_no, "is_correct": correct,
         "wrong_attempts": a.wrong_attempts,
         "feedback_kind": feedback["kind"] if feedback else None,
@@ -414,7 +507,7 @@ def submit_attempt(student_id, assignment_id, code, lang="sk", integrity=None):
         log_event(student_id, "task_finished", a, payload={
             "status": a.status, "is_correct": a.is_correct, "attempts_used": a.attempts_used,
             "solved_on_attempt": a.solved_on_attempt, "hints_used": a.hints_used,
-            "agent_opened": a.agent_opened,
+            "agent_opened": a.agent_opened, "credit": task_credit(a),
         })
     db.session.commit()
 
@@ -449,8 +542,7 @@ def agent_chat(student_id, assignment_id, intent=None, message=None, code="", la
     if a.status != "open":
         return 409, {"error": tt(lang, "agent.closed")}
     if a.wrong_attempts < AGENT_AFTER_WRONG:
-        return 403, {"error": "Agent sa sprístupní až po druhej nesprávnej odpovedi.",
-                     "agent_available": False}
+        return 403, {"error": "Agent zatiaľ nie je dostupný.", "agent_available": False}
 
     question = get_question(a.question_id)
     already_opened = a.agent_opened
@@ -465,6 +557,13 @@ def agent_chat(student_id, assignment_id, intent=None, message=None, code="", la
 
     if intent not in ("open", "explain", "hint"):
         intent = task_agent.intent_from_message(message) if message else "hint"
+    if intent == "hint":
+        state = hint_state(a)
+        if not state["hint_available"]:
+            db.session.commit()
+            return 403, {"error": hint_block_message(state, lang), "hint_reason": state["hint_reason"],
+                         **state_fields(a)}
+        a.last_hint_wrong = a.wrong_attempts
 
     if message:
         log_event(student_id, "agent_message", a,

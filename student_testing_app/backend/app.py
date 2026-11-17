@@ -46,6 +46,9 @@ PAGE_ROUTES = {
     "ulohy": "ulohy.html",
     "admin-user-ulohy": "admin_user_ulohy.html",
     "admin-user-tests": "admin_user_tests.html",
+    "admin-assistant": "admin_assistant.html",
+    "admin-materials": "admin_materials.html",
+    "materialy": "materialy.html",
 }
 
 
@@ -97,6 +100,10 @@ def create_app():
     Session(app)
     CORS(app, supports_credentials=True)
     register_cli(app)
+    from services.ai.cli import register_ai_cli
+    register_ai_cli(app)
+    # nahrávanie materiálov kurzu (knihy v PDF môžu mať desiatky MB)
+    app.config["MAX_CONTENT_LENGTH"] = (int(os.getenv("MATERIALS_MAX_MB", "200")) + 10) * 1024 * 1024
 
     _register_blueprints(app)
     _register_frontend(app)
@@ -113,6 +120,10 @@ def _register_blueprints(app):
     from routes.exercise_routes import exercise_bp
     from routes.invite_routes import invite_admin_bp, invite_public_bp
     from routes.ulohy_routes import ulohy_bp
+    from routes.assistant_routes import assistant_bp
+    from routes.admin_assistant_routes import admin_assistant_bp
+    from routes.materials_routes import admin_materials_bp, materials_bp
+    import models_ai         # noqa: F401
     import models_exercises  # noqa: F401  (modely sa musia načítať pre migrácie)
     import models_invites    # noqa: F401
     import models_ulohy      # noqa: F401
@@ -127,6 +138,10 @@ def _register_blueprints(app):
     app.register_blueprint(admin_ulohy_bp, url_prefix="/api/admin/ulohy")
     app.register_blueprint(invite_public_bp, url_prefix="/api/invites")
     app.register_blueprint(invite_admin_bp, url_prefix="/api/admin/invitations")
+    app.register_blueprint(assistant_bp, url_prefix="/api/assistant")
+    app.register_blueprint(admin_assistant_bp, url_prefix="/api/admin/assistant")
+    app.register_blueprint(materials_bp, url_prefix="/api/materials")
+    app.register_blueprint(admin_materials_bp, url_prefix="/api/admin/materials")
 
 
 def _register_frontend(app):

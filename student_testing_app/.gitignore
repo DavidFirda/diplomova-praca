@@ -25,6 +25,11 @@ student_testing_app/pomdp_data/*
 !student_testing_app/pomdp_data/.gitkeep
 ulohy_logs/*
 !ulohy_logs/.gitkeep
+# materiály kurzu a RAG index (knihy/prednášky sa nesmú dostať na verejný GitHub)
+materials/*
+!materials/.gitkeep
+rag_index/*
+!rag_index/.gitkeep
 
 # --- OS / editor ---
 .DS_Store

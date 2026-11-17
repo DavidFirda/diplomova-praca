@@ -63,6 +63,9 @@ def sanitize(raw):
         "deleted_chars": _int(raw.get("deleted_chars")),
         "paste_blocked": _int(raw.get("paste_blocked")),
         "internal_chars": _int(raw.get("internal_chars")),
+        # kód vložený z AI asistenta po potvrdení študentom (admin to vidí pri pokuse)
+        "assistant_chars": _int(raw.get("assistant_chars")),
+        "assistant_inserts": _int(raw.get("assistant_inserts")),
         "baseline_len": _int(raw.get("baseline_len")),
         "active_ms": _int(raw.get("active_ms")),
         "interval_cv": _float(raw.get("interval_cv")),

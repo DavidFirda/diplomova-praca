@@ -49,6 +49,7 @@
             <a class="btn btn--secondary btn--sm" href="/admin-user-exercises?uid=${u.id}" data-i18n="adminU.exercises">${tr("adminU.exercises","Cvičenia")}</a>
             <a class="btn btn--secondary btn--sm" href="/admin-user-ulohy?uid=${u.id}" data-i18n="adminU.ulohy">${tr("adminU.ulohy","Úlohy")}</a>
             <a class="btn btn--secondary btn--sm" href="/admin-user-tests?uid=${u.id}" data-i18n="adminU.tests" title="${tr("adminU.testsHint", "Predtest a hlavné testy")}">${tr("adminU.tests","Testy")}</a>
+            <a class="btn btn--secondary btn--sm" href="/admin-assistant?student_id=${u.id}" data-i18n="adminU.ai" title="${tr("adminU.aiHint", "Konverzácie s AI asistentom")}">${tr("adminU.ai","AI")}</a>
             <button class="btn btn--danger-outline btn--sm" data-i18n="adminU.delete" data-del="${u.id}" data-name="${u.name} ${u.surname}">${tr("adminU.delete","Vymazať")}</button>
           </div>
         </td>

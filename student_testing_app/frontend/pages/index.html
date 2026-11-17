@@ -12,30 +12,55 @@
 <body>
   <div id="navbar"></div>
 
-  <main class="page page--mid">
-    <div class="card">
-      <div class="brand-hero">
-        <img src="/assets/logo.svg" alt="AdaptPy" class="brand-hero__logo" width="60" height="60" />
-        <h1 data-i18n-html="index.title">Vitaj v Adapt<span class="accent-py">Py</span></h1>
-        <span class="pill" data-i18n="index.subtitle">Adaptívne precvičovanie programovania v Pythone</span>
+  <main class="landing">
+    <!-- Úvod: veľký nadpis + výzva k akcii -->
+    <section class="landing-hero">
+      <img src="/assets/logo.svg" alt="" class="landing-hero__logo" width="84" height="84" />
+      <p class="landing-eyebrow" data-i18n="index.subtitle">Adaptívne precvičovanie programovania v Pythone</p>
+      <h1 class="landing-title" data-i18n-html="index.title">Vitaj v Adapt<span class="accent-py">Py</span></h1>
+      <p class="landing-intro" data-i18n="index.intro"></p>
+      <div class="landing-cta">
+        <a class="btn landing-btn" id="cta-btn" href="/login" data-i18n="index.cta">Začať</a>
+        <a class="landing-link" href="#how"><span data-i18n="index.how">Ako to funguje</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
       </div>
 
-      <p data-i18n="index.intro"></p>
+      <!-- Ukážka: okno editora, v ktorom sa "napíše" riešenie úlohy (dekorácia) -->
+      <div class="landing-demo" aria-hidden="true">
+        <div class="lc-window">
+          <div class="lc-bar">
+            <span class="lc-dot"></span><span class="lc-dot"></span><span class="lc-dot"></span>
+            <span class="lc-file">riesenie.py</span>
+          </div>
+          <pre class="lc-code"><span class="lc-line"><span class="k">def</span> <span class="f">bez_duplikatov</span>(zoznam):</span>
+<span class="lc-line">    videne = []</span>
+<span class="lc-line">    <span class="k">for</span> x <span class="k">in</span> zoznam:</span>
+<span class="lc-line">        <span class="k">if</span> x <span class="k">not in</span> videne:</span>
+<span class="lc-line">            videne.append(x)</span>
+<span class="lc-line">    <span class="k">return</span> videne</span>
+<span class="lc-line"> </span>
+<span class="lc-line"><span class="c">&gt;&gt;&gt;</span> bez_duplikatov([<span class="n">3</span>, <span class="n">1</span>, <span class="n">3</span>, <span class="n">2</span>, <span class="n">1</span>])</span>
+<span class="lc-line lc-out">[<span class="n">3</span>, <span class="n">1</span>, <span class="n">2</span>]</span></pre>
+          <div class="lc-badge"><span class="lc-badge__ic"></span><span data-i18n="index.demoOk">Správne – výborne!</span></div>
+        </div>
+      </div>
+    </section>
 
-      <h2 data-i18n="index.how">Ako to funguje</h2>
-      <ul class="steps">
-        <li><span class="step-num">1</span><span data-i18n="index.step1"></span></li>
-        <li><span class="step-num">2</span><span data-i18n="index.step2"></span></li>
-        <li><span class="step-num">3</span><span data-i18n="index.step3"></span></li>
-        <li><span class="step-num">4</span><span data-i18n="index.step4"></span></li>
-        <li><span class="step-num">5</span><span data-i18n="index.step5"></span></li>
-      </ul>
+    <!-- Ako to funguje: 5 krokov -->
+    <section class="landing-how" id="how">
+      <h2 class="landing-h2" data-i18n="index.how" data-reveal>Ako to funguje</h2>
+      <ol class="landing-steps">
+        <li class="landing-step" data-reveal style="--reveal-delay:0s"><span class="landing-step__num">1</span><span data-i18n="index.step1"></span></li>
+        <li class="landing-step" data-reveal style="--reveal-delay:.06s"><span class="landing-step__num">2</span><span data-i18n="index.step2"></span></li>
+        <li class="landing-step" data-reveal style="--reveal-delay:.12s"><span class="landing-step__num">3</span><span data-i18n="index.step3"></span></li>
+        <li class="landing-step" data-reveal style="--reveal-delay:.18s"><span class="landing-step__num">4</span><span data-i18n="index.step4"></span></li>
+        <li class="landing-step" data-reveal style="--reveal-delay:.24s"><span class="landing-step__num">5</span><span data-i18n="index.step5"></span></li>
+      </ol>
+    </section>
 
-      <a class="btn" id="cta-btn" href="/login" data-i18n="index.cta">Začať</a>
-
-      <hr class="divider">
-      <p class="muted" style="font-size:0.85rem" data-i18n="index.thesis"></p>
-    </div>
+    <footer class="landing-foot">
+      <p data-i18n="index.thesis"></p>
+    </footer>
   </main>
 
   <script src="/config.js"></script>

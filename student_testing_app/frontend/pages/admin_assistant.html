@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdaptPy – AI asistent (správa)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-mount" data-active="admin-assistant"></div>
+
+    <main class="app-main">
+      <div class="app-topbar">
+        <div class="app-topbar__greeting">
+          <h1 data-i18n="aiA.title">AI asistent</h1>
+          <p data-i18n="aiA.subtitle">Konverzácie študentov, zdroje RAG, zásahy strážcu a nastavenie modelu.</p>
+        </div>
+        <div class="app-topbar__actions" id="topbar-controls"></div>
+      </div>
+
+      <div class="ai-admin-tabs" role="tablist">
+        <button type="button" data-tab="overview" class="active" data-i18n="aiA.tabOverview">Prehľad</button>
+        <button type="button" data-tab="conversations" data-i18n="aiA.tabConversations">Konverzácie</button>
+        <button type="button" data-tab="settings" data-i18n="aiA.tabSettings">Model</button>
+      </div>
+
+      <section id="tab-overview"></section>
+      <section id="tab-conversations" hidden></section>
+      <section id="tab-settings" hidden></section>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/js/core/session-guard.js"></script>
+  <script src="/js/core/i18n.js"></script>
+  <script src="/js/core/sidebar.js"></script>
+  <script src="/js/core/topbar-controls.js"></script>
+  <script src="/js/core/ai_chat.js"></script>
+  <script src="/js/admin/admin_assistant.js"></script>
+</body>
+</html>

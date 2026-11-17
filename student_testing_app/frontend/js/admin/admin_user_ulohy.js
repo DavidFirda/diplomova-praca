@@ -126,6 +126,7 @@
     const meta = [
       chip(tr("adminUL.attemptsUsed", "pokusov"), `${a.attempts_used}/5`),
       chip(tr("adminUL.hints", "nápovedy"), `${a.hints_used}/3`),
+      a.credit != null ? chip(tr("adminUL.credit", "hodnotenie"), `${Math.round(a.credit * 100)} %`) : "",
       a.agent_opened ? `<span class="inv-chip"> ${tr("adminUL.agentOpened", "asistent otvorený")}</span>` : "",
       a.solution_shown ? `<span class="inv-chip">${tr("adminUL.solutionShown", "riešenie ukázané")}</span>` : "",
       a.reward != null ? chip(tr("adminUL.reward", "odmena POMDP"), a.reward) : "",

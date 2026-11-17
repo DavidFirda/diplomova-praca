@@ -1,354 +1,421 @@
 /* ============================================================
-   App Shell — sidebar layout (dashboard, profil, atď.)
-   Modro-biely štýl, ikony čierne/biele podľa témy.
+   App Shell - bočný panel (sidebar), horná lišta, mobilný tab bar
+   a spoločné bloky stránok po prihlásení.
    ============================================================ */
 .app-shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar (štýl macOS) ---------- */
 .sidebar {
-  width: 240px;
+  width: var(--sidebar-w);
   flex-shrink: 0;
-  background: var(--surface);
+  background: var(--sidebar-bg);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
   border-right: 1px solid var(--border);
-  padding: 22px 14px;
+  padding: 14px 12px 12px;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
-  height: 100dvh;              
+  height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-width: none;          
-  -ms-overflow-style: none;       
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  z-index: 120;
 }
 .sidebar::-webkit-scrollbar { display: none; }
-.sidebar > * { flex-shrink: 0; } 
+.sidebar > * { flex-shrink: 0; }
 
 .sidebar__brand {
   display: flex; align-items: center; gap: 10px;
-  padding: 0 10px 24px;
-  font-weight: 800; font-size: 1.15rem; color: var(--text);
-  letter-spacing: -0.02em;
+  padding: 6px 10px 18px;
+  font-weight: 600; font-size: 1.0625rem; color: var(--text);
+  letter-spacing: -0.01em;
 }
-.sidebar__brand img { width: 30px; height: 30px; border-radius: 8px; }
-.sidebar__brand .accent-py { color: var(--accent); }
+.sidebar__brand:hover { color: var(--text); }
+.sidebar__brand img { width: 28px; height: 28px; border-radius: 7px; }
+.sidebar__brand .accent-py { color: inherit; }
 
-.sidebar__nav { display: flex; flex-direction: column; gap: 3px; }
-.sidebar__link {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 12px;
-  border-radius: 10px;
+.sidebar__nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar__section-label {
+  font-size: 0.75rem; font-weight: 600;
   color: var(--text-muted);
-  font-size: 0.9rem; font-weight: 500;
+  padding: 16px 10px 6px;
+}
+.sidebar__nav > .sidebar__section-label:first-child { padding-top: 2px; }
+
+.sidebar__link {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9375rem; font-weight: 400;
   transition: background var(--transition), color var(--transition);
 }
-.sidebar__link:hover { background: var(--surface-2); color: var(--text); }
-.sidebar__link.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.sidebar__link:hover { background: var(--selection); color: var(--text); }
+.sidebar__link.active { background: var(--selection-strong); color: var(--text); font-weight: 600; }
 .sidebar__link .ic {
   width: 20px; height: 20px; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
+  color: var(--primary);
 }
-/* ikony dedia farbu textu (currentColor) => čierne/biele podľa témy */
-.sidebar__link .ic svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
+.sidebar__link .ic svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sidebar__link > span:not(.ic):not(.sidebar__tag) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar__ext { width: 13px; height: 13px; color: var(--text-muted); flex-shrink: 0; }
 
-.sidebar__spacer { flex-grow: 1; }
+.sidebar__spacer { flex-grow: 1; min-height: 20px; }
+.sidebar__link--danger { color: var(--danger); }
+.sidebar__link--danger .ic { color: var(--danger); }
 .sidebar__link--danger:hover { background: var(--danger-soft); color: var(--danger); }
+
+.sidebar__footer {
+  display: flex; flex-direction: column; gap: 2px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px; padding-top: 8px;
+}
 
 /* ---------- Hlavná plocha ---------- */
 .app-main {
+  --main-pad: clamp(16px, 3.4vw, 40px);
+  --content-w: 1120px;
   flex: 1;
   min-width: 0;
-  padding: 24px 32px 48px;
+  padding: 0 var(--main-pad) 64px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 24px;
 }
-.app-topbar {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 16px;
-}
-.app-topbar__greeting h1 { margin: 0; font-size: clamp(1.4rem, 3vw, 1.7rem); }
-.app-topbar__greeting p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.9rem; }
-.app-topbar__actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.app-main > * { width: 100%; max-width: var(--content-w); }
 
-/* ---------- Metriky (riadok kariet s číslami) ---------- */
+/* Hlavička stránky: nadpis + lišta. Lišta (actions) je prilepená hore
+   ako priesvitný toolbar, nadpis je pod ňou ako "veľký titulok". */
+.app-topbar { display: contents; }
+.app-topbar__greeting {
+  width: 100%;
+  max-width: var(--content-w);
+  padding-top: 4px;
+}
+.app-topbar__greeting h1 { margin: 0; font-size: clamp(1.75rem, 3vw, 2.125rem); }
+.app-topbar__greeting p { margin: 6px 0 0; color: var(--text-muted); font-size: 1.0625rem; }
+
+.app-topbar__actions {
+  order: -1;
+  position: sticky; top: 0; z-index: 90;
+  align-self: stretch;
+  width: auto; max-width: none;
+  margin: 0 calc(-1 * var(--main-pad));
+  padding: 0 var(--main-pad);
+  height: var(--toolbar-h);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--glass);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition);
+}
+.app-topbar__actions.is-scrolled { border-bottom-color: var(--glass-border); }
+
+/* názov stránky v lište - ukáže sa po odscrollovaní veľkého nadpisu */
+.topbar-title {
+  flex: 1; min-width: 0;
+  font-size: 0.9375rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transform: translateY(4px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+.app-topbar__actions.show-title .topbar-title { opacity: 1; transform: none; }
+
+.topbar-switches { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.topbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+.topbar-logout {
+  width: auto; min-height: 32px; height: 32px;
+  padding: 0 10px;
+  background: transparent; color: var(--primary);
+  font-size: 0.875rem; font-weight: 500;
+  border-radius: var(--radius-sm);
+  gap: 6px;
+}
+.topbar-logout:hover:not(:disabled) { background: var(--fill); color: var(--primary); }
+.topbar-logout svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.topbar-hamburger { display: none; }
+.sidebar-backdrop { display: none; }
+
+/* ---------- Metriky (jedna zoskupená karta) ---------- */
 .metric-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 .metric {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
+  padding: 18px 22px;
+  box-shadow: 1px 0 0 var(--border), 0 1px 0 var(--border);
 }
-.metric__label { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; }
-.metric__value { color: var(--text); font-size: 1.7rem; font-weight: 800; }
+.metric__label { color: var(--text-muted); font-size: 0.8125rem; font-weight: 500; margin-bottom: 2px; }
+.metric__value {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- Zoznam úloh (riadky) ---------- */
-.task-list { display: flex; flex-direction: column; gap: 10px; }
+.task-list { display: flex; flex-direction: column; gap: 12px; }
 .task-row {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 }
-.task-row:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
-.task-row--locked { opacity: 0.55; }
 .task-row__icon {
   width: 40px; height: 40px; border-radius: 10px;
-  background: var(--surface-2);
+  background: var(--primary-soft);
   display: grid; place-items: center;
-  color: var(--text); flex-shrink: 0;
+  color: var(--primary); flex-shrink: 0;
 }
-.task-row__icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
-.task-row__body { flex: 1; min-width: 140px; }
-.task-row__title { color: var(--text); font-weight: 600; font-size: 0.95rem; }
-.task-row__desc { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
+.task-row__icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.task-row__body { flex: 1; min-width: 160px; }
+.task-row__title { color: var(--text); font-weight: 600; font-size: 1rem; }
+.task-row__desc { color: var(--text-muted); font-size: 0.875rem; margin-top: 2px; }
 .task-row__action { flex-shrink: 0; margin-left: auto; }
-.task-row__action .btn { width: auto; min-height: 42px; padding: 9px 20px; font-size: 0.85rem; white-space: nowrap; }
+.task-row__action .btn { width: auto; min-height: 36px; padding: 0 16px; font-size: 0.875rem; white-space: nowrap; }
 
-/* Keď je task-row v úzkom priestore (dashboard s mobil): prvky pod seba */
-@media (max-width: 640px) {
-  .app-layout .task-row {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: left;
-  }
-  .app-layout .task-row__body { min-width: 0; }
-  .app-layout .task-row__action { margin-left: 0; }
-  .app-layout .task-row__action .btn { width: 100%; }
-  .app-layout .task-row__badge { align-self: flex-start; }
-}
+.task-row--locked .task-row__icon { background: var(--fill); color: var(--text-muted); }
 .task-row__badge {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: var(--radius-full);
+  padding: 4px 10px; border-radius: var(--radius-full);
   background: var(--success-soft); color: var(--success);
-  font-size: 0.82rem; font-weight: 600; flex-shrink: 0;
+  font-size: 0.8125rem; font-weight: 600; flex-shrink: 0;
 }
-.task-row__locked-label {
-  padding: 8px 14px; border-radius: var(--radius-sm);
-  background: var(--surface-2); color: var(--text-muted);
-  font-size: 0.82rem; font-weight: 500; flex-shrink: 0;
+.task-row__locked-label,
+a.task-row__locked-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0; background: none; color: var(--text-muted);
+  font-size: 0.875rem; font-weight: 500; flex-shrink: 0; cursor: default;
+}
+.task-row__locked-label::before {
+  content: ""; width: 14px; height: 14px; flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
-/* ---------- Pravý bočný panel ---------- */
+/* ---------- Pravý bočný panel / profilová karta ---------- */
 .app-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
 .side-panel { display: flex; flex-direction: column; gap: 16px; }
 .profile-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 24px; text-align: center;
+  background: var(--surface); border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg); padding: 24px; text-align: center; box-shadow: var(--shadow-sm);
 }
 .profile-card__avatar {
   width: 60px; height: 60px; border-radius: 50%;
-  background: var(--primary); color: #fff;
+  background: linear-gradient(180deg, #a1a1a6, #7c7c80); color: #fff;
   display: grid; place-items: center;
-  font-size: 1.5rem; font-weight: 800; margin: 0 auto 12px;
+  font-size: 1.5rem; font-weight: 600; margin: 0 auto 12px;
 }
-.profile-card__name { color: var(--text); font-weight: 700; }
-.profile-card__sub { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
+.profile-card__name { color: var(--text); font-weight: 600; }
+.profile-card__sub { color: var(--text-muted); font-size: 0.8125rem; margin-top: 2px; }
 
-/* ---------- Hamburger v topbare (mobil) ---------- */
-.topbar-hamburger { display: none; }
-.topbar-switches { display: flex; align-items: center; gap: 8px; }
-.sidebar-backdrop { display: none; }
+/* ---------- Mobilný tab bar (zobrazí sa len na úzkych obrazovkách) ---------- */
+.tabbar { display: none; }
 
 @media (max-width: 900px) {
   .app-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
-  /* Sidebar sa skryje a vysúva sa cez hamburger */
+  :root { --tabbar-h: 58px; }
+
+  /* Sidebar = vysúvacia zásuvka cez hamburger */
   .sidebar {
     position: fixed; left: 0; top: 0; z-index: 200;
-    transform: translateX(-100%);
-    transition: transform var(--transition);
+    width: min(300px, 86vw);
+    background: var(--surface);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    transform: translateX(-102%);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow: var(--shadow-lg);
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
   .sidebar.open { transform: translateX(0); }
 
   .sidebar-backdrop {
     position: fixed; inset: 0; z-index: 150;
-    background: rgba(0,0,0,0.5);
+    background: var(--overlay);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
   }
-  .sidebar-backdrop.show { display: block; }
+  .sidebar-backdrop.show { display: block; opacity: 1; pointer-events: auto; }
 
-  .app-main { padding: 16px 16px 40px; }
+  .app-main { padding-bottom: calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom)); gap: 20px; }
+  .app-topbar__actions { gap: 8px; }
+  .app-topbar__greeting h1 { font-size: 1.75rem; }
+  .app-topbar__greeting p { font-size: 0.9375rem; }
 
-  /* Topbar: actions (hamburger + prepínače) v hornom riadku,
-     hamburger vľavo, prepínače vpravo. Nadpis pod nimi. */
-  .app-topbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-  }
-  .app-topbar__actions {
-    order: -1;                    /* actions nad nadpis */
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between; /* hamburger vľavo, prepínače vpravo */
-    width: 100%;
-    gap: 8px;
-  }
   .topbar-hamburger {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 42px; height: 42px; border-radius: var(--radius-sm);
-    background: var(--surface-2); border: 1px solid var(--border);
-    color: var(--text); cursor: pointer; flex-shrink: 0;
-    padding: 0;
+    width: 36px; min-width: 36px; height: 36px; min-height: 36px;
+    margin-left: -8px; padding: 0;
+    background: transparent; color: var(--primary);
+    border-radius: var(--radius-sm); flex-shrink: 0;
   }
+  .topbar-hamburger:hover:not(:disabled) { background: var(--fill); color: var(--primary); }
   .topbar-hamburger svg { width: 22px; height: 22px; display: block; }
 
-  /* Vycentrované stránky (profil, heslo): hamburger + prepínače
-     v hornom riadku (rovnako ako dashboard), nadpis pod nimi vycentrovaný */
-  .app-main--centered { align-items: stretch; }
-  .app-main--centered .app-topbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding-top: 0;
+  .topbar-switches { gap: 6px; }
+  .topbar-sep { display: none; }
+
+  /* Tab bar dole - hlavné sekcie, ako v iOS */
+  .tabbar {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 110;
+    padding: 5px max(6px, env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom));
+    background: var(--glass);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid var(--glass-border);
   }
-  .app-main--centered .app-topbar__actions {
-    position: static;
-    order: -1;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+  .tabbar__item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: 48px; padding: 2px 2px 0;
+    color: var(--text-muted);
+    font-size: 0.6875rem; font-weight: 500; line-height: 1.2;
+    text-align: center; border-radius: var(--radius-sm);
+    -webkit-tap-highlight-color: transparent;
   }
-  .app-main--centered .app-topbar__greeting { text-align: center; }
-  .app-main--centered .centered-card { align-self: center; }
+  .tabbar__item:hover { color: var(--text); }
+  .tabbar__item.active, .tabbar__item.active:hover { color: var(--primary); }
+  .tabbar__item svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .tabbar__item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Úzky displej: dashboard riadky pod seba */
+  .app-layout .task-row { align-items: flex-start; }
+  .app-layout .task-row__body { min-width: 0; flex-basis: calc(100% - 60px); }
+  .app-layout .task-row__action { margin-left: 56px; }
 }
 
-/* ---------- Auth stránky (login/register) - prepínače v rohu ---------- */
+@media (max-width: 560px) {
+  .topbar-logout { width: 36px; min-width: 36px; padding: 0; justify-content: center; }
+  .topbar-logout span { display: none; }
+  .theme-slider { width: 48px !important; min-width: 48px !important; }
+  .lang-switch button { min-width: 34px; padding: 0 8px; }
+  .task-row { padding: 14px 16px; }
+  .metric { padding: 14px 16px; }
+  .metric__value { font-size: 1.5rem; }
+}
+
+/* ---------- Auth stránky - prepínače v rohu ---------- */
 .auth-controls {
-  position: fixed; top: 18px; right: 18px; z-index: 50;
+  position: fixed; top: 12px; right: 16px; z-index: 50;
   display: flex; align-items: center; gap: 8px;
 }
 .auth-page { padding-top: 40px; }
 
-/* ---------- Chat panel (AI asistent) ---------- */
+/* ---------- Chat panel (asistent pri cvičení) ----------
+   Rovnaký vizuál ako asistent v Úlohách (.ul-agent): sklenený panel,
+   gradientový avatar, bubliny s „chvostíkom“, pilulkové pole a okrúhle odoslanie.
+   Umiestnenie (stĺpec / dok) rieši 09-exercises.css. */
 .chat-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column; overflow: hidden;
   height: 520px;
-  overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid var(--glass-border, var(--card-border));
+  border-radius: 20px;
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+}
+@media (prefers-reduced-transparency: reduce) {
+  .chat-panel { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 .chat-panel__header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 16px 18px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 14px 12px 16px;
   border-bottom: 1px solid var(--border);
-  font-weight: 700; font-size: 0.95rem; color: var(--text);
   flex-shrink: 0;
 }
-.chat-panel__dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 0 3px var(--success-soft);
+.chat-panel__title { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.chat-panel__title strong { font-size: 1rem; font-weight: 600; line-height: 1.2; color: var(--text); }
+.chat-panel__status { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.8125rem; min-width: 0; }
+.chat-panel__status > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-panel__preview { display: none; color: var(--text-muted); font-size: 0.8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-panel__toggle {
+  display: none; margin-left: auto;
+  width: 30px; min-width: 30px; height: 30px; min-height: 30px; padding: 0; flex: none;
+  align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--fill); color: var(--text-muted);
+  transition: background 0.2s, color 0.2s;
 }
+.chat-panel__toggle:hover { background: var(--fill-strong); color: var(--text); }
+.chat-panel__toggle svg { width: 16px; height: 16px; transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.chat-panel.is-expanded .chat-panel__toggle svg { transform: rotate(180deg); }
+
 .chat-panel__messages {
-  flex: 1; overflow-y: auto;
-  padding: 18px;
-  display: flex; flex-direction: column; gap: 12px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: 14px 14px 6px;
+  display: flex; flex-direction: column; gap: 10px;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
 }
 .chat-msg {
   max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 0.9rem; line-height: 1.5;
-  word-wrap: break-word;
+  padding: 9px 14px;
+  border-radius: 18px;
+  font-size: 0.9375rem; line-height: 1.4;
+  white-space: pre-wrap; word-wrap: break-word;
+  animation: ul-msg-in 0.25s ease both;
 }
-.chat-msg--bot {
-  align-self: flex-start;
-  background: var(--surface-2);
-  color: var(--text);
-  border-bottom-left-radius: 4px;
-}
-.chat-msg--user {
-  align-self: flex-end;
-  background: var(--primary);
-  color: var(--primary-contrast);
-  border-bottom-right-radius: 4px;
-}
-.chat-msg--typing { color: var(--text-muted); font-style: italic; }
+.chat-msg--bot { align-self: flex-start; background: var(--surface-2); color: var(--text); border-bottom-left-radius: 6px; }
+.chat-msg--user { align-self: flex-end; background: var(--button); color: #fff; border-bottom-right-radius: 6px; }
+.chat-msg--typing { padding: 0; }
+
+.chat-panel__quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 14px 8px; flex-shrink: 0; }
 .chat-panel__input {
   display: flex; gap: 8px; align-items: center;
-  padding: 12px;
-  border-top: 1px solid var(--border);
+  padding: 4px 12px 12px;
   flex-shrink: 0;
 }
 .chat-panel__input input {
-  flex: 1; margin: 0;
-  padding: 10px 14px;
+  flex: 1; min-width: 0; margin: 0;
+  height: 38px; min-height: 38px; padding: 0 16px;
   border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong, var(--border));
+  background: var(--field);
+  font-size: 0.9375rem;
 }
-.chat-panel__send {
-  width: 40px; height: 40px; flex-shrink: 0;
-  border-radius: 50%;
-  padding: 0;
-  display: grid; place-items: center;
-}
-.chat-panel__send svg { width: 18px; height: 18px; }
-.chat-panel__send:hover { transform: none; }
+.chat-panel__send { flex-shrink: 0; }
+.chat-panel__send svg { width: 16px; height: 16px; }
+.chat-panel__send:disabled, .chat-panel__input input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ---------- Vycentrovaný obsah (profil, zmena hesla...) ---------- */
-.centered-card {
-  width: 100%;
-  max-width: 520px;
-}
-/* Vycentrované stránky na desktope: nadpis je na stredu a prepínače (SK/EN, téma)
-   v pravom stĺpci GRIDU - nie sú položené cez nadpis (predtým position:absolute,
-   čo pri užšom okne prekrylo text). Ak je obsah príliš úzky na 3 stĺpce
-   (container query podľa šírky .app-main, nie okna), prepínače sa dajú nad nadpis. */
-.app-main--centered { container-type: inline-size; container-name: centered-main; }
+/* ---------- Vycentrované stránky (profil, heslo, testy, štatistika) ---------- */
+/* Užšie stránky (formuláre, testy, štatistika): obsah v čitateľnom stĺpci,
+   veľký nadpis zarovnaný vľavo s obsahom - rovnako ako na ostatných stránkach. */
+.app-main--centered { --content-w: 720px; }
+.centered-card { width: 100%; max-width: var(--content-w) !important; }
+.app-main--centered .app-topbar__greeting { text-align: left; }
+.app-main--centered .app-topbar__greeting p { max-width: 600px; }
 
-@media (min-width: 761px) {
-  .app-main--centered { align-items: center; }
-  .app-main--centered .app-topbar {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 184px minmax(0, 1fr) 184px;   /* bočné stĺpce = šírka prepínačov */
-    align-items: start;
-    column-gap: 16px;
-  }
-  .app-main--centered .app-topbar__greeting {
-    grid-column: 2; grid-row: 1;
-    text-align: center;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-  .app-main--centered .app-topbar__actions {
-    grid-column: 3; grid-row: 1;
-    justify-self: end;
-    position: static;
-  }
-}
-
-@container centered-main (max-width: 700px) {
-  @media (min-width: 761px) {
-    .app-main--centered .app-topbar { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
-    .app-main--centered .app-topbar__actions { order: -1; align-self: flex-end; }
-  }
-}
-
-
-/* Tag "skryté" pri sekcii, ktorú admin vypol pre študentov (vidí ju len admin) */
+/* Tag "skryté" pri sekcii, ktorú admin vypol pre študentov */
 .sidebar__tag, .task-row__tag {
-  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: var(--radius-full);
-  background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border);
-  font-size: 0.68rem; font-weight: 600; line-height: 1.4; vertical-align: middle; white-space: nowrap;
+  display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: var(--radius-full);
+  background: var(--fill); color: var(--text-muted);
+  font-size: 0.6875rem; font-weight: 600; line-height: 1.5; vertical-align: middle; white-space: nowrap;
 }
 .task-row__body > .task-row__tag { margin: 8px 0 0; }

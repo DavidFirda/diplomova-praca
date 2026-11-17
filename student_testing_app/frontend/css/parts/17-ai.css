@@ -1,0 +1,204 @@
+/* ============================================================
+   AI asistent: odpovede v markdowne, stav, zdroje, vloženie kódu do bunky,
+   panel v cvičení + admin stránky (AI asistent, Materiály) a stránka Materiály.
+   Nadväzuje na bubliny .ul-* (13-assistant.css) a tokeny z 01-tokens.css.
+   ============================================================ */
+
+/* ---------- bublina odpovede ---------- */
+.ai-msg { white-space: normal; }
+.ai-wrap { max-width: 92%; }
+.ai-body > :first-child { margin-top: 0; }
+.ai-body > :last-child { margin-bottom: 0; }
+.ai-body p { margin: 0 0 0.55em; }
+.ai-body ul, .ai-body ol { margin: 0.3em 0 0.6em; padding-left: 1.3em; }
+.ai-body li { margin: 0.15em 0; }
+.ai-body h3, .ai-body h4, .ai-body h5 { font-size: 0.9375rem; font-weight: 600; margin: 0.7em 0 0.3em; }
+.ai-body code {
+  font-family: var(--font-mono); font-size: 0.84em; background: var(--surface);
+  border-radius: 5px; padding: 0.08em 0.35em;
+}
+.ai-body pre {
+  margin: 0.5em 0; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow-x: auto; white-space: pre; line-height: 1.5;
+}
+.ai-body pre code { background: none; padding: 0; font-size: 0.8125rem; }
+.ai-body a { color: var(--primary); font-weight: 500; text-decoration: none; }
+.ai-body a:hover { text-decoration: underline; }
+.ai-body blockquote { margin: 0.4em 0; padding-left: 10px; border-left: 3px solid var(--border-strong); color: var(--text-muted); }
+.ai-body em { color: var(--text-muted); }
+.ai-cite {
+  display: inline-block; min-width: 1.35em; padding: 0 0.3em; margin: 0 1px; border-radius: 6px;
+  background: var(--primary-soft); color: var(--primary); font-size: 0.6875rem; font-weight: 600;
+  line-height: 1.45; text-align: center; vertical-align: super; cursor: help;
+  font-variant-numeric: tabular-nums;
+}
+.ai-msg.is-streaming .ai-body > :last-child::after {
+  content: ""; display: inline-block; width: 7px; height: 1em; margin-left: 2px; vertical-align: -2px;
+  background: var(--primary); border-radius: 2px; animation: ai-caret 0.9s steps(2) infinite;
+}
+@keyframes ai-caret { 50% { opacity: 0; } }
+.ai-msg--error { background: var(--danger-soft) !important; }
+.ai-msg--error .ai-body { color: var(--danger); }
+
+.ai-status { display: flex; align-items: center; gap: 2px; }
+.ai-status .ul-typing { padding: 4px 4px; }
+.ai-status__text { font-size: 0.8125rem; color: var(--text-muted); }
+
+/* ---------- zdroje ---------- */
+.ai-sources { margin: 2px 6px 0; font-size: 0.75rem; color: var(--text-muted); text-align: left; }
+.ai-sources summary { cursor: pointer; font-weight: 500; list-style: none; user-select: none; }
+.ai-sources summary::-webkit-details-marker { display: none; }
+.ai-sources summary::before { content: "▸ "; }
+.ai-sources[open] summary::before { content: "▾ "; }
+.ai-sources ol { margin: 4px 0 0; padding-left: 1.6em; }
+.ai-sources li { margin: 2px 0; }
+.ai-sources a { color: var(--primary); text-decoration: none; }
+.ai-sources a:hover { text-decoration: underline; }
+
+/* ---------- vloženie kódu do bunky / editora ---------- */
+.ai-insert { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -2px 0 8px; }
+.ai-insert__btn {
+  width: auto; min-height: 28px; margin: 0; padding: 0 12px; font-size: 0.8125rem; font-weight: 500;
+  border-radius: var(--radius-full); border: 0; background: var(--surface);
+  color: var(--primary); box-shadow: none; cursor: pointer;
+}
+.ai-insert__btn:hover:not(:disabled) { background: var(--fill-strong); color: var(--primary); transform: none; }
+.ai-insert__done { font-size: 0.75rem; font-weight: 500; color: var(--success); }
+.ai-confirm {
+  width: 100%; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+  border: 1px solid var(--card-border); border-radius: var(--radius); background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.ai-confirm__q { font-size: 0.8125rem; font-weight: 600; }
+.ai-confirm select { margin: 0; padding: 4px 28px 4px 8px; font-size: 0.8125rem; min-height: 30px; }
+.ai-confirm__how { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.8125rem; }
+.ai-confirm__how label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.ai-confirm__how input { width: auto; margin: 0; }
+.ai-confirm__actions { display: flex; gap: 8px; }
+.ai-confirm__actions button { width: auto; min-height: 30px; margin: 0; padding: 0 14px; font-size: 0.8125rem; }
+.ai-confirm__actions .ai-confirm__cancel { background: var(--fill); color: var(--primary); box-shadow: none; }
+.ai-confirm__actions .ai-confirm__cancel:hover:not(:disabled) { background: var(--fill-strong); color: var(--primary); }
+.ai-note {
+  align-self: center; font-size: 0.75rem; color: var(--success); background: var(--success-soft);
+  padding: 3px 10px; border-radius: var(--radius-full);
+}
+
+/* ---------- panel asistenta v cvičení ---------- */
+.ai-panel__cell {
+  flex: none; font-size: 0.75rem; font-weight: 600; color: var(--primary); white-space: nowrap;
+  background: var(--fill); padding: 3px 9px; border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+}
+.ai-panel__cell:empty { display: none; }
+@media (max-width: 1180px), (max-height: 620px) {
+  .ex-workspace .chat-panel:not(.is-expanded) .ai-panel__cell { display: none; }
+}
+.chat-panel__messages .ul-avatar { width: 28px; height: 28px; }
+.nb-code__num {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px;
+  padding: 0 6px; border-radius: 6px; background: var(--fill);
+  color: var(--text-muted); font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  transition: background var(--transition), color var(--transition);
+}
+.nb-code--active { box-shadow: 0 0 0 3px var(--primary-soft); }
+.nb-code--active .nb-code__num { background: var(--primary); color: #fff; }
+.nb-code--inserted { animation: ai-flash 1.6s ease; }
+@keyframes ai-flash { 0%, 40% { box-shadow: 0 0 0 3px var(--primary); } 100% { box-shadow: 0 0 0 3px var(--primary-soft); } }
+@media (prefers-reduced-motion: reduce) {
+  .ai-msg.is-streaming .ai-body > :last-child::after, .nb-code--inserted { animation: none; }
+}
+
+/* ---------- študent: Materiály ---------- */
+.mat-list { display: flex; flex-direction: column; gap: 10px; }
+.mat-group-title { margin: 18px 0 6px; font-size: 1rem; font-weight: 600; color: var(--text-muted); }
+.mat-row {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--surface);
+  border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  scroll-margin-top: calc(var(--toolbar-h) + 24px);
+}
+.mat-row:target { box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow-sm); }
+.mat-row__ic {
+  width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 0.75rem;
+}
+.mat-row__body { flex: 1; min-width: 0; }
+.mat-row__title { font-weight: 600; }
+.mat-row__sub { font-size: 0.8125rem; color: var(--text-muted); }
+.mat-row .btn { width: auto; margin: 0; }
+
+/* ---------- admin: AI asistent a Materiály ---------- */
+.ai-admin-tabs {
+  display: flex; gap: 2px; margin-bottom: 16px; padding: 2px; flex-wrap: wrap;
+  width: fit-content; max-width: 100%; align-self: flex-start;
+  background: var(--fill); border-radius: 9px;
+}
+.ai-admin-tabs button {
+  width: auto; min-height: 30px; margin: 0; padding: 0 16px; border-radius: 7px;
+  background: transparent; color: var(--text); border: 0; box-shadow: none; font-size: 0.875rem; font-weight: 500;
+}
+.ai-admin-tabs button:hover:not(:disabled) { background: transparent; color: var(--text); }
+.ai-admin-tabs button.active { background: var(--seg-on); box-shadow: var(--shadow-sm); }
+.ai-admin-card {
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+  padding: 18px 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm);
+}
+.ai-admin-card h3 { margin: 0 0 12px; font-size: 1.0625rem; font-weight: 600; }
+.ai-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ai-kpi { background: var(--surface-2); border-radius: var(--radius); padding: 12px 14px; }
+.ai-kpi__v { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ai-kpi__l { font-size: 0.75rem; color: var(--text-muted); }
+.ai-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.ai-filters input, .ai-filters select { width: auto; margin: 0; min-height: 32px; padding: 4px 10px; font-size: 0.875rem; }
+.ai-filters select { padding-right: 30px; }
+.ai-filters button, .ai-admin-card .btn-sm { width: auto; min-height: 32px; margin: 0; padding: 0 14px; font-size: 0.875rem; }
+.ai-filters label { display: inline-flex; align-items: center; gap: 6px; }
+.ai-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.ai-table th, .ai-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.ai-table th { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.ai-table tr.is-clickable { cursor: pointer; }
+.ai-table tr.is-clickable:hover td { background: color-mix(in srgb, var(--selection) 60%, transparent); }
+.ai-table-wrap { overflow-x: auto; }
+.ai-badge {
+  display: inline-block; padding: 1px 8px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 500;
+  background: var(--fill); color: var(--text-muted); white-space: nowrap;
+}
+.ai-badge--ok { background: var(--success-soft); color: var(--success); }
+.ai-badge--warn { background: var(--warning-soft); color: var(--warning); }
+.ai-badge--err { background: var(--danger-soft); color: var(--danger); }
+.ai-badge--info { background: var(--primary-soft); color: var(--primary); }
+.ai-conv { display: flex; flex-direction: column; gap: 10px; }
+.ai-conv__msg { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: var(--surface); }
+.ai-conv__msg--student { background: var(--surface-2); border-color: transparent; }
+.ai-conv__msg--event { border-style: dashed; }
+.ai-conv__meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+.ai-conv__text { font-size: 0.9375rem; }
+.ai-conv__text pre { white-space: pre-wrap; background: var(--surface-2); padding: 8px 10px; border-radius: var(--radius-sm); }
+.ai-conv .ai-sources { margin: 8px 0 0; }
+.ai-src-table { margin-top: 6px; font-size: 0.8125rem; }
+.ai-src-table td.snip { color: var(--text-muted); max-width: 420px; }
+.ai-guard { margin-top: 8px; font-size: 0.8125rem; color: var(--warning); }
+.ai-settings { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.ai-settings label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8125rem; font-weight: 600; }
+.ai-settings input, .ai-settings select { margin: 0; }
+.ai-health { font-size: 0.875rem; line-height: 1.7; }
+.ai-search-results { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.ai-search-results .item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.875rem; }
+.ai-search-results .item pre {
+  white-space: pre-wrap; margin: 6px 0 0; font-size: 0.75rem; color: var(--text-muted);
+  max-height: 140px; overflow: auto; background: var(--surface-2); padding: 6px 8px; border-radius: 6px;
+}
+.mat-upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.mat-upload input[type=file] { width: auto; margin: 0; }
+.mat-upload select { width: auto; margin: 0; }
+.mat-upload label.inline { display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; }
+.mat-upload label.inline input { width: auto; margin: 0; }
+.mat-admin-title { width: 100%; margin: 0; padding: 4px 8px; font-size: 0.875rem; min-height: 30px; }
+.mat-admin-num { width: 70px; margin: 0; padding: 4px 6px; font-size: 0.875rem; min-height: 30px; }
+.ai-toggle { width: auto !important; margin: 0 !important; }
+.ai-muted { color: var(--text-muted); font-size: 0.8125rem; }
+.ai-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.ai-actions button, .ai-actions .btn { width: auto; min-height: 28px; margin: 0; padding: 0 10px; font-size: 0.8125rem; }
+.ai-actions .danger, .ai-filters .danger { background: var(--danger); color: #fff; }
+.ai-actions .danger:hover:not(:disabled), .ai-filters .danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000); color: #fff;
+}

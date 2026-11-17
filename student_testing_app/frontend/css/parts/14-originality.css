@@ -8,15 +8,19 @@
   position: fixed; left: 50%; bottom: 28px; z-index: 1200;
   transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
   max-width: calc(100vw - 32px);
-  padding: 11px 18px; border-radius: var(--radius);
-  background: var(--text); color: var(--surface);
-  font-size: 0.9rem; font-weight: 600; box-shadow: var(--shadow-lg);
+  padding: 10px 18px; border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--text) 92%, transparent); color: var(--bg);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-size: 0.9375rem; font-weight: 500; box-shadow: var(--shadow-lg);
   transition: opacity var(--transition), transform var(--transition);
 }
 .orig-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
-/* vedľa bočného menu (240 px) centruj na obsah, nie na celé okno; pod 760 px sa menu skrýva */
+/* vedľa bočného menu centruj na obsah, nie na celé okno; pod 760 px sa menu skrýva */
 @media (min-width: 761px) {
-  .orig-toast { left: calc(50% + 120px); }
+  .orig-toast { left: calc(50% + var(--sidebar-w) / 2); }
+}
+@media (max-width: 760px) {
+  .orig-toast { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)); }
 }
 
 /* ---------- potvrdzovacie okno ---------- */
@@ -24,56 +28,56 @@ body.orig-modal-open { overflow: hidden; }
 .orig-modal {
   position: fixed; inset: 0; z-index: 1100;
   display: flex; align-items: center; justify-content: center; padding: 16px;
-  background: rgba(20, 16, 12, 0.55);
+  background: var(--overlay);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   animation: orig-fade 0.18s ease-out;
 }
 .orig-modal__box {
-  width: 100%; max-width: 480px; max-height: calc(100vh - 32px); overflow-y: auto;
+  width: 100%; max-width: 460px; max-height: calc(100vh - 32px); overflow-y: auto;
   background: var(--surface); color: var(--text);
-  border: 1px solid var(--border); border-top: 4px solid var(--danger);
-  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
-  padding: 22px 24px 20px;
-  animation: orig-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid var(--card-border);
+  border-radius: 16px; box-shadow: var(--shadow-lg);
+  padding: 24px 24px 20px;
+  animation: orig-pop 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .orig-modal__icon {
   width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: var(--danger-soft); color: var(--danger); font-size: 1.15rem; margin-bottom: 10px;
+  background: var(--warning-soft); color: var(--warning); font-size: 1.1rem; margin-bottom: 12px;
 }
-.orig-modal h2 { margin: 0 0 6px; font-size: 1.2rem; }
-.orig-modal__lead { margin: 0 0 6px; color: var(--text-muted); font-size: 0.92rem; }
-.orig-modal__reasons { margin: 0 0 14px; padding-left: 20px; font-size: 0.92rem; line-height: 1.5; }
+.orig-modal h2 { margin: 0 0 6px; font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.01em; }
+.orig-modal__lead { margin: 0 0 6px; color: var(--text-muted); font-size: 0.9375rem; }
+.orig-modal__reasons { margin: 0 0 16px; padding-left: 20px; font-size: 0.9375rem; line-height: 1.5; }
 .orig-modal__choices { border: 0; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
-.orig-modal__choices legend { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; padding: 0; }
+.orig-modal__choices legend { font-weight: 600; font-size: 0.9375rem; margin-bottom: 8px; padding: 0; }
 .orig-choice {
   display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
-  padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  background: var(--surface-2); font-size: 0.92rem; line-height: 1.4;
+  padding: 11px 12px; border: 1.5px solid transparent; border-radius: var(--radius);
+  background: var(--surface-2); font-size: 0.9375rem; line-height: 1.4;
   transition: border-color var(--transition), background var(--transition);
+  margin: 0; font-weight: 400; color: var(--text);
 }
-.orig-choice:hover { border-color: var(--border-strong); }
-.orig-choice { margin: 0; font-weight: 500; color: var(--text); }
-/* globálne štýly inputov (width:100 %, padding, ...) sa na rádio nehodia */
+.orig-choice:hover { background: var(--surface-hover); }
 .orig-choice input[type="radio"] {
   width: 16px; height: 16px; min-height: 0; padding: 0; margin: 2px 0 0;
   border: 0; box-shadow: none; background: none; flex: 0 0 16px;
-  accent-color: var(--primary); cursor: pointer;
+  accent-color: var(--button); cursor: pointer;
 }
 .orig-choice input[type="radio"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .orig-choice span { flex: 1 1 auto; }
 .orig-choice:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
-.orig-modal__note { margin: 0 0 16px; font-size: 0.82rem; color: var(--text-muted); }
+.orig-modal__note { margin: 0 0 16px; font-size: 0.8125rem; color: var(--text-muted); }
 .orig-modal__actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
-.orig-modal__actions button { width: auto; flex: 0 0 auto; min-height: 42px; padding: 10px 18px; }
-.orig-modal__actions button[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.orig-modal__actions button { width: auto; flex: 0 0 auto; min-height: 40px; padding: 0 18px; }
+.orig-modal__actions button[disabled] { opacity: 0.45; cursor: not-allowed; transform: none; }
 @media (max-width: 480px) {
   .orig-modal__actions button { flex: 1 1 100%; }
 }
 @media (min-width: 761px) {
-  .orig-modal { padding-left: calc(240px + 16px); }
+  .orig-modal { padding-left: calc(var(--sidebar-w) + 16px); }
 }
 @keyframes orig-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes orig-pop { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes orig-pop { from { opacity: 0; transform: scale(0.97) translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .orig-modal, .orig-modal__box { animation: none; }
   .orig-toast { transition: none; }
@@ -82,28 +86,25 @@ body.orig-modal-open { overflow: hidden; }
 /* ---------- admin: red flag pri pokuse / odpovedi ---------- */
 .orig-flag {
   margin: 8px 0; padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
-  background: var(--danger-soft); border-radius: var(--radius-sm);
-  font-size: 0.85rem; line-height: 1.45;
+  border: 0;
+  background: var(--danger-soft); border-radius: var(--radius);
+  font-size: 0.875rem; line-height: 1.45;
 }
 .orig-flag__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.orig-flag__title { font-weight: 800; color: var(--danger); }
+.orig-flag__title { font-weight: 600; color: var(--danger); }
 .orig-flag__reasons { margin: 4px 0 0; padding-left: 18px; }
-.orig-flag__confirm { margin-top: 6px; font-weight: 700; }
+.orig-flag__confirm { margin-top: 6px; font-weight: 600; }
 .orig-flag__confirm--outside { color: var(--danger); }
-.orig-flag__metrics { margin-top: 4px; color: var(--text-muted); font-size: 0.78rem; }
+.orig-flag__metrics { margin-top: 4px; color: var(--text-muted); font-size: 0.8125rem; }
 .orig-flag .btn--sm { width: auto; }
-.orig-flag--dismissed {
-  background: var(--surface-2); border-color: var(--border);
-}
+.orig-flag--dismissed { background: var(--surface-2); }
 .orig-flag--dismissed .orig-flag__title { color: var(--text-muted); text-decoration: line-through; }
 .orig-flag--dismissed .orig-flag__confirm--outside { color: var(--text-muted); }
 
 .orig-chip {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 0.75rem; font-weight: 800; padding: 3px 9px; border-radius: 999px;
-  background: var(--danger-soft); color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
-  white-space: nowrap;
+  font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  background: var(--warning-soft); color: var(--warning);
+  border: 0; white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 .admin-answer.orig-has-flag, .ul-attempt.orig-has-flag, .ux-cell.orig-has-flag { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--danger) 55%, transparent); }

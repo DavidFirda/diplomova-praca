@@ -13,3 +13,6 @@
 @import url("parts/12-dashboard.css"); /* Dashboard: karty Úlohy/Cvičenia */
 @import url("parts/13-assistant.css"); /* Asistent: ikona + okno (Úlohy aj dashboard) */
 @import url("parts/14-originality.css"); /* Kontrola originality: zákaz vkladania, potvrdenie, red flag */
+@import url("parts/15-motion.css"); /* Animácie: prechody stránok, nástup obsahu, spätná väzba */
+@import url("parts/16-landing.css"); /* Úvodná stránka (štýl Apple produktovej stránky) */
+@import url("parts/17-ai.css"); /* AI asistent: odpovede, zdroje, vloženie kódu, admin AI + Materiály */

@@ -1,79 +1,91 @@
-/* AdaptPy - Štatistiky: výsledky posledného testu + predtest po kategóriách */
+/* AdaptPy - Štatistiky: úlohy (samoštúdium) + predtest po kategóriách.
+   Hlavné testy sa prerábajú, preto tu zatiaľ nie sú. */
 document.addEventListener("DOMContentLoaded", async () => {
-  const session = localStorage.getItem("main_test_session");
   const loading = document.getElementById("stats-loading");
 
   function tr(key, fallback) {
     try { if (typeof I18N !== "undefined") { const v = I18N.t(key); if (v && v !== key) return v; } } catch (e) {}
     return fallback;
   }
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (m) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+  const catName = (c) => (typeof I18N !== "undefined" && I18N.category) ? I18N.category(c) : c;
 
-  // --- 1) Výsledky posledného testu ---
-  {
-    try {
-      const res = await fetch("/api/test/analysis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ test_session: session }),
-      });
-      const data = await res.json();
-      if (!data.error) {
-        const { correct_answers, total_questions, student_accuracy, percentile_rank } = data;
-        document.getElementById("test-correct").textContent = `${correct_answers}/${total_questions}`;
-        document.getElementById("test-metrics").innerHTML =
-          `${tr("stats.accuracy", "Správnosť")}: <strong>${student_accuracy}%</strong> · ` +
-          `${tr("stats.percentile", "Percentil")}: <strong>${percentile_rank}%</strong>`;
-        document.getElementById("test-result-card").style.display = "block";
-        renderDonut(correct_answers, total_questions - correct_answers);
-      }
-    } catch (e) { /* ticho - test nemusel byť spravený */ }
+  function catRow(name, value, percent) {
+    return `
+      <div class="cat-row">
+        <div class="cat-row__head">
+          <span class="cat-row__name">${esc(name)}</span>
+          <span class="cat-row__val">${value}</span>
+        </div>
+        <div class="cat-bar"><div class="cat-bar__fill" style="width:${Math.max(0, Math.min(100, percent))}%"></div></div>
+      </div>`;
   }
 
-  // --- 2) Predtest podľa kategórií (vždy, cez server session) ---
+  let stats = null;
   try {
     const r = await fetch("/api/auth/stats", { credentials: "include" });
-    if (r.ok) {
-      const stats = await r.json();
-      if (stats.pretest && stats.pretest.done && stats.pretest.categories.length) {
-        const wrap = document.getElementById("pretest-cats");
-        wrap.innerHTML = stats.pretest.categories.map(c => `
-          <div class="cat-row">
-            <div class="cat-row__head">
-              <span class="cat-row__name">${I18N.category(c.category)}</span>
-              <span class="cat-row__val">${c.correct}/${c.total} · ${c.accuracy}%</span>
-            </div>
-            <div class="cat-bar"><div class="cat-bar__fill" style="width:${c.accuracy}%"></div></div>
-          </div>
-        `).join("");
-        document.getElementById("pretest-cats-card").style.display = "block";
-      }
-    }
+    if (r.ok) stats = await r.json();
   } catch (e) { /* ticho */ }
+
+  // --- 1) Úlohy ---
+  const t = stats && stats.tasks;
+  if (t && t.total > 0) {
+    document.getElementById("tasks-solved").textContent = `${t.solved}/${t.total}`;
+    const kpi = (v, l) => `<div class="stats-kpi"><div class="stats-kpi__v">${v}</div><div class="stats-kpi__l">${esc(l)}</div></div>`;
+    document.getElementById("tasks-kpis").innerHTML =
+      kpi(t.score_percent != null ? `${t.score_percent} %` : "–", tr("stats.tasksScore", "hodnotenie úloh")) +
+      kpi(t.solved_first_try, tr("stats.tasksFirstTry", "na prvý pokus")) +
+      kpi(t.hints_used, tr("stats.tasksHints", "použitých nápoved"));
+    document.getElementById("tasks-card").style.display = "block";
+    renderDonut("tasksChart", [t.solved, t.failed],
+      [tr("stats.solved", "Vyriešené"), tr("stats.failed", "Nevyriešené")]);
+
+    if (t.categories && t.categories.length) {
+      document.getElementById("tasks-cats").innerHTML = t.categories.map((c) => catRow(
+        catName(c.category),
+        `${c.solved}/${c.total} · ${tr("stats.score", "hodnotenie")} ${c.score_percent} %`,
+        c.score_percent,
+      )).join("");
+      document.getElementById("tasks-cats-card").style.display = "block";
+    }
+  }
+
+  // --- 2) Predtest podľa kategórií ---
+  if (stats && stats.pretest && stats.pretest.done && stats.pretest.categories.length) {
+    document.getElementById("pretest-cats").innerHTML = stats.pretest.categories.map((c) =>
+      catRow(catName(c.category), `${c.correct}/${c.total} · ${c.accuracy}%`, c.accuracy)).join("");
+    document.getElementById("pretest-cats-card").style.display = "block";
+  }
 
   if (loading) loading.style.display = "none";
 
-  // Ak sa nezobrazil ani test ani predtest → prázdny stav
-  const hasTestCard = document.getElementById("test-result-card").style.display === "block";
-  const hasPretestCard = document.getElementById("pretest-cats-card").style.display === "block";
-  if (!hasTestCard && !hasPretestCard) {
+  // nič na zobrazenie -> prázdny stav
+  const shown = ["tasks-card", "pretest-cats-card"].some((id) => document.getElementById(id).style.display === "block");
+  if (!shown) {
     const empty = document.getElementById("stats-empty");
     if (empty) empty.style.display = "block";
   }
 });
 
-function renderDonut(correct, incorrect) {
-  const canvas = document.getElementById("circleChart");
+function renderDonut(canvasId, values, labels) {
+  const canvas = document.getElementById(canvasId);
   if (!canvas || typeof Chart === "undefined") return;
   const styles = getComputedStyle(document.documentElement);
   const textColor = styles.getPropertyValue("--text").trim() || "#333";
   new Chart(canvas.getContext("2d"), {
     type: "doughnut",
     data: {
-      labels: [tr2("Správne"), tr2("Chybné")],
+      labels,
       datasets: [{
-        data: [correct, incorrect],
-        backgroundColor: ["#6b8afd", "#f87171"],
+        data: values,
+        backgroundColor: [
+          styles.getPropertyValue("--primary").trim() || "#0066cc",
+          styles.getPropertyValue("--danger").trim() || "#c4000f",
+        ],
         borderWidth: 0,
+        borderRadius: 4,
+        spacing: 2,
       }],
     },
     options: {
@@ -81,9 +93,8 @@ function renderDonut(correct, incorrect) {
       maintainAspectRatio: true,
       cutout: "68%",
       plugins: {
-        legend: { position: "bottom", labels: { color: textColor, font: { size: 12 } } },
+        legend: { position: "bottom", labels: { color: textColor, usePointStyle: true, pointStyle: "circle", boxWidth: 8, boxHeight: 8, padding: 14, font: { size: 13, family: styles.getPropertyValue("--font").trim() || undefined } } },
       },
     },
   });
 }
-function tr2(s) { return s; }

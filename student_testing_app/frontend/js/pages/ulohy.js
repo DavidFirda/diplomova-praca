@@ -1,7 +1,8 @@
 // Úlohy (samoštúdium) - POMDP priebežne vyberá úlohy z tém, ktoré študent nezvláda.
-// Server drží stav úlohy: počet pokusov, kedy sa sprístupní asistent (po 2. nesprávnej
-// odpovedi) a kedy sa ukáže riešenie (po 5. nesprávnej). Klient nič z toho neurčuje,
-// len zobrazuje to, čo vráti /api/ulohy/*.
+// Server drží stav úlohy: počet pokusov, nápovedy (max 3, každá ďalšia až po ďalšom
+// nesprávnom pokuse) a kedy sa ukáže riešenie (po 5. nesprávnej). Klient nič z toho
+// neurčuje, len zobrazuje to, čo vráti /api/ulohy/* a /api/assistant/*.
+// AI asistent (voľný chat) je dostupný od začiatku úlohy, nikdy nedá celé riešenie.
 
 let codeMirrorEditor = null;
 let originality = null;   // kontrola originality editora (js/core/originality.js)
@@ -120,11 +121,9 @@ function showTask(a) {
     $("next-task").style.display = "none";
     renderAttempts();
 
-    // asistent: po obnovení stránky sa obnoví jeho história
-    $("agent-messages").innerHTML = "";
-    (a.agent_history || []).forEach((m) => addAgentMessage(m.role === "agent" ? "agent" : "user", m.text, false));
+    // asistent: po obnovení stránky sa obnoví jeho história (z DB)
     renderAgentHints();
-    updateAgentAvailability(a.agent_available, !a.agent_opened, !!(draft && draft.panelOpen));
+    loadAgentHistory(a.id, !!(draft && draft.panelOpen));
 }
 
 function renderAttempts() {
@@ -235,7 +234,8 @@ $("submit-answer").addEventListener("click", async () => {
     // nesprávny pokus, ďalší je možný: spätná väzba, kód musí opraviť sám
     showFeedback(d.feedback);
     setResult(t("ul.wrongRetry", "Nesprávne. Oprav kód a skús to znova."), "wrong");
-    if (d.agent_unlocked_now) updateAgentAvailability(true, true);
+    // odomkla sa ďalšia nápoveda -> ikona asistenta zapulzuje (ak je okno zatvorené)
+    if (d.hint_available && !assistant.isOpen()) setFab(true, true);
 });
 
 function applyState(d) {
@@ -243,6 +243,8 @@ function applyState(d) {
     Object.assign(task, {
         status: d.status, attempts_used: d.attempts_used, wrong_attempts: d.wrong_attempts,
         agent_available: d.agent_available, hints_used: d.hints_used,
+        hint_available: d.hint_available, hint_reason: d.hint_reason,
+        credit_now: d.credit_now, credit_after_hint: d.credit_after_hint, max_hints: d.max_hints,
     });
     if (d.correct && d.attempt_no) task.solved_on_attempt = d.attempt_no;
     renderAttempts();
@@ -264,66 +266,103 @@ async function refreshStats() {
 $("next-task").addEventListener("click", loadTask);
 
 // ---------- asistent ----------
-// Okno, ikona robota, animácie a bubliny rieši spoločný komponent (js/core/assistant.js),
-// rovnaký ako na dashboarde. Tu je len to, čo je špecifické pre úlohy: odomknutie po 2. chybe,
-// tlačidlá "Vysvetli, čo je zle" / "Daj mi nápovedu" a volanie /api/ulohy/agent.
+// Okno a ikonu robota rieši spoločný komponent (js/core/assistant.js), bubliny a streamovanie
+// odpovedí js/core/ai_chat.js. Tu je to, čo je špecifické pre úlohy: voľný chat od začiatku,
+// postupné nápovedy (server ich odomyká po nesprávnych pokusoch) a vloženie kódu do editora
+// len na výslovnú žiadosť a po potvrdení.
+let agentBusy = false;
 const assistant = AdaptAssistant.create({
-    onSubmit: (text) => askAgent(null, text),
-    canShowFab: () => !!(task && task.agent_available),
+    onSubmit: (text) => askAgent(text),
+    canShowFab: () => !!(task && task.status === "open"),
 });
-const addAgentMessage = (who, text, withTime = true) => assistant.addMessage(who, text, withTime);
-const showTyping = () => assistant.showTyping();
-const hideTyping = () => assistant.hideTyping();
 const openAgent = () => assistant.open();
 const setFab = (visible, pulsing = false) => assistant.setFab(visible, pulsing);
 
+const agentChat = AiChat.view($("agent-messages"), {
+    insert: {
+        fixedTarget: "editor",
+        apply(code, _target, how) {
+            if (!task || task.status !== "open") return false;
+            const cm = codeMirrorEditor;
+            const last = cm.lastLine();
+            if (how === "replace") {
+                cm.replaceRange(code, { line: 0, ch: 0 }, { line: last, ch: cm.getLine(last).length }, "assistant");
+            } else {
+                const end = { line: last, ch: cm.getLine(last).length };
+                cm.replaceRange((cm.getValue().trim() ? "\n" : "") + code, end, end, "assistant");
+            }
+            cm.focus();
+            return true;
+        },
+    },
+});
+
+function pct(x) { return x == null ? "" : `${Math.round(x * 100)} %`; }
+
 function renderAgentHints() {
     if (!task) return;
-    $("agent-hints").innerText = `${t("ul.hints", "Nápovedy")}: ${task.hints_used}/${task.max_hints}`;
-    $("agent-hint").disabled = task.hints_used >= task.max_hints;
+    const max = task.max_hints || 3;
+    const parts = [`${t("ul.hints", "Nápovedy")}: ${task.hints_used}/${max}`];
+    if (task.status === "open") {
+        const reason = task.hint_reason;
+        if (task.hint_available) {
+            parts.push(`${t("ul.hintCost", "ďalšia zníži hodnotenie na")} ${pct(task.credit_after_hint)}`);
+        } else if (reason === "no_wrong_attempt") {
+            parts.push(t("ul.hintAfterWrong", "nápoveda po prvom nesprávnom pokuse"));
+        } else if (reason === "need_new_wrong") {
+            parts.push(t("ul.hintAfterNextWrong", "ďalšia po ďalšom nesprávnom pokuse"));
+        }
+        if (task.hints_used > 0) parts.push(`${t("ul.taskScore", "hodnotenie úlohy")} ${pct(task.credit_now)}`);
+    }
+    $("agent-hints").innerText = parts.join(" · ");
+    $("agent-hint").disabled = agentBusy || !task.hint_available;
+    $("agent-explain").disabled = agentBusy;
 }
 
-// Asistent nie je dostupný (úloha je uzavretá / ešte nie je odomknutý): skry okno aj ikonu.
+// Asistent nie je dostupný (úloha je uzavretá): skry okno aj ikonu.
 function setAgentAvailable(on) {
     if (task) task.agent_available = on;
     if (!on) assistant.hide();
 }
 
-// Sprístupní asistenta; keď ho študent ešte neotvoril, vyskočí sám (pozdrav).
-async function updateAgentAvailability(available, popUp, reopen = false) {
-    if (!task) return;
-    if (!available) { setAgentAvailable(false); return; }
-    task.agent_available = true;
-    if (popUp) {
-        setFab(true);
-        showTyping();
-        const r = await api("agent", { assignment_id: task.id, intent: "open", code: codeMirrorEditor.getValue() });
-        hideTyping();
-        if (r && r.ok) {
-            addAgentMessage("agent", r.data.reply);
-            task.agent_opened = true;
-        }
-        openAgent();
-    } else if (reopen) {
-        openAgent();
-    } else {
-        setFab(true, false);
-    }
+function agentGreeting() {
+    agentChat.plain(t("ul.agentGreeting",
+        "Ahoj! Som tvoj AI asistent k tejto úlohe. Pýtaj sa ma kedykoľvek – vysvetlím ti pojmy aj chyby, ale riešenie ti neprezradím. Po nesprávnom pokuse si môžeš vypýtať nápovedu."));
 }
 
-async function askAgent(intent, message) {
-    if (!task || !task.agent_available) return;
-    if (message) addAgentMessage("user", message);
-    showTyping();
-    const r = await api("agent", {
-        assignment_id: task.id, intent, message: message || "", code: codeMirrorEditor.getValue(),
+async function loadAgentHistory(assignmentId, reopen) {
+    agentChat.clear();
+    const messages = await AiChat.history({ mode: "task", assignment_id: assignmentId });
+    if (!task || task.id !== assignmentId) return;
+    if (messages.length) agentChat.restore(messages);
+    else agentGreeting();
+    if (task.status !== "open") { setAgentAvailable(false); return; }
+    if (reopen) openAgent(); else setFab(true, false);
+}
+
+function setAgentBusy(on) {
+    agentBusy = on;
+    const input = $("agent-input");
+    if (input) input.disabled = on;
+    renderAgentHints();
+}
+
+async function askAgent(message, action = "chat", shownText = null) {
+    if (!task || task.status !== "open" || agentBusy) return;
+    setAgentBusy(true);
+    await AiChat.ask(agentChat, {
+        mode: "task", action, assignment_id: task.id, message: message || "",
+        code: codeMirrorEditor.getValue(),
+    }, {
+        userText: shownText || message,
+        onMeta: (d) => { if (d.task_state) { applyState(d.task_state); } },
+        onDone: (d) => { if (d.task_state) applyState(d.task_state); },
+        onError: (d) => { if (d.task_state) applyState(d.task_state); },
     });
-    hideTyping();
-    if (!r) return;
-    if (!r.ok) { addAgentMessage("agent", r.data.error || t("ul.loadError", "Chyba.")); return; }
-    addAgentMessage("agent", r.data.reply);
-    applyState(r.data);
+    setAgentBusy(false);
 }
 
-$("agent-explain").addEventListener("click", () => askAgent("explain", ""));
-$("agent-hint").addEventListener("click", () => askAgent("hint", ""));
+$("agent-explain").addEventListener("click", () =>
+    askAgent(t("ul.agentExplainMsg", "Vysvetli mi, čo mám v kóde zle (bez riešenia)."), "chat"));
+$("agent-hint").addEventListener("click", () =>
+    askAgent("", "hint", t("ul.agentHintMsg", "Daj mi nápovedu.")));

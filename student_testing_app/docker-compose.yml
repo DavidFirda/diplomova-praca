@@ -10,6 +10,16 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - RUNNER_URL=http://runner:6000
+      # AI asistent: Ollama beží na hostiteľskom PC (mimo Dockeru), pozri README -> AI asistent.
+      # Model a ďalšie nastavenia sú v .env (AI_CHAT_MODEL, AI_THINK, ...).
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - MATERIALS_DIR=/app/backend/data/materials
+      - RAG_INDEX_DIR=/app/backend/data/rag_index
+      # SSE (streamované odpovede asistenta) držia vlákno workera počas písania
+      - GUNICORN_THREADS=${GUNICORN_THREADS:-8}
+    # host.docker.internal funguje aj na Linuxe (Docker Desktop ho má automaticky)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       redis:
         condition: service_healthy
@@ -28,6 +38,9 @@ services:
       - ${POMDP_MOUNT}
       # textový log všetkých pokusov a interakcií v Úlohách (JSONL, jeden súbor na študenta)
       - ${ULOHY_LOGS_MOUNT:-./ulohy_logs:/app/backend/data/ulohy_logs}
+      # materiály kurzu (prednášky, knihy) a RAG index - NEJDÚ na git (repozitár je verejný)
+      - ${MATERIALS_MOUNT:-./materials:/app/backend/data/materials}
+      - ${RAG_INDEX_MOUNT:-./rag_index:/app/backend/data/rag_index}
 
   # --- Redis (zdieľaný rate limiter medzi gunicorn workermi) ---
   redis:

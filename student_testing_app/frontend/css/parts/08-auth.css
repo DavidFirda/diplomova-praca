@@ -2,56 +2,102 @@
    Auth split-screen s postavičkami (login / register)
    ============================================================ */
 .auth-wrap {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 88px 20px 40px;
+  padding: calc(var(--toolbar-h) + 40px) 20px 48px;
   display: flex; align-items: center; justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 .auth-card {
+  --hero-bg: #eaf1fb;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  width: 100%; max-width: 900px;
+  width: 100%; max-width: 920px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
+:root[data-theme="dark"] .auth-card { --hero-bg: #1c2230; }
 
-/* Panel s postavičkami */
+/* Panel s postavičkami (postavičky samotné sú nižšie, bez zmeny) */
 .auth-hero {
   position: relative;
-  background: var(--surface-2);
+  background: linear-gradient(180deg, var(--hero-bg) 0%, color-mix(in srgb, var(--hero-bg) 55%, var(--surface)) 100%);
   padding: 0; overflow: hidden;
-  min-height: 440px;
+  min-height: 480px;
   display: flex; flex-direction: column;
 }
 .auth-hero__head {
   position: absolute; top: 0; left: 0; right: 0;
-  padding: 30px 30px 18px; z-index: 3;
-  background: linear-gradient(to bottom, var(--surface-2) 62%, transparent);
+  padding: 32px 32px 20px; z-index: 3;
+  background: linear-gradient(to bottom, var(--hero-bg) 62%, transparent);
   pointer-events: none;
 }
-.auth-hero__title { font-size: 1.7rem; font-weight: 800; color: var(--text); margin: 0 0 4px; }
-.auth-hero__subtitle { font-size: 0.92rem; color: var(--text-muted); margin: 0; }
-.auth-buddies {
-  position: absolute; left: 0; right: 0; bottom: 0; top: 96px;
+.auth-hero__title {
+  font-family: var(--font-display);
+  font-size: 1.75rem; font-weight: 700; letter-spacing: -0.022em;
+  color: var(--text); margin: 0 0 4px;
 }
-.auth-buddies svg { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; }
+.auth-hero__subtitle { font-size: 0.9375rem; color: var(--text-muted); margin: 0; }
+/* ============================================================
+   Postavičky + scéna (js/auth/buddies.js)
+   Vrstvy: scéna (škvrny, symboly, zadná vlna) < postavičky < predná vlna < nadpis
+   ============================================================ */
+.auth-hero {
+  --sc-blob: #d9e6fb;
+  --sc-back: #c9daf5;
+  --sc-front: #b7cbee;
+  --sc-sym: #7e9fd8;
+  isolation: isolate;
+}
+:root[data-theme="dark"] .auth-hero {
+  --sc-blob: #222c41;
+  --sc-back: #26324b;
+  --sc-front: #2f3d5c;
+  --sc-sym: #6584bd;
+}
+.auth-hero__head { z-index: 4; }
 
-/* Postavičky - správanie presne podľa gifu (gestá, mimika, pohyb) */
-/* Hlava sa nakláňa na KRKU (pivot dole, kde sa napája na telo) - NEODLIETA */
+.auth-scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.auth-front {
+  position: absolute; left: 0; right: 0; bottom: -1px; z-index: 3;
+  width: 100%; height: clamp(24px, 8%, 44px);
+  pointer-events: none;
+}
+.sc-blob { fill: var(--sc-blob); }
+.sc-blob--1 { opacity: 0.9; }
+.sc-blob--2 { opacity: 0.7; }
+.sc-blob--3 { opacity: 0.55; }
+.sc-wave--back path { fill: var(--sc-back); }
+.sc-wave--front path { fill: var(--sc-front); }
+.sc-sym { fill: var(--sc-sym); font-family: var(--font-mono); font-size: 17px; font-weight: 600; opacity: 0; }
+.sc-bubble { fill: none; stroke: var(--sc-sym); stroke-width: 1.6; opacity: 0; }
+
+.auth-buddies {
+  position: absolute; left: 0; right: 0; bottom: 0; top: 96px; z-index: 2;
+}
+.auth-buddies svg { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
+
+/* všetky skupiny sa otáčajú/škálujú okolo vlastného dna */
+.auth-buddies .bd, .auth-buddies .bd__enter, .auth-buddies .bd__bob, .auth-buddies .bd__body {
+  transform-box: fill-box; transform-origin: 50% 100%;
+}
+.auth-buddies .bd { cursor: pointer; }
+/* hlava sa nakláňa na krku (pivot dole) */
 .auth-buddies .bd__head {
-  transform-box: fill-box;
-  transform-origin: bottom center;
+  transform-box: fill-box; transform-origin: bottom center;
   transition: transform 0.45s cubic-bezier(0.34, 1.35, 0.5, 1);
 }
-.auth-buddies .eye, .auth-buddies .mouth {
-  transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1);
-}
+.auth-buddies .eye, .auth-buddies .mouth { transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1); }
+.auth-buddies .lid { transform: translateY(var(--up)); transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1); }
+.auth-buddies .eye-closed { opacity: 0; transition: opacity 0.12s ease; }
+.auth-buddies .leg { transform-box: fill-box; transform-origin: top center; }
+.auth-buddies .blush { transition: opacity 0.3s ease; }
 
-/* Varianty úst */
+/* ---------- Varianty úst ---------- */
 .auth-buddies .mouth-open,
 .auth-buddies .mouth-blue-open,
 .auth-buddies .mouth-fluff-dash { opacity: 0; transition: opacity 0.2s ease; }
@@ -59,11 +105,15 @@
 .auth-buddies .mouth-blue-small,
 .auth-buddies .mouth-fluff-small { opacity: 1; transition: opacity 0.2s ease; }
 
-/* LOOKING (heslo viditeľné): zuby, hlavy sa jemne naklonia k formuláru (malý uhol) */
-.auth-hero.buddies-looking .mouth-open,
-.auth-hero.buddies-looking .mouth-blue-open { opacity: 1; }
-.auth-hero.buddies-looking .mouth-closed,
-.auth-hero.buddies-looking .mouth-blue-small { opacity: 0; }
+.auth-hero.buddies-looking .mouth-open, .auth-hero.buddies-cheer .mouth-open,
+.auth-hero.buddies-looking .mouth-blue-open, .auth-hero.buddies-cheer .mouth-blue-open { opacity: 1; }
+.auth-hero.buddies-looking .mouth-closed, .auth-hero.buddies-cheer .mouth-closed,
+.auth-hero.buddies-looking .mouth-blue-small, .auth-hero.buddies-cheer .mouth-blue-small { opacity: 0; }
+.auth-hero.buddies-away .mouth-fluff-dash, .auth-hero.buddies-sad .mouth-fluff-dash { opacity: 1; }
+.auth-hero.buddies-away .mouth-fluff-small, .auth-hero.buddies-sad .mouth-fluff-small { opacity: 0; }
+.auth-hero.buddies-cheer .blush, .auth-hero.buddies-looking .blush { opacity: 0.75; }
+
+/* ---------- LOOKING: heslo zobrazené - nakuknú k formuláru ---------- */
 .auth-hero.buddies-looking .bd--ghost .bd__head { transform: rotate(5deg); }
 .auth-hero.buddies-looking .bd--tall  .bd__head { transform: rotate(8deg); }
 .auth-hero.buddies-looking .bd--fluff .bd__head { transform: rotate(6deg); }
@@ -72,10 +122,22 @@
 .auth-hero--right.buddies-looking .bd--tall  .bd__head { transform: rotate(-8deg); }
 .auth-hero--right.buddies-looking .bd--fluff .bd__head { transform: rotate(-6deg); }
 .auth-hero--right.buddies-looking .bd--blue  .bd__head { transform: rotate(-9deg); }
+.auth-hero.buddies-looking .bd__bob { transform: translateY(-6px); transition: transform 0.4s cubic-bezier(0.34, 1.35, 0.5, 1); }
 
-/* AWAY (píše sa skryté heslo): hlavy sa naklonia PREČ od formulára - jemne, NEODLIETAJÚ */
-.auth-hero.buddies-away .mouth-fluff-dash { opacity: 1; }
-.auth-hero.buddies-away .mouth-fluff-small { opacity: 0; }
+/* ---------- WATCH: píšeš - jemne sa nakloní k formuláru ---------- */
+.auth-hero.buddies-watch .bd--ghost .bd__head { transform: rotate(3deg); }
+.auth-hero.buddies-watch .bd--tall  .bd__head { transform: rotate(5deg); }
+.auth-hero.buddies-watch .bd--fluff .bd__head { transform: rotate(4deg); }
+.auth-hero.buddies-watch .bd--blue  .bd__head { transform: rotate(6deg); }
+.auth-hero--right.buddies-watch .bd--ghost .bd__head { transform: rotate(-3deg); }
+.auth-hero--right.buddies-watch .bd--tall  .bd__head { transform: rotate(-5deg); }
+.auth-hero--right.buddies-watch .bd--fluff .bd__head { transform: rotate(-4deg); }
+.auth-hero--right.buddies-watch .bd--blue  .bd__head { transform: rotate(-6deg); }
+
+/* ---------- AWAY: skryté heslo - otočia sa preč a zavrú oči ---------- */
+.auth-hero.buddies-away .lid { transform: translateY(var(--down)); }
+.auth-hero.buddies-away .eye-closed { opacity: 1; transition-delay: 0.12s; }
+.auth-hero.buddies-away .blush { opacity: 0.8; }
 .auth-hero.buddies-away .bd--ghost .bd__head { transform: rotate(-6deg); }
 .auth-hero.buddies-away .bd--tall  .bd__head { transform: rotate(-11deg); }
 .auth-hero.buddies-away .bd--fluff .bd__head { transform: rotate(-7deg); }
@@ -85,50 +147,112 @@
 .auth-hero--right.buddies-away .bd--fluff .bd__head { transform: rotate(7deg); }
 .auth-hero--right.buddies-away .bd--blue  .bd__head { transform: rotate(9deg); }
 
-/* IDLE: hlavičky sa jemne kývajú na krku */
+/* ---------- SAD: chyba - pokrútia hlavou ---------- */
+.auth-hero.buddies-sad .bd__head { animation: bdNo 0.7s ease-in-out both !important; }
+.auth-hero.buddies-sad .bd--tall .bd__head { animation-delay: 0.05s !important; }
+.auth-hero.buddies-sad .bd--fluff .bd__head { animation-delay: 0.1s !important; }
+.auth-hero.buddies-sad .bd--blue .bd__head { animation-delay: 0.15s !important; }
+.auth-hero.buddies-sad .bd__bob { transform: translateY(5px) scaleY(0.98); transition: transform 0.35s ease; }
+.auth-hero.buddies-sad .lid { transform: translateY(var(--half)); }
+@keyframes bdNo {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-8deg); } 40% { transform: rotate(7deg); }
+  60% { transform: rotate(-5deg); } 80% { transform: rotate(3deg); }
+}
+
+/* ---------- Žmurknutie, poskočenie, skok ---------- */
+.bd.is-blink .lid { animation: bdBlink 0.22s ease-in-out; }
+@keyframes bdBlink { 0%, 100% { transform: translateY(var(--up)); } 45%, 55% { transform: translateY(var(--down)); } }
+
+.bd.is-hop { animation: bdHop 0.34s cubic-bezier(0.3, 0.7, 0.4, 1); }
+@keyframes bdHop {
+  0%   { transform: translateY(0) scale(1, 1); }
+  30%  { transform: translateY(-9px) scale(0.98, 1.03); }
+  70%  { transform: translateY(0) scale(1.03, 0.97); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.bd.is-jump { animation: bdJump 0.7s cubic-bezier(0.3, 0.7, 0.4, 1); }
+@keyframes bdJump {
+  0%   { transform: translateY(0) scale(1, 1); }
+  15%  { transform: translateY(0) scale(1.07, 0.9); }
+  45%  { transform: translateY(-34px) scale(0.95, 1.07); }
+  72%  { transform: translateY(0) scale(1.06, 0.93); }
+  86%  { transform: translateY(-4px) scale(0.99, 1.01); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* ---------- Nástup pri načítaní: vyskočia zdola jedna po druhej ---------- */
+.bd__enter { animation: bdEnter 0.8s cubic-bezier(0.34, 1.4, 0.6, 1) backwards; }
+.bd--ghost .bd__enter { animation-delay: 0.1s; }
+.bd--tall  .bd__enter { animation-delay: 0.22s; }
+.bd--fluff .bd__enter { animation-delay: 0.34s; }
+.bd--blue  .bd__enter { animation-delay: 0.46s; }
+@keyframes bdEnter { from { transform: translateY(105%); } to { transform: translateY(0); } }
+
+/* ---------- IDLE: hlavy sa kývajú, telá pohupujú, nohy prešľapujú ---------- */
 @keyframes headSway1 { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 @keyframes headSway2 { 0%,100% { transform: rotate(3deg); } 50% { transform: rotate(-3deg); } }
-.auth-hero:not(.buddies-looking):not(.buddies-away) .bd--ghost .bd__head { animation: headSway1 4.5s ease-in-out infinite; }
-.auth-hero:not(.buddies-looking):not(.buddies-away) .bd--tall  .bd__head { animation: headSway2 3.8s ease-in-out infinite; }
-.auth-hero:not(.buddies-looking):not(.buddies-away) .bd--fluff .bd__head { animation: headSway1 4.2s ease-in-out 0.3s infinite; }
-.auth-hero:not(.buddies-looking):not(.buddies-away) .bd--blue  .bd__head { animation: headSway2 3.4s ease-in-out 0.5s infinite; }
+.auth-hero:not([class*="buddies-"]) .bd--ghost .bd__head { animation: headSway1 4.5s ease-in-out infinite; }
+.auth-hero:not([class*="buddies-"]) .bd--tall  .bd__head { animation: headSway2 3.8s ease-in-out infinite; }
+.auth-hero:not([class*="buddies-"]) .bd--fluff .bd__head { animation: headSway1 4.2s ease-in-out 0.3s infinite; }
+.auth-hero:not([class*="buddies-"]) .bd--blue  .bd__head { animation: headSway2 3.4s ease-in-out 0.5s infinite; }
 
-/* POHYB TIEL - jemné pohupovanie hore-dole */
-@keyframes bodyBob1 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-@keyframes bodyBob2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-.auth-hero:not(.buddies-away) .bd--ghost { animation: bodyBob1 3.6s ease-in-out infinite; }
-.auth-hero:not(.buddies-away) .bd--tall  { animation: bodyBob2 3.2s ease-in-out 0.4s infinite; }
-.auth-hero:not(.buddies-away) .bd--fluff { animation: bodyBob1 3.9s ease-in-out 0.2s infinite; }
-.auth-hero:not(.buddies-away) .bd--blue  { animation: bodyBob2 2.9s ease-in-out 0.6s infinite; }
+@keyframes bodyBob1 { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-4px) scaleY(1.012); } }
+@keyframes bodyBob2 { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-6px) scaleY(1.018); } }
+.auth-hero:not(.buddies-away):not(.buddies-looking):not(.buddies-sad) .bd--ghost .bd__bob { animation: bodyBob1 3.6s ease-in-out infinite; }
+.auth-hero:not(.buddies-away):not(.buddies-looking):not(.buddies-sad) .bd--tall  .bd__bob { animation: bodyBob2 3.2s ease-in-out 0.4s infinite; }
+.auth-hero:not(.buddies-away):not(.buddies-looking):not(.buddies-sad) .bd--fluff .bd__bob { animation: bodyBob1 3.9s ease-in-out 0.2s infinite; }
+.auth-hero:not(.buddies-away):not(.buddies-looking):not(.buddies-sad) .bd--blue  .bd__bob { animation: bodyBob2 2.9s ease-in-out 0.6s infinite; }
 
-/* POHYB NÔH - kmitajú ako kyvadlo (pivot HORE, kde sa napájajú na telo), výrazne ako v gife */
-.auth-buddies .leg { transform-box: fill-box; transform-origin: top center; }
 @keyframes legSwingL { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 @keyframes legSwingR { 0%,100% { transform: rotate(4deg); } 50% { transform: rotate(-4deg); } }
+@keyframes legVL { 0%,100% { transform: rotate(2deg); } 50% { transform: rotate(8deg); } }
+@keyframes legVR { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(-2deg); } }
 .auth-hero:not(.buddies-away) .leg--l { animation: legSwingL 2.2s ease-in-out infinite; }
 .auth-hero:not(.buddies-away) .leg--r { animation: legSwingR 2.2s ease-in-out infinite; }
 .auth-buddies .bd--tall .leg { animation-duration: 2.6s !important; }
 .auth-buddies .bd--blue .leg { animation-duration: 1.9s !important; }
 .auth-buddies .bd--fluff .leg { animation-duration: 2.4s !important; }
-/* červené nohy rozkročené do V (ako v gife) + kmitanie okolo tohto uhla */
-@keyframes legVL { 0%,100% { transform: rotate(2deg); } 50% { transform: rotate(8deg); } }
-@keyframes legVR { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(-2deg); } }
 .auth-hero:not(.buddies-away):not(.buddies-looking) .bd--tall .leg--l { animation: legVL 2.6s ease-in-out infinite; }
 .auth-hero:not(.buddies-away):not(.buddies-looking) .bd--tall .leg--r { animation: legVR 2.6s ease-in-out infinite; }
+/* pri písaní nohy cupkajú rýchlejšie */
+.auth-hero.buddies-watch .leg { animation-duration: 0.9s !important; }
 
-/* Pri interakcii s heslom sa pohyb tiel/nôh utíši (hlavy a mimika ostávajú) */
-.auth-hero.buddies-looking .bd, .auth-hero.buddies-away .bd { animation-play-state: paused; }
-.auth-hero.buddies-looking .leg, .auth-hero.buddies-away .leg { animation-play-state: paused !important; }
+/* ---------- Scéna: vlny, plávajúce symboly a bubliny ---------- */
+.sc-wave { transform-box: view-box; }
+.sc-wave--back { animation: scWave 16s linear infinite; }
+.sc-wave--front { animation: scWave 11s linear infinite reverse; }
+@keyframes scWave { from { transform: translateX(0); } to { transform: translateX(-200px); } }
+.sc-sym, .sc-bubble { animation: scFloat var(--t, 12s) linear var(--d, 0s) infinite; }
+@keyframes scFloat {
+  0%   { transform: translateY(0); opacity: 0; }
+  12%  { opacity: 0.75; }
+  80%  { opacity: 0.55; }
+  100% { transform: translateY(-430px); opacity: 0; }
+}
+.sc-blob--1 { animation: scDrift 18s ease-in-out infinite; }
+.sc-blob--2 { animation: scDrift 22s ease-in-out -6s infinite reverse; }
+.sc-blob--3 { animation: scDrift 20s ease-in-out -3s infinite; }
+@keyframes scDrift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10px, -12px); } }
+
+/* Bez pohybu: postavičky stoja, stavy (oči, ústa, hlavy) ostávajú */
+@media (prefers-reduced-motion: reduce) {
+  .auth-hero .bd__enter, .auth-hero .bd__bob, .auth-hero .bd__head, .auth-hero .leg,
+  .sc-wave, .sc-sym, .sc-bubble, .sc-blob { animation: none !important; }
+  .sc-sym, .sc-bubble { opacity: 0; }
+}
+
 
 /* Formulár */
-.auth-panel { padding: 40px 36px; display: flex; flex-direction: column; justify-content: center; }
-.auth-panel h1 { margin: 0 0 4px; font-size: 1.5rem; }
-.auth-switch-line { font-size: 0.88rem; color: var(--text-muted); margin: 0 0 22px; }
-.auth-switch-line a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.auth-panel { padding: 44px 40px; display: flex; flex-direction: column; justify-content: center; }
+.auth-panel h1 { margin: 0 0 6px; font-size: 1.75rem; letter-spacing: -0.022em; }
+.auth-switch-line { font-size: 0.9375rem; color: var(--text-muted); margin: 0 0 24px; }
+.auth-switch-line a { color: var(--primary); font-weight: 500; text-decoration: none; }
 .auth-switch-line a:hover { text-decoration: underline; }
-.auth-panel .bottom-link { display: block; margin-top: 14px; font-size: 0.85rem; text-align: center; }
-.auth-panel .bottom-link a { color: var(--text-muted); text-decoration: none; }
-.auth-panel .bottom-link a:hover { color: var(--primary); }
+.auth-panel form button[type="submit"] { margin-top: 6px; }
+.auth-panel .bottom-link { display: block; margin-top: 16px; font-size: 0.9375rem; text-align: center; }
+.auth-panel .bottom-link a { color: var(--primary); text-decoration: none; }
+.auth-panel .bottom-link a:hover { color: var(--primary-hover); }
 
 /* Register: postavičky vpravo, formulár vľavo (zmena poradia stĺpcov) */
 .auth-card--reverse .auth-hero { order: 2; }
@@ -137,15 +261,17 @@
 /* Pole hesla s okom */
 .pw-field { position: relative; }
 .pw-field input { padding-right: 46px; }
-.pw-toggle {
-  position: absolute; top: 9px; right: 8px;
+.pw-toggle,
+button.pw-toggle {
+  position: absolute; top: 5px; right: 5px;
   width: 34px; height: 34px; min-height: 0; padding: 0;
-  background: transparent; border: none; box-shadow: none;
+  background: transparent; border: none; box-shadow: none; border-radius: var(--radius-sm);
   color: var(--text-muted); cursor: pointer;
   display: grid; place-items: center;
 }
-.pw-toggle:hover { background: transparent; color: var(--text); transform: none; box-shadow: none; }
-.pw-toggle svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.pw-toggle:hover:not(:disabled) { background: var(--fill); color: var(--text); transform: none; box-shadow: none; }
+.pw-toggle:active:not(:disabled) { transform: none; }
+.pw-toggle svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Tablet */
 @media (max-width: 860px) {
@@ -157,9 +283,12 @@
 
 /* Mobil - postavičky hore, formulár dole (v oboch režimoch) - ako úvodná stránka */
 @media (max-width: 720px) {
-  .auth-wrap { padding: 80px 16px 32px; min-height: auto; align-items: flex-start; }
+  .auth-wrap { padding: calc(var(--toolbar-h) + 16px) 16px 32px; min-height: auto; align-items: flex-start; }
+  .auth-card { border-radius: 16px; }
   .auth-card, .auth-card--reverse { grid-template-columns: 1fr; max-width: 440px; }
-  .auth-hero { min-height: 220px; order: 1 !important; }
+  .auth-hero { min-height: 300px; order: 1 !important; }
+  .auth-hero__head { padding: 22px 24px 14px; }
+  .auth-buddies { top: 72px; }
   .auth-panel { order: 2 !important; padding: 26px 24px; }
   .auth-hero__title { font-size: 1.4rem; }
   .auth-hero__subtitle { font-size: 0.85rem; }
@@ -167,8 +296,9 @@
 
 /* Veľmi malé mobily */
 @media (max-width: 380px) {
-  .auth-hero { min-height: 180px; }
-  .auth-hero__head { padding: 20px 20px 0; }
+  .auth-hero { min-height: 260px; }
+  .auth-hero__head { padding: 18px 20px 0; }
+  .auth-buddies { top: 64px; }
   .auth-panel { padding: 22px 18px; }
   .auth-hero__title { font-size: 1.25rem; }
 }

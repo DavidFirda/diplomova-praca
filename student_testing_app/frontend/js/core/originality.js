@@ -70,6 +70,7 @@
       m = {
         typed_chars: 0, keystrokes: 0, corrections: 0, deleted_chars: 0,
         paste_blocked: 0, internal_chars: 0, active_ms: 0,
+        assistant_chars: 0, assistant_inserts: 0,   // kód vložený z AI asistenta (po potvrdení)
         baseline_len: cm.getValue().length,
       };
       intervals = [];
@@ -122,6 +123,13 @@
     cm.on("change", (_cm, change) => {
       const origin = change.origin || "";
       if (origin === "setValue") return;
+      if (origin === "assistant") {               // vloženie z AI asistenta: vysvetľuje nárast kódu
+        const ins = (change.text || []).join("\n").length;
+        m.internal_chars += ins;
+        m.assistant_chars += ins;
+        m.assistant_inserts += 1;
+        return;
+      }
       const inserted = (change.text || []).join("\n").length;
       const removed = (change.removed || []).join("\n").length;
 

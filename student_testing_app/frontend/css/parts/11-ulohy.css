@@ -3,34 +3,39 @@
    Využíva test-card/test-output/test-solution z 04-test-pages.css
    ============================================================ */
 .ul-stats {
-  padding: 5px 14px; border-radius: var(--radius-full);
-  background: var(--primary-soft); color: var(--primary);
-  font-size: 0.85rem; font-weight: 700;
+  padding: 3px 10px; border-radius: var(--radius-full);
+  background: var(--fill); color: var(--text);
+  font-size: 0.8125rem; font-weight: 600; font-variant-numeric: tabular-nums;
 }
 .ul-stats:empty { display: none; }
 
-/* Pokusy: 5 bodiek (minulé zlé = červená, aktuálny = obrys, vyriešený = zelená) */
+/* Pokusy: segmenty (zlé = červená, aktuálny = modrá, vyriešený = zelená) */
 .ul-attempts {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  margin: 0 0 14px; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;
+  margin: 0 0 14px; color: var(--text); font-size: 0.875rem; font-weight: 600;
 }
-.ul-attempts__dots { display: inline-flex; gap: 6px; }
+.ul-attempts__dots { display: inline-flex; gap: 4px; }
 .ul-dot {
-  width: 12px; height: 12px; border-radius: 50%;
-  background: var(--surface-2); border: 1.5px solid var(--border-strong);
+  width: 24px; height: 5px; border-radius: 3px;
+  background: var(--fill-strong); border: 0;
 }
-.ul-dot--bad { background: var(--danger); border-color: var(--danger); }
-.ul-dot--ok { background: var(--success); border-color: var(--success); }
-.ul-dot--now { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.ul-dot--bad { background: var(--danger); }
+.ul-dot--ok { background: var(--success); }
+.ul-dot--now { background: var(--primary); box-shadow: none; }
 
 /* Spätná väzba "čo bolo zlé" */
 .ul-feedback {
+  position: relative;
   background: var(--danger-soft); color: var(--text);
-  border: 1px solid var(--danger); border-radius: var(--radius-sm);
-  padding: 12px 14px; margin: 0 0 14px; text-align: left;
-  font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+  border: 0; border-radius: var(--radius);
+  padding: 12px 14px 12px 42px; margin: 0 0 14px; text-align: left;
+  font-size: 0.9375rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
 }
-.ul-empty { margin: 0; text-align: center; color: var(--text-muted); font-weight: 600; }
+.ul-feedback::before {
+  content: ""; position: absolute; left: 14px; top: 13px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--danger) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M12 6v8M12 18.5v.01'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+.ul-empty { margin: 0; text-align: center; color: var(--text-muted); font-weight: 500; padding: 24px 0; }
 
 /* ---------- Admin: úlohy používateľa ---------- */
 .ex-badge--fail { background: var(--danger-soft); color: var(--danger); }
@@ -38,6 +43,6 @@
 .ul-attempt { border-left: 3px solid var(--border-strong); }
 .ul-attempt--ok { border-left-color: var(--success); }
 .ul-attempt--bad { border-left-color: var(--danger); }
-.ul-admin-fb { margin-top: 8px; font-size: 0.84rem; color: var(--text); line-height: 1.5; }
-.ul-admin-events td { font-size: 0.82rem; padding: 8px 10px; word-break: break-word; white-space: pre-wrap; }
+.ul-admin-fb { margin-top: 8px; font-size: 0.875rem; color: var(--text); line-height: 1.5; }
+.ul-admin-events td { font-size: 0.8125rem; padding: 8px 10px; word-break: break-word; white-space: pre-wrap; }
 .ul-admin-events code { font-size: 0.78rem; }

@@ -16,6 +16,7 @@ from models import db, Question, Student
 from models_ulohy import TaskAssignment, TaskAttempt, TaskEvent
 from services import integrity as integrity_check
 from services.task_feedback import feedback_message
+from services import task_flow
 from services.task_log import log_event
 
 admin_ulohy_bp = Blueprint("admin_ulohy", __name__)
@@ -58,6 +59,7 @@ def _assignment_dict(a, question, attempts, events):
         "status": a.status, "is_correct": a.is_correct,
         "attempts_used": a.attempts_used, "wrong_attempts": a.wrong_attempts,
         "solved_on_attempt": a.solved_on_attempt, "hints_used": a.hints_used,
+        "credit": task_flow.task_credit(a),
         "agent_opened": a.agent_opened, "solution_shown": a.solution_shown,
         "reward": a.reward, "pomdp_applied": a.pomdp_applied, "strategy": a.strategy,
         "assigned_at": _iso(a.assigned_at), "finished_at": _iso(a.finished_at),

@@ -73,10 +73,15 @@ class TutorRewardModel(pomdp_py.RewardModel):
     def __init__(self):
         self.category_performance = {}
 
-    def update_performance(self, category, correct):
+    def update_performance(self, category, correct, weight=None):
+        """weight (0-1) = čiastočne správne (úloha vyriešená s nápovedou); None = podľa `correct`."""
         if category not in self.category_performance:
             self.category_performance[category] = {"correct": 0, "incorrect": 0}
-        if correct:
+        if weight is not None:
+            w = max(0.0, min(float(weight), 1.0))
+            self.category_performance[category]["correct"] += w
+            self.category_performance[category]["incorrect"] += 1 - w
+        elif correct:
             self.category_performance[category]["correct"] += 1
         else:
             self.category_performance[category]["incorrect"] += 1
@@ -110,15 +115,20 @@ class BayesianTutorPolicy(pomdp_py.PolicyModel):
         self.weak_threshold = weak_threshold
         self.category_performance = {category: {"alpha": 1, "beta": 1} for category in categories}
 
-    def update_performance(self, category, correct, decay=0.95):
-        """Bayesovská aktualizácia s poklesom vplyvu starých údajov."""
+    def update_performance(self, category, correct, decay=0.95, weight=None):
+        """Bayesovská aktualizácia s poklesom vplyvu starých údajov.
+        weight (0-1) = čiastočne správne (úloha vyriešená s nápovedou): alpha += w, beta += 1 - w."""
         if category not in self.category_performance:
             self.category_performance[category] = {"alpha": 1, "beta": 1}
 
         self.category_performance[category]["alpha"] *= decay
         self.category_performance[category]["beta"] *= decay
 
-        if correct:
+        if weight is not None:
+            w = max(0.0, min(float(weight), 1.0))
+            self.category_performance[category]["alpha"] += w
+            self.category_performance[category]["beta"] += 1 - w
+        elif correct:
             self.category_performance[category]["alpha"] += 1
         else:
             self.category_performance[category]["beta"] += 1
@@ -216,7 +226,7 @@ class BayesianTutorPOMDP(pomdp_py.POMDP):
         env = TutorEnvironment(init_state, TutorTransitionModel(), TutorRewardModel())
         super().__init__(agent, env)
     
-    def step_with_action(self, action, observation, reward=None, next_state=None):
+    def step_with_action(self, action, observation, reward=None, next_state=None, weight=None):
         """
         Aktualizuje belief, reward, policy a state na základe odpovede.
 
@@ -233,8 +243,12 @@ class BayesianTutorPOMDP(pomdp_py.POMDP):
             reward = self.env.reward_model.reward(self.env.state, action, next_state)
 
         self.env.set_state(next_state)
-        self.agent.policy_model.update_performance(category, correct)
-        self.env.reward_model.update_performance(category, correct)
+        if weight is None:
+            self.agent.policy_model.update_performance(category, correct)
+            self.env.reward_model.update_performance(category, correct)
+        else:   # čiastočný výsledok (úlohy s nápovedou)
+            self.agent.policy_model.update_performance(category, correct, weight=weight)
+            self.env.reward_model.update_performance(category, correct, weight=weight)
         self.agent.belief.update(action, observation)
 
         return observation, reward

@@ -67,6 +67,75 @@ Najdôležitejšie:
 
 ---
 
+## AI asistent (lokálny jazykový model + RAG)
+
+V aplikácii sú tri asistenti, všetci volajú lokálny model cez **Ollamu** a odpovede sa
+streamujú (SSE). Všetko sa loguje do DB (`assistant_*` tabuľky) a admin to vidí
+v **Administrácia → AI asistent** (prehľad, konverzácie so zdrojmi RAG, export CSV, nastavenie modelu).
+
+| Kde | Čo robí | RAG | Kód |
+|---|---|---|---|
+| Dashboard | ovládanie aplikácie z pohľadu študenta, jeho štatistiky, čo robiť ďalej, odkazy na cvičenia/prednášky | nie (návod `backend/services/ai/prompts/app_guide_*.md` + údaje študenta) | nikdy |
+| Cvičenia | vysvetľuje látku z prednášok, navádza, dá kostru riešenia | áno | do bunky len po potvrdení (výber bunky, nahradiť/pridať) |
+| Úlohy | voľný chat od začiatku + max. 3 nápovedy (1. kde je chyba, 2. všetky chyby a logika, 3. kostra) | áno | nikdy celé riešenie; do editora len na žiadosť a po potvrdení |
+
+**Nápovedy v Úlohách** sa odomykajú postupne: 1. po prvom nesprávnom pokuse, každá ďalšia až po
+ďalšom nesprávnom pokuse. Hodnotenie vyriešenej úlohy je 100 / 75 / 50 / 25 % podľa počtu nápoved
+(`HINT_CREDIT` v `services/task_flow.py`) a s touto váhou ide výsledok aj do POMDP a do „Zvládnutia tém“.
+
+**Strážca** (`backend/services/ai/guard.py`) kontroluje odpoveď ešte počas streamovania:
+v Úlohách porovná kód s referenčným riešením a kód bez vynechaných miest **spustí v sandboxe** –
+ak vypíše očakávaný výstup, je to riešenie a nahradí sa kostrou. V Cvičeniach zmení na kostru
+úplnú implementáciu funkcie zo zadania. Na dashboarde nepustí kód, odkazy mimo aplikácie ani
+nič o admin rozhraní, kóde či heslách. Testy: `cd backend && python -m pytest tests -q`.
+
+### Spustenie Ollamy na PC (zatiaľ)
+
+```powershell
+ollama pull qwen3.8:27b
+ollama pull bge-m3
+# Docker kontajner backendu sa na Ollamu pripája cez host.docker.internal:11434.
+# Ak beží Ollama len na localhoste, povoľ ju pre Docker: OLLAMA_HOST=0.0.0.0
+```
+
+### Premenné v `.env`
+
+| Premenná | Predvolene | Popis |
+|---|---|---|
+| `OLLAMA_URL` | `http://host.docker.internal:11434` | adresa Ollamy |
+| `AI_CHAT_MODEL` | `qwen3.8:27b` | jazykový model (dá sa zmeniť aj v admin rozhraní) |
+| `AI_THINK` | `false` | uvažovanie: `true/false` (qwen), `low/medium/high` (gpt-oss) |
+| `AI_TEMPERATURE` | `0.3` | teplota |
+| `AI_EMBED_MODEL` | `bge-m3` | embedding model pre RAG (po zmene: *Reindexovať všetko*) |
+| `AI_EMBED_KEEP_ALIVE` | `0` | ako dlho ostane embedding model vo VRAM po otázke (`0` = hneď sa uvoľní pre jazykový model) |
+| `AI_CHAT_KEEP_ALIVE` | `30m` | ako dlho ostane jazykový model načítaný |
+| `AI_NUM_CTX` | `16384` | kontextové okno |
+| `AI_MAX_TOKENS` / `AI_MAX_TOKENS_THINK` | `1200` / `6000` | limit odpovede bez / s uvažovaním |
+| `AI_RAG_K` | `5` | počet kúskov materiálov v prompte |
+| `AI_TRANSLATE_QUERY` | `true` | anglickú otázku preložiť (glosár) a hľadať aj po slovensky |
+| `AI_MAX_CONCURRENT` | `2` | koľko odpovedí naraz generuje jeden worker |
+| `AI_RATE_LIMIT` / `AI_RATE_WINDOW` | `30` / `600` | max. správ na študenta za okno (s) |
+| `AI_ENABLED` | `true` | asistent zapnutý (dá sa prepnúť aj v admin rozhraní) |
+| `MATERIALS_MAX_MB` | `200` | max. veľkosť nahrávaného materiálu |
+
+### Materiály (prednášky, knihy)
+
+Admin ich nahráva v **Administrácia → Materiály (správa)** (pptx, pdf, ipynb, py, md, txt, zip),
+indexujú sa na pozadí (rovnaké delenie a vyhľadávanie ako v `rag_asistent`: vektory bge-m3 + BM25,
+RRF, váhy prednášky 1,0 / knihy 0,6). Každý materiál sa dá vypnúť pre asistenta a sprístupniť
+študentom na stiahnutie (stránka **Materiály**). Súbory a index sú vo volume `materials/`
+a `rag_index/` – **nejdú na git**. Prvé naplnenie z `rag_asistent/data` naraz:
+
+```bash
+docker compose cp ../rag_asistent/data/prednasky backend:/tmp/prednasky
+docker compose cp ../rag_asistent/data/knihy backend:/tmp/knihy
+docker compose exec backend sh -c "cd /app/backend && flask --app app ai import /tmp/prednasky --kind prednaska"
+docker compose exec backend sh -c "cd /app/backend && flask --app app ai import /tmp/knihy --kind kniha"
+docker compose exec backend sh -c "cd /app/backend && flask --app app ai search 'čo je dedenie'"
+```
+
+---
+
 ## Štruktúra projektu
 
 ```
