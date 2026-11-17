@@ -1,0 +1,6 @@
+requests>=2.32
+pandas>=2.2
+numpy>=1.26
+python-pptx>=1.0
+pypdf>=5.0
+matplotlib

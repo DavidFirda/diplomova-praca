@@ -1,0 +1,2 @@
+model,verdict_ok,possible_leak,avg_words,tok_per_s,avg_total_s,vram_share
+gpt-oss:20b,0.9,0.0,28.0,155.25,1.57,1.0

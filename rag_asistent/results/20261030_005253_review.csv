@@ -1,0 +1,219 @@
+﻿model;lang;task_id;kind;verdict_ok;answer;spravnost_1_5;jazyk_1_5;uzitocnost_1_5;poznamka
+gpt-oss:20b;sk;1617;incorrect;True;"Chýba dvojbodka po definícii funkcie a v slovníkoch chýba dvojbodka medzi kľúčom a hodnotou.  
+Skontrolujte syntax definície funkcie a zápis slovníkov.";;;;
+gpt-oss:20b;sk;1617;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;1617;incorrect;True;"You’re missing a few syntax elements: the function definition needs a colon, and the dictionaries require commas between key‑value pairs.  
+Make sure each dictionary is written like `{'a': 10, 'b': 20, 'c': 30}` and that the function header ends with `:`. Once those are fixed, your merging logic will work.";;;;
+gpt-oss:20b;en;1617;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;870;incorrect;True;"Chýba správny názov funkcie – namiesto `rang` by malo byť `range`.  
+Skontrolujte, či používate správny názov funkcie na generovanie sekvencie čísel.";;;;
+gpt-oss:20b;sk;870;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;870;incorrect;True;"The function name is misspelled – it should be `range`, not `rang`.  
+Try correcting the spelling and see if the loop runs.  
+Hint: `range(0, 11)` generates numbers from 0 up to but not including 11.";;;;
+gpt-oss:20b;en;870;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;255;incorrect;False;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;sk;255;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;255;incorrect;True;"The function definition is not valid Python syntax.  
+You need to use `def` and a colon after the parameter list.  
+Try adding the correct keyword and colon, then test the function again.";;;;
+gpt-oss:20b;en;255;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;1147;incorrect;True;"Chýbajú dvojbodky po `for`, `if` a `else`, čo spôsobuje syntaxovú chybu.  
+Skontroluj, kde by mali byť dvojbodky a správne odsadenie blokov.  
+
+Tip: po každej riadku, ktorý definuje blok (ako `for`, `if`, `else`), musí nasledovať dvojbodka a potom odriadnený kód.";;;;
+gpt-oss:20b;sk;1147;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;1147;incorrect;True;"Missing colons after the `for`, `if`, and `else` statements (and the indentation is off).  
+Add a colon after each of those lines and indent the block under the `for` loop.";;;;
+gpt-oss:20b;en;1147;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;189;incorrect;True;"Váš kód obsahuje chyby v inicializácii zoznamu a v porovnávaní podmienky.  
+Použitie `==` namiesto `=` a `!==` namiesto `!=` spôsobuje syntaktické chyby.  
+Skontrolujte, ako sa v Pythone inicializuje zoznam a ako sa porovnáva podmienka na nepárne číslo.";;;;
+gpt-oss:20b;sk;189;correct;False;"Chýba vám generovanie 100 nepárnych čísel – cyklus prechádza iba do 100, takže dostanete len 50 čísel.  
+Skúste upraviť rozsah cyklu tak, aby generoval 100 nepárnych čísel (napríklad iterujte po 2 alebo zvýšte hornú hranicu).";;;;
+gpt-oss:20b;en;189;incorrect;True;"The code has a few syntax and logic errors.  
+- `odds == []` is a comparison, not an assignment; it should be `odds = []`.  
+- In Python the inequality operator is `!=`, not `!==`.  
+- Looping from 1 to 100 will only give you 50 odd numbers; to get the first 100 odd numbers you need to iterate further (e.g., up to 200).  
+
+Try fixing the assignment and operator, then adjust the range so that you collect 100 odd numbers.";;;;
+gpt-oss:20b;en;189;correct;False;"You’re only collecting odd numbers up to 100, which gives 50 numbers.  
+To get the first 100 odd numbers, generate numbers beyond 100.  
+Try using a loop that runs 100 times and calculates each odd number as `2 * i - 1`.";;;;
+gpt-oss:20b;sk;1809;incorrect;True;"Chýba vám správne spojenie bez medzery.  
+Skúste použiť operátor `+` priamo na `string1` a `string2` bez pridávania medzery.";;;;
+gpt-oss:20b;sk;1809;correct;False;"Chyba je v tom, že funkcia pridáva medzeru medzi reťazcami, čo nie je požadované.  
+Skontroluj, či je potrebné pridať medzeru, alebo len spojit reťazce.  
+Skús upraviť návratový výraz na `string1 + string2` a porovnaj výsledok.";;;;
+gpt-oss:20b;en;1809;incorrect;True;"Your function definition uses the wrong keyword – it should be `def`, not `define`. This causes a syntax error.  
+Try correcting the keyword and then test the function again.";;;;
+gpt-oss:20b;en;1809;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;837;incorrect;True;"Chýba dvojbodka po definícii funkcie a pravopisná chyba v slovnom kľúči `return`.  
+Skontrolujte syntax definície funkcie a správne napíšte `return`.";;;;
+gpt-oss:20b;sk;837;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;837;incorrect;True;"The function definition is missing a colon after the parameter list, and there’s a typo in the return statement (`retrn`).  
+Make sure the syntax is correct and that you return the string.  
+Hint: Use `def list_to_str(lst):` and `return result`.";;;;
+gpt-oss:20b;en;837;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;2026;incorrect;True;Chýbajú dvojbodky po definícii funkcie a po cykle `for`. Bez dvojbodky Python nepozná blok kódu. Skontrolujte syntax definície funkcie a cyklu `for` a odstráňte duplikát funkcie.;;;;
+gpt-oss:20b;sk;2026;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;2026;incorrect;True;"The code has syntax errors (missing colons) and duplicate function definitions.  
+Make sure each function definition ends with a colon and that you only define the function once.";;;;
+gpt-oss:20b;en;2026;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;212;incorrect;True;"Chýba dvojbodka po cykle `for`.  
+Bez dvojbodky Python nepozná začiatok bloku.  
+Skontrolujte syntax cyklu `for` a uistite sa, že máte dvojbodku na konci riadku, ktorý definuje cyklus.";;;;
+gpt-oss:20b;sk;212;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;212;incorrect;True;"The code has a syntax error – the `for` loop line is missing a colon (`:`).  
+This causes Python to raise a `SyntaxError` before it can generate any permutations.  
+Try adding the colon after the loop header and ensure the `print` statement is indented.";;;;
+gpt-oss:20b;en;212;correct;True;Everything is correct. Good job!;;;;
+gpt-oss:20b;sk;2581;incorrect;True;"Chýba správny typ dát a syntaxe.  
+Tu je návod: najprv uložte hodnoty do zoznamu (napr. `my_list = [10, 20, 30, 40, 50]`), potom použite metódu `reverse()` alebo funkciu `reversed()`.  Skontrolujte, či používate správne závorky a či je objekt, na ktorom voláte `reverse()`, zmeniteľný.";;;;
+gpt-oss:20b;sk;2581;correct;True;Všetko je správne. Výborne!;;;;
+gpt-oss:20b;en;2581;incorrect;True;"You’re trying to reverse a tuple, but `reverse()` only works on lists. Also, using `list` as a variable name shadows the built‑in type.  
+
+Try converting the tuple to a list first, then reverse it. Remember that `list` is a built‑in, so pick a different variable name.";;;;
+gpt-oss:20b;en;2581;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;1617;incorrect;True;"V kóde chýbajú dvojbodky (:) v definícii funkcie a v definíciach slovníkov.
+Skontroluj syntaktické pravidlá pre definovanie funkcií a zápis slovníkov v Python.";;;;
+gemma4:12b;sk;1617;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;1617;incorrect;True;"There are syntax errors in your function definition and dictionary declarations.
+
+In Python, you need to use colons to separate parameters in a function definition and to separate keys from values in a dictionary.
+
+Check your punctuation in the `def` line and inside the curly braces `{}`.";;;;
+gemma4:12b;en;1617;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;870;incorrect;True;Chyba je v náz;;;;
+gemma4:12b;sk;870;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;870;incorrect;True;There is a small typo in the name of the function you used to generate the sequence. Check the spelling of the built-in function used to create a range of numbers.;;;;
+gemma4:12b;en;870;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;255;incorrect;True;V kóde si použil kľúčové slovo `define`, ktoré v Pythonie neexistuje.;;;;
+gemma4:12b;sk;255;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;255;incorrect;True;"You used the wrong keyword to define your function. In Python, functions are defined using a specific keyword starting with ""d"".
+
+Hint: Check the very first word of your function definition.";;;;
+gemma4:12b;en;255;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;1147;incorrect;True;;;;;
+gemma4:12b;sk;1147;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;1147;incorrect;True;"Your code is missing colons at the end of the `for` and `if` statements. In Python, colons are required to indicate the start of a new block of code.
+
+Check the syntax of your loop and conditional statements.";;;;
+gemma4:12b;en;1147;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;189;incorrect;True;;;;;
+gemma4:12b;sk;189;correct;False;;;;;
+gemma4:12b;en;189;incorrect;True;;;;;
+gemma4:12b;en;189;correct;False;"The code prints the odd numbers up to 100, but the task asks for the first hundred odd numbers. There are only 50 odd numbers in that range.
+
+Think about how much higher the upper limit of your `range()` needs to be to collect a total of 100 odd numbers.";;;;
+gemma4:12b;sk;1809;incorrect;True;"Použil si kľúčové slovo `define` namiesto `def`.
+V Pythoni sa funkcie definujú pomocov `def`.
+Skús nahradiť `define` správnym kľúčovým slovom pre definovanie funkcií.";;;;
+gemma4:12b;sk;1809;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;1809;incorrect;True;;;;;
+gemma4:12b;en;1809;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;837;incorrect;True;"V kóde sú syntaxové chyby v definícii funkcie a v kľúčovom slove pre návratovú hodnotu. Chýba dvojbodie a je opýsené kľúčové slovo.
+
+Skontroluj syntax v riadku s `def` a oprav chybu v názve kľúčového slova na poslednom riadku funkcie.";;;;
+gemma4:12b;sk;837;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;837;incorrect;True;"There are syntax errors in your function definition and the return statement.
+
+Check the punctuation at the end of your `def` line and ensure the keyword used to send back a value is spelled correctly.";;;;
+gemma4:12b;en;837;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;2026;incorrect;True;"Chýbajú dvojbodky (`:`) po definíciach funkcií a cyklov.
+V Pythoni sú dvojbod";;;;
+gemma4:12b;sk;2026;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;2026;incorrect;True;;;;;
+gemma4:12b;en;2026;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;212;incorrect;True;;;;;
+gemma4:12b;sk;212;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;212;incorrect;True;There is a syntax error in your `for` loop statement. Python requires a colon at the end of the loop header. Check the end of that line.;;;;
+gemma4:12b;en;212;correct;True;Everything is correct. Good job!;;;;
+gemma4:12b;sk;2581;incorrect;True;"V tvojom kóde je syntaxová chyba pri definícii zoznamu.
+Použil si nesúhlasné závorky, čo spôsobí chybu pri spustení.
+
+Skontroluj, či používaš správne hranaté zátvorky `[]` pre definíciu zoznamu.";;;;
+gemma4:12b;sk;2581;correct;True;Všetko je správne. Výborne!;;;;
+gemma4:12b;en;2581;incorrect;True;"There is a syntax error in your list definition.
+You have mixed a parenthesis and a square bracket.
+Check the symbols you used to wrap the numbers to ensure they match.";;;;
+gemma4:12b;en;2581;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;1617;incorrect;True;"V kódovom riadku s definíciou slovníkov chýbajú dvojtečky po kľúčoch. 
+
+Napríklad `'a' 10` by mal byť `'a': 10`.
+
+Skontrolujte všetky riadky, kde definujete slovníky a pridajte chýbajúce dvojtečky.";;;;
+qwen3:14b;sk;1617;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;1617;incorrect;True;"The code has syntax errors in the dictionary definitions. Missing colons after the keys in dict1 and dict2.
+
+Check the syntax for dictionary literals - each key should be followed by a colon. For example, {'a': 10} is correct, but {'a' 10} is not.";;;;
+qwen3:14b;en;1617;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;870;incorrect;True;"Funkcia ""rang"" je nesprávne napísaná. Skúste použiť správne meno funkcie. Skontrolujte, či ste funkciu ""range"" napísali správne.";;;;
+qwen3:14b;sk;870;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;870;incorrect;True;There is a typo in the function name. The correct function is `range`, not `rang`. Check the spelling of the function.;;;;
+qwen3:14b;en;870;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;255;incorrect;True;Funkcia je definovaná pomocou `define` namiesto `def`. Použite kľúčové slovo `def` na vytvorenie funkcie v Python.;;;;
+qwen3:14b;sk;255;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;255;incorrect;True;"The function definition uses `define` instead of `def`.  
+In Python, the correct keyword for defining a function is `def`.  
+Check the syntax for function definitions in Python.";;;;
+qwen3:14b;en;255;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;1147;incorrect;True;"V kóde chýbajú dvojtečky za príkazmi `for`, `if` a `else`.  
+Zapamätaj si, že v Pythoni musí byť za každým príkazom (napr. `for`, `if`, `else`) dvojtečka.";;;;
+qwen3:14b;sk;1147;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;1147;incorrect;True;Your code has syntax errors. Missing colons after `for`, `if`, and `else` statements. Check Python syntax rules for control structures.;;;;
+qwen3:14b;en;1147;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;189;incorrect;True;V kóde sú chyby v operátoroch. Použite `=` pre priradenie a `!=` pre porovnanie. Skontrolujte podmienky v cykle.;;;;
+qwen3:14b;sk;189;correct;False;"The code generates only 50 odd numbers instead of 100.  
+The range should be extended to include enough numbers to collect 100 odd values.  
+Consider generating numbers up to 199 (since the 100th odd number is 199).";;;;
+qwen3:14b;en;189;incorrect;True;;;;;
+qwen3:14b;en;189;correct;False;"The loop runs from 1 to 100, but the first 100 odd numbers end at 199. 
+
+The range should generate numbers up to 199 (since 2*100-1 = 199). 
+
+Try adjusting the range to `range(1, 200, 2)` to directly generate all required odd numbers.";;;;
+qwen3:14b;sk;1809;incorrect;True;"V kóde je chyba v prvej časti – slovo `define` nie je platným kľúčovým slovom v Python. Miesto toho by malo byť kľúčové slovo `def`.
+
+Začnite správnym vytvorením funkcie pomocou `def`, potom pokračujte v ostatných krokoch.";;;;
+qwen3:14b;sk;1809;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;1809;incorrect;True;"The function definition uses `define` instead of `def`. In Python, functions are defined with `def`.
+
+Hint: Correct the keyword to `def` when defining the function.";;;;
+qwen3:14b;en;1809;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;837;incorrect;True;"V kóde je prítomná chyba v kľúčovom slove `return` – napísané je `retrn`. 
+
+Zmeňte `retrn result` na `return result`.
+
+Všimnite si, že výstupový reťazec je správne vytvorený pomocou `"","".join(...)`.";;;;
+qwen3:14b;sk;837;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;837;incorrect;True;There is a typo in the return statement. The keyword 'return' is misspelled as 'retrn'. Check the spelling of the return statement in the function.;;;;
+qwen3:14b;en;837;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;2026;incorrect;True;"V kóde chýbajú dvojtečky za definíciou funkcií a za príkazom `for`. 
+
+Zároveň je v programe definovaných dve funkcie so rovnakým názvom, pričom druhá prepíše prvú.
+
+Použite vzorec `n * (n + 1) // 2` pre optimalizáciu, ale najprv opravte syntax.";;;;
+qwen3:14b;sk;2026;correct;False;"V kóde je definovaná funkcia dvakrát, čo nie je platné v Python. Odstráňte prvú verziu funkcie a ponechajte len optimalizovanú verziu. 
+
+Poznámka: Výsledok by mal byť 55, čo je správne.";;;;
+qwen3:14b;en;2026;incorrect;True;"The code has syntax errors and redundant function definitions. 
+
+The first function is missing a colon after the parameter list and in the for loop line.";;;;
+qwen3:14b;en;2026;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;212;incorrect;True;"Chýba dvojtečka na konci riadka s cyklom `for`. 
+
+Permutácie sú výstupom ako tuple, nie ako reťazce. 
+
+Skontroluj syntax cyklu a uisti sa, že všetky riadky kódu majú správne ukončenie.";;;;
+qwen3:14b;sk;212;correct;False;;;;;
+qwen3:14b;en;212;incorrect;True;There is a syntax error in the for loop. The line `for string in list(perm)` is missing a colon at the end. Check the loop structure and ensure all control statements end with a colon.;;;;
+qwen3:14b;en;212;correct;True;Everything is correct. Good job!;;;;
+qwen3:14b;sk;2581;incorrect;True;"V kóde používate zátvorky `()` namiesto hranatých zátvoriek `[]`, čo vytvára tuplu namiesto zoznamu. Tuply v Python-e nemajú metódu `reverse()`. 
+
+Zmeňte zátvorky na hranaté a skúste znova. Ak chcete použiť metódu `reverse()`, musí byť premenná typu zoznam.";;;;
+qwen3:14b;sk;2581;correct;True;Všetko je správne. Výborne!;;;;
+qwen3:14b;en;2581;incorrect;True;"The input is a list, but you're using a tuple (parentheses) instead of a list (square brackets). Tuples are immutable and don't have the `reverse()` method. 
+
+Hint: Use `list = [10, 20, 30, 40, 50]` to create a list, then call `reverse()`.";;;;
+qwen3:14b;en;2581;correct;True;Everything is correct. Good job!;;;;

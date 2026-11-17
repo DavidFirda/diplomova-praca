@@ -1,0 +1,69 @@
+﻿model;lang;task_id;kind;verdict_ok;answer;spravnost_1_5;jazyk_1_5;uzitocnost_1_5;poznamka
+qwen3.8:27b;sk;1617;incorrect;True;V kóde je chýbajúca dvojbodka za definíciou funkcie a v slovníkoch chýbajú dvojbodky medzi kľúčmi a hodnotami. Skontroluj si syntaxiu definície funkcie a tvorby slovníka v Pythone.;;;;
+qwen3.8:27b;sk;1617;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;1617;incorrect;True;"Your code has a syntax error: you are missing colons (`:`) after the function definition and inside the dictionary literals.
+
+Hint: Check the syntax for defining a function and creating dictionaries in Python.";;;;
+qwen3.8:27b;en;1617;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;870;incorrect;True;Váš kód obsahuje chybu v názve funkcie – správne je `range`, nie `rang`.;;;;
+qwen3.8:27b;sk;870;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;870;incorrect;True;"There is a typo in your code: `rang` should be `range`.
+
+Hint: Check the spelling of the built-in function you are using to generate the sequence of numbers.";;;;
+qwen3.8:27b;en;870;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;255;incorrect;False;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;sk;255;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;255;incorrect;False;Everything is correct. Good job!;;;;
+qwen3.8:27b;en;255;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;1147;incorrect;True;"V kóde chýbajú dvojbodky (`:`) na konci riadkov s `for` a `if`.
+
+Pripomeň si, že v Pythone sa bloky kódu (ako cykly alebo podmienky) vždy začínajú riadkom, ktorý končí dvojbodkou.";;;;
+qwen3.8:27b;sk;1147;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;1147;incorrect;True;"Your logic is on the right track, but there are syntax errors in your loop.
+
+Specifically, you are missing colons (`:`) at the end of your `for` and `if` lines.
+
+Hint: Check the end of the lines starting with `for` and `if`.";;;;
+qwen3.8:27b;en;1147;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;189;incorrect;True;"V kóde sú použité neplatné operátory pre porovnanie a priradenie.
+
+V Python sa na porovnanie rovnosti používa `==` a na porovnanie nerovnosti `!=`, zatiaľ čo na priradenie sa používa `=`.";;;;
+qwen3.8:27b;sk;189;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;189;incorrect;True;"Your code has syntax errors: `==` is for comparison, not assignment, and `!==` is not valid Python (use `!=`).
+
+Hint: Use `=` to assign an empty list, and `!=` to check if a number is not divisible by 2.";;;;
+qwen3.8:27b;en;189;correct;True;"""Everything is correct. Good job!""";;;;
+qwen3.8:27b;sk;1809;incorrect;False;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;sk;1809;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;1809;incorrect;False;Everything is correct. Good job!;;;;
+qwen3.8:27b;en;1809;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;837;incorrect;True;"V kóde je chyba: v riadku s návratovou hodnotou je opечатка v názve kľúčového slova (`retrn` namiesto `return`).
+
+Skontroluj si pravopis kľúčových slov v Pythoni.";;;;
+qwen3.8:27b;sk;837;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;837;incorrect;True;"Your solution is incorrect.
+
+There are two typos in your code:
+1. `def list_to_str(lst)` is missing a colon `:` at the end.
+2. `retrn result` should be `return result`.
+
+Hint: Check the syntax for defining a function and the spelling of the keyword used to send a value back from a function.";;;;
+qwen3.8:27b;en;837;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;2026;incorrect;True;Váš kód obsahuje chyby v syntaxi (chýbajú dvojbodky za `def` a `for`) a definujete funkciu s rovnakým menom dvakrát. Skúste opraviť syntax a ponechajte len jednu verziu funkcie.;;;;
+qwen3.8:27b;sk;2026;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;2026;incorrect;False;Everything is correct. Good job!;;;;
+qwen3.8:27b;en;2026;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;212;incorrect;True;"Kód obsahuje syntaktickú chybu: chýba dvojbodka na konci riadku s `for` cyklusom.
+
+Skontroluj si syntax pre cykly v Pythone – čo musí nasledovať za podmienkou alebo iterovaným objektom v hlavičke `for`?";;;;
+qwen3.8:27b;sk;212;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;212;incorrect;True;"Your code has a syntax error: the `for` loop is missing a colon (`:`) at the end of the line.
+
+Hint: Check the syntax of your `for` loop statement.";;;;
+qwen3.8:27b;en;212;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;2581;incorrect;True;"V riešení je chyba v syntaxi: zoznam sa definuje hranatými zátvorkami, nie okrúhlymi.
+
+Skontroluj si, ako sa v Pythone správne vytvorí zoznam (list) a skús to upraviť.";;;;
+qwen3.8:27b;sk;2581;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;2581;incorrect;True;Your code has a syntax error: you started the list with a parenthesis `(` instead of a square bracket `[`. Also, using `list` as a variable name shadows Python's built-in `list` type, which is not recommended.;;;;
+qwen3.8:27b;en;2581;correct;True;Everything is correct. Good job!;;;;
