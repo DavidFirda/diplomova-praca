@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+
+# data a index nikdy na git: domace ulohy (osobne udaje) a knihy (autorske prava)
+data/
+index/

@@ -1,0 +1,87 @@
+﻿model;lang;task_id;kind;verdict_ok;answer;spravnost_1_5;jazyk_1_5;uzitocnost_1_5;poznamka
+qwen3.8:27b;sk;1617;incorrect;True;"Kód obsahuje syntaktické chyby – chýbajú dvojbodky na viacerých miestach.
+
+Konkrétne: po definícii funkcie a medzi kľúčmi a hodnotami v slovníkoch musí byť `:`.
+
+Skontroluj si, kde Python očakáva dvojbodku – napr. pri `def` a pri priradení `kľúč: hodnota` v slovníku.";;;;
+qwen3.8:27b;sk;1617;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;1617;incorrect;True;"There are a couple of syntax errors in your code.
+
+You're missing colons in two places: after the function definition line and between the keys and values in your dictionary literals.
+
+**Hint:** In Python, a `def` line always ends with `:`, and each key-value pair in a dictionary is written as `key: value`. Check those two spots and you should be good to go!";;;;
+qwen3.8:27b;en;1617;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;870;incorrect;True;V kóde je preklep v názve funkcie – `rang` namiesto správneho mena. Python túto funkciu nenájde a vyhodí `NameError`. Skontroluj si presný názov funkcie, ktorá generuje rozsah čísel v Pythone.;;;;
+qwen3.8:27b;sk;870;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;870;incorrect;True;There's a small typo in your code that will cause a `NameError` at runtime. Double-check the spelling of the built-in function you're calling — it's off by one letter.;;;;
+qwen3.8:27b;en;870;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;255;incorrect;True;"Vo funkcii máš syntaktickú chybu – Python nepozná kľúčové slovo `define` a chýba ti dvojbodka za zátvorkou.
+
+V Python sa funkcia deklaruje kľúčovým slovom `def` a na konci hlavičky musí byť `:`. Skús si to opraviť a skontrolovať, či sa program spustí bez chyby.";;;;
+qwen3.8:27b;sk;255;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;255;incorrect;False;Everything is correct. Good job!;;;;
+qwen3.8:27b;en;255;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;1147;incorrect;True;"V kóde chýbajú dvojbodky (`:`) na konci riadkov s `for`, `if` a `else` – Python ich vyžaduje.
+
+Skontroluj si syntax blokov v Pythone: každý riadok, ktorý zavádza blok (`for`, `if`, `else`, `def`…), musí končiť konkrétnym znakom.";;;;
+qwen3.8:27b;sk;1147;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;1147;incorrect;True;Your logic is on the right track, but the code has syntax errors that will prevent it from running. In Python, `for`, `if`, and `else` statements each need a colon at the end of the line. Check the three lines where you're missing that punctuation mark.;;;;
+qwen3.8:27b;en;1147;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;189;incorrect;True;"Riešenie obsahuje viacero chýb: `==` je porovnanie, nie priradenie, `!==` neexistuje v Pythone, a rozsah 1–100 ti dá len 50 nepárnych čísel, nie 100.
+
+Skús si overiť: koľko nepárnych čísel sa skutočne nachádza v rozsahu 1 až 100, a do akého rozsahu by si musel ísť, aby si ich dostal sto? A pre priradenie a porovnanie v Pythone platia iné operátory než v niektorých iných jazykoch – pozri si, aký operátor slúži na „nie je rovné"".";;;;
+qwen3.8:27b;sk;189;correct;False;"Program nájde len 50 nepárnych čísel, pretože prechádza len rozsahom 1 až 100. Prvých 100 nepárnych čísel končí až na 199.
+
+Skús si premyslieť, do akej hodnoty by mal ísť tvoj `range`, aby si zistil práve 100 nepárnych čísel – alebo použi `while` slučku s počítadlom, ktoré sa zastaví, keď máš už 100 prvkov.";;;;
+qwen3.8:27b;en;189;incorrect;True;"There are two syntax errors: `==` is a comparison operator (not assignment), and `!==` is not a valid operator in Python.
+
+In Python, assignment uses a single `=`, and ""not equal"" is written as `!=`.
+
+Hint: Look up the correct single-character operators for assignment and inequality in Python, then fix both lines.";;;;
+qwen3.8:27b;en;189;correct;False;"Your loop only goes up to 100, which gives you just 50 odd numbers instead of 100.
+
+The first hundred odd numbers extend beyond 100 — think about what the 100th odd number actually is.
+
+Hint: You could either extend your range so it covers enough numbers, or change your loop condition to stop once your list has 100 elements. Which approach feels more natural to you?";;;;
+qwen3.8:27b;sk;1809;incorrect;True;"Funkcia sa v Pythone deklaruje kľúčovým slovom `def`, nie `define`.
+
+Skontroluj si, aké kľúčové slovo Python používa na definíciu funkcie – je to jedno krátké slovo.";;;;
+qwen3.8:27b;sk;1809;correct;False;;;;;
+qwen3.8:27b;en;1809;incorrect;True;"Your function logic is fine, but the code won't run because `define` is not a valid Python keyword.
+
+In Python, the keyword to declare a function is a single word — check the Python documentation for the exact spelling.
+
+Hint: It's a 3-letter keyword, not a 6-letter one. Try replacing that word and running your code again.";;;;
+qwen3.8:27b;en;1809;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;837;incorrect;True;"V kóde sú dve syntaxické chyby, ktoré bránia spusteniu programu.
+
+Skontroluj si, či za zátvorkou pri definícii funkcie niečo chýba a či sa v riadku s vrátením hodnoty neprehliadla jedna literka.
+
+Tip: Python je veľmi prísny voči chýbajúcim znakom – skús si kód prečítať pomaly riadok po riadku a porovnať s tým, čo si pamätáš z syntaxe.";;;;
+qwen3.8:27b;sk;837;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;837;incorrect;True;"Your code has two syntax errors that prevent it from running: a missing colon after the function definition and a typo in the return statement.
+
+Hint: Check the end of your `def` line and the spelling of the keyword that sends a value back to the caller.";;;;
+qwen3.8:27b;en;837;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;2026;incorrect;True;"V kóde sú chýbajúce dvojbodky (`:`) na konci riadkov s `def` a `for` v prvej funkcii, čo spôsobí `SyntaxError` a celý skript sa nespustí.
+
+**Tip:** V Pythoni každý blok (funkcia, cyklus, podmienka) musí mať na konci riadka dvojbodku. Skontroluj si obe riadky v prvej funkcii.";;;;
+qwen3.8:27b;sk;2026;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;2026;incorrect;True;"Your code has syntax errors — the function definitions and the `for` loop are missing colons (`:`) at the end of their lines. In Python, every block-introducing statement (like `def` and `for`) must end with a colon.
+
+**Hint:** Check the end of each line that introduces a new block (`def ...` and `for ...`) and make sure it ends with the correct punctuation.";;;;
+qwen3.8:27b;en;2026;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;212;incorrect;True;V riadku s `for` cyklom chýba dvojbodka na konci. V Pythoni každý blok (cyklus, podmienka, funkcia) musí mať po hlavičke dvojbodku. Skontroluj si syntax `for` – čo tam má byť hneď za `list(perm)`?;;;;
+qwen3.8:27b;sk;212;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;212;incorrect;True;"There's a syntax error in your `for` loop — it's missing a colon at the end of the line.
+
+In Python, every `for` statement needs a `:` before the indented block begins.
+
+Check the line right before `print(string)` and add the missing character.";;;;
+qwen3.8:27b;en;212;correct;True;Everything is correct. Good job!;;;;
+qwen3.8:27b;sk;2581;incorrect;True;V kóde je syntaktická chyba – zátvorka na začiatku a zátvorka na konci sa nezhodujú. Skontroluj si, či obe zátvorky (alebo obe hranaté zátvorky) sú rovnakého typu.;;;;
+qwen3.8:27b;sk;2581;correct;True;Všetko je správne. Výborne!;;;;
+qwen3.8:27b;en;2581;incorrect;True;"There's a syntax error: your opening bracket is `(` instead of `[`, so Python can't parse the expression.
+
+Check that the characters you use to open and close your collection match each other.";;;;
+qwen3.8:27b;en;2581;correct;True;Everything is correct. Good job!;;;;

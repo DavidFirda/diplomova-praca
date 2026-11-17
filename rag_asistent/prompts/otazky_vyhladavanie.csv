@@ -1,0 +1,37 @@
+otazka;jazyk;prednaska
+Čo je walrus operátor?;sk;1
+Aký je rozdiel medzi while a for cyklom?;sk;1
+Ako funguje rekurzia?;sk;2
+Čo robí yield v generátore?;sk;2
+Ako otvorím súbor a zapíšem doň text?;sk;2
+Ako rozdelím string podľa medzery?;sk;3
+Ako skopírujem zoznam, aby sa nezmenil originál?;sk;3
+Ako prechádzať dictionary v cykle?;sk;3
+Ako zmeniť tvar numpy poľa?;sk;4
+Ako vyberiem riadky z dataframe podľa podmienky?;sk;4
+Čo je hašovacia tabuľka a ako sa riešia kolízie?;sk;4
+Ako zachytím viac rôznych výnimiek naraz?;sk;5
+Ako si vytvorím vlastnú výnimku?;sk;5
+Čo je memoizácia?;sk;6
+Čo vyjadruje asymptotická notácia?;sk;6
+Ako zavolám metódu nadtriedy?;sk;7
+Ako funguje enkapsulácia v Pythone?;sk;7
+Ako funguje viacnásobné dedenie?;sk;8
+Na čo slúži metóda __str__?;sk;8
+Čo je simulácia Monte Carlo?;sk;9
+Čo je návrhový vzor singleton?;sk;10
+Na čo slúži návrhový vzor observer?;sk;11
+How does inheritance work?;en;7|8
+How do I catch an exception?;en;5
+What is a lambda function?;en;2
+How do list comprehensions with conditions work?;en;3
+What is the difference between a stack and a queue?;en;4
+What is dynamic programming?;en;6
+How do I generate random numbers from a normal distribution?;en;9
+What is the adapter design pattern?;en;11
+What is a class variable?;en;8
+How do I override a method in a subclass?;en;7|8
+Ako funguje asyncio a async/await?;sk;
+Ako použiť regulárne výrazy v Pythone?;sk;
+How do I create a virtual environment?;en;
+What is a context manager?;en;
